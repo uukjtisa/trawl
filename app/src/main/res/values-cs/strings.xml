@@ -278,12 +278,9 @@
     <string name="second">sekunda</string>
     <string name="set_directory_desc">Klikněte pro nastavení adresáře</string>
     <string name="update_channel">Kanál aktualizací</string>
-    <string name="sponsor_msg">Trawl bude vždy zdarma a open source pro každého. Pokud se vám aplikace líbí, prosím zvažte sponzorování na GitHubu!</string>
     <string name="crop_artwork">Oříznout obrázek</string>
     <string name="subtitle_sponsorblock">Titulky mohou mít špatné časování při odstranění SponsorBlock segmentů.</string>
     <string name="start">Začít</string>
-    <string name="sponsor_msg2">Moc vám děkujeme!</string>
-    <string name="sponsor_desc">Podpořte tuto aplikaci sponzorováním na GitHubu</string>
     <string name="enable_experimental_feature">Povolit experimentální funkce?</string>
     <string name="running_tasks">Běžící úlohy</string>
     <string name="ua_header">Hlavička s User-Agentem</string>
@@ -297,7 +294,6 @@
     <string name="select_all">Vybrat vše</string>
     <string name="format_sorting_desc">Třídit formáty s možností -S v nástroji yt-dlp</string>
     <string name="auto_update">Automatické aktualizace</string>
-    <string name="sponsor">Sponzor</string>
     <string name="auto_subtitle">Automatické titulky</string>
     <string name="required">Vyžadované</string>
     <string name="embed_subtitles_mkv_msg">Pro účel vložení souborů titulků budou videa převedena do kontejneru mkv. Pro přehrávání videí se soubory titulků můžete použít například VLC Media Player nebo jiné kompatibilní aplikace.</string>
@@ -357,7 +353,6 @@
     <string name="remove_multiple_templates_msg">Navždy odstranit %1$s z šablon pro příkazy?</string>
     <string name="enable_notifications">Povolit upozornění?</string>
     <string name="proxy">Proxy</string>
-    <string name="sponsors">Sponzoři</string>
     <string name="clear_all_cookies_desc">Chcete navždy smazat všechny cookies uložené v aplikaci?</string>
     <string name="minute">minuta</string>
     <string name="format_sorting">Třídění formátů</string>

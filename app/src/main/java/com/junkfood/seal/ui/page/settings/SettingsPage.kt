@@ -1,5 +1,9 @@
 package com.junkfood.seal.ui.page.settings
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: removed the donation hint card that appeared after 30 visits to Settings,
+// and the visit counter that existed only to schedule it.
+
 import android.content.Context
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -26,7 +30,6 @@ import androidx.compose.material.icons.rounded.Stars
 import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.material.icons.rounded.VideoFile
 import androidx.compose.material.icons.rounded.ViewComfy
-import androidx.compose.material.icons.rounded.VolunteerActivism
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
@@ -57,7 +60,6 @@ import com.junkfood.seal.util.BatteryUtil
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
-import com.junkfood.seal.util.SHOW_SPONSOR_MSG
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,10 +93,6 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
             }
         }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
-    val showSponsorMessage by SHOW_SPONSOR_MSG.intState
-
-    LaunchedEffect(Unit) { SHOW_SPONSOR_MSG.updateInt(showSponsorMessage + 1) }
 
     val typography = MaterialTheme.typography
 
@@ -143,19 +141,6 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                     }
                 }
             }
-            if (!showBatteryHint && showSponsorMessage > 30)
-                item {
-                    PreferencesHintCard(
-                        title = stringResource(id = R.string.sponsor),
-                        icon = Icons.Rounded.VolunteerActivism,
-                        description = stringResource(id = R.string.sponsor_desc),
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    ) {
-                        onNavigateTo(Route.DONATE)
-                    }
-                }
-
             item {
                 PreferenceItem(
                     title = stringResource(id = R.string.general_settings),

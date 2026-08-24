@@ -98,7 +98,6 @@ const val CROP_ARTWORK = "crop_artwork"
 const val EMBED_THUMBNAIL = "embed_thumbnail"
 const val FORMAT_SELECTION = "format_selection"
 const val VIDEO_CLIP = "video_clip"
-const val SHOW_SPONSOR_MSG = "sponsor_msg_v1"
 const val OUTPUT_TEMPLATE = "output_template"
 const val CUSTOM_OUTPUT_TEMPLATE = "custom_output_template"
 const val DOWNLOAD_ARCHIVE = "download_archive"
@@ -138,13 +137,6 @@ const val NOTIFICATION_VIBRATE = "notification_vibrate"
 const val NOTIFICATION_LED = "notification_led"
 const val NOTIFICATION_SUCCESS_SOUND = "notification_success_sound"
 const val NOTIFICATION_ERROR_SOUND = "notification_error_sound"
-
-// Sponsor Support Dialog
-const val SPONSOR_DIALOG_FREQUENCY = "sponsor_dialog_frequency"  // 0=Off, 1=Weekly, 2=Monthly
-const val SPONSOR_DIALOG_LAST_SHOWN = "sponsor_dialog_last_shown"
-const val SPONSOR_FREQ_OFF = 0
-const val SPONSOR_FREQ_WEEKLY = 1
-const val SPONSOR_FREQ_MONTHLY = 2
 
 // Battery Optimization Dialog
 // NOTE: there is intentionally NO dismissal flag or cooldown here. The home-screen dialog is
@@ -292,7 +284,6 @@ private val IntPreferenceDefaults =
         VIDEO_QUALITY to NOT_SPECIFIED,
         VIDEO_FORMAT to FORMAT_QUALITY,
         UPDATE_CHANNEL to STABLE,
-        SHOW_SPONSOR_MSG to 0,
         CONVERT_SUBTITLE to NOT_SPECIFIED,
         DOWNLOAD_TYPE_INITIALIZATION to USE_PREVIOUS_SELECTION,
         YT_DLP_UPDATE_CHANNEL to YT_DLP_STABLE,
@@ -301,12 +292,10 @@ private val IntPreferenceDefaults =
         NETWORK_PAUSE_DELAY_SECONDS to 25,
         MAX_CONCURRENT_DOWNLOADS to 1,
         ARIA2C_CONNECTIONS to 16,
-        SPONSOR_DIALOG_FREQUENCY to SPONSOR_FREQ_WEEKLY,
     )
 
 private val LongPreferenceDefaults = mapOf(
     YT_DLP_UPDATE_INTERVAL to DEFAULT_INTERVAL,
-    SPONSOR_DIALOG_LAST_SHOWN to 0L,
 )
 
 fun String.getStringDefault() = StringPreferenceDefaults.getOrElse(this) { "" }

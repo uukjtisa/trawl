@@ -24,8 +24,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **1 — Progress tracker + logging tag**
 - [x] **2 — Identity** (app name, applicationId, launcher icon)
 - [x] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
-- [~] **4 — Strip donation surfaces**
-- [ ] **5 — Theme foundation** (7 palettes + extended tokens)
+- [x] **4 — Strip donation surfaces**
+- [~] **5 — Theme foundation** (7 palettes + extended tokens)
 - [ ] **6 — Typography, shape, bundled fonts**
 - [ ] **7 — Glass system** (Off/Subtle/Full, default Off)
 - [ ] **8 — Ambient motion + download effects**
@@ -135,11 +135,16 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [ ] 65 Permission gate degrading to the notification
 
 ### Removals — step 4
-- [ ] 66 Home donation dialog
-- [ ] 67 Crypto donation page
-- [ ] 68 Sponsor / Support Developer pages
+- [x] 66 Home donation dialog
+- [x] 67 Crypto donation page
+- [x] 68 Sponsor / Support Developer pages
 - [ ] 69 Gradient theme as default
 - [ ] 70 "Built on" out of the drawer (→ About)
+      — PAIRED WITH STEP 12, do not do it earlier. The real app's equivalent is
+      "Powered by Mahesh Technicals" on the splash screen, which is currently the most
+      explicit upstream credit anywhere in the UI. It may move to About; it may not be
+      absent in between. Step 12 must add the credit card and remove the splash line in
+      the same commit.
 
 ---
 
@@ -152,3 +157,6 @@ Ticked only when the behaviour is real in the app, not merely coded.
 | 3 | done — 62 locales + 15 Kotlin files swept; auto-updater and notification icon
 repointed off upstream; Seal artwork, splash logo and dead demo file deleted; `.gitattributes`
 added. APK verified: no Seal text in any locale. |
+| 4 | done — 7 pages/dialogs deleted (2,944 lines), 8 files edited, 227 string
+elements dropped across 39 locales. SponsorBlock (a yt-dlp video feature, unrelated to
+donations) verified intact. APK 94.5 MB → 87.6 MB. |

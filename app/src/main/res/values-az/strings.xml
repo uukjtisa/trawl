@@ -279,11 +279,7 @@
     <string name="minute">dəqiqə</string>
     <string name="clear_all_cookies">Bütün məlumat bazaların sil</string>
     <string name="temporary_directory_desc">Müvəqqəti faylları daxili kataloqda saxla</string>
-    <string name="sponsor">Himayədar</string>
     <string name="feedback">Əks əlaqə</string>
-    <string name="sponsors">Himayədarlar</string>
-    <string name="sponsor_desc">GitHub-da himayədarlıq edərək bu tətbiqi dəstəklə</string>
-    <string name="sponsor_msg">Trawl həmişə, hamı üçün pulsuz və açıq mənbə olacaqdır. Əgər bəyənirsinizszə, mənə GitHub-da himayədarlıq etməyi düşünün!</string>
     <string name="audio_format">Səs formatı</string>
     <string name="no_downloaded_media">Yüklənilən media yoxdur</string>
     <string name="beta_features">Sınaq</string>
@@ -297,7 +293,6 @@
     <string name="feature_unavailable">Xüsusiyyət mövcud deyil</string>
     <string name="no_custom_command_tasks">Fərdi əmr tapşırıqları yoxdur</string>
     <string name="msg_from_developer">Tərtibatçıdan mesaj</string>
-    <string name="sponsor_msg2">Çox sağ olun!</string>
     <string name="download_video_desc">Videoları URL-dən yüklə</string>
     <string name="convert_subtitle">Titrləri çevir</string>
     <string name="convert_subtitle_desc">Titrləri başqa formata çevir</string>

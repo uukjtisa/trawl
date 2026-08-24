@@ -265,21 +265,16 @@
     <string name="beta_features">Beta</string>
     <string name="enable_experimental_feature">Slå på røynd funksjon\?</string>
     <string name="msg_from_developer">Melding ifrå utviklaren</string>
-    <string name="sponsor_msg2">Mange takk!</string>
     <string name="auto_update_disabled_msg">Sjølvoppdatering er ikkje tilgjengeleg for %1$s-utgåver. Om du ikkje har %1$s lagt inn på eininga di, eller vil røyna komande funksjonar, tak ein titt på %2$s.</string>
     <string name="switch_to_github_builds">bytt til GitHub-utgåver</string>
     <string name="okay">Greitt</string>
     <string name="got_it">Skjønar</string>
     <string name="feature_unavailable">Funksjonen er ikkje tilgjengeleg</string>
-    <string name="sponsor_msg">Trawl vil for alltid vera kostnadsfri og ha ein open kjeldekode. Om du vil kan du stø meg på GitHub.</string>
     <string name="auto_update">Sjølvoppdater</string>
     <string name="enable_auto_update">Slå på sjølvoppdatering</string>
     <string name="audio_format_preference">Ynkst ljodformat</string>
     <string name="minute">Minutt</string>
     <string name="clear_all_cookies">Tøm alle infokapslar</string>
     <string name="clear_all_cookies_desc">Slett alle infokapslane gøymde i appen\?</string>
-    <string name="sponsor">Stø</string>
-    <string name="sponsor_desc">Stø appen ved å gje pengar gjennom GitHub</string>
     <string name="feedback">Tilbakemelding</string>
-    <string name="sponsors">Støarar</string>
 </resources>

@@ -235,9 +235,7 @@
     <string name="update_channel">채널 업데이트</string>
     <string name="auto_update">자동 업데이트</string>
     <string name="enable_auto_update">자동 업데이트 사용</string>
-    <string name="sponsor_msg">Trawl은 항상 무료이며 모든 사람을 위한 오픈 소스입니다. 마음에 드신다면 GitHub에서 저를 후원해 주세요!</string>
     <string name="msg_from_developer">개발자 메시지</string>
-    <string name="sponsor_msg2">매우 감사합니다!</string>
     <string name="switch_to_github_builds">GitHub 빌드로 전환</string>
     <string name="okay">좋아요</string>
     <string name="got_it">알겠어요</string>
@@ -277,7 +275,6 @@
     <string name="edit_shortcuts_desc">명령 템플릿을 작성하는 데 사용할 수 있는 사용자 지정 바로 가기를 편집합니다.</string>
     <string name="clear">지우기</string>
     <string name="embed_subtitles_mkv_msg">자막을 삽입하기 위해 동영상은 mkv 컨테이너로 리먹스됩니다. VLC 미디어 플레이어 등 지원되는 플레이어로 재생할 수 있습니다.</string>
-    <string name="sponsor">후원하기</string>
     <string name="format_selection_desc">다운로드를 시작하기 전에 다운로드할 형식 선택</string>
     <string name="subtitle_sponsorblock">SponsorBlock 세그먼트를 제거할 때 자막이 누락될 수 있습니다.</string>
     <string name="update_channel_desc">새로운 기능과 변경 사항을 미리 보기위해 시험판 빌드를 설치합니다.
@@ -295,9 +292,7 @@
     <string name="rename">이름 바꾸기</string>
     <string name="minute">분</string>
     <string name="clear_all_cookies">모든 쿠키 지우기</string>
-    <string name="sponsor_desc">GitHub에서 후원하여 이 앱을 지원해주세요</string>
     <string name="feedback">피드백</string>
-    <string name="sponsors">후원자</string>
     <string name="temporary_directory_desc">내부 디렉토리에 임시 파일 저장</string>
     <string name="split_video_msg">영상은 %1$d개의 장으로 분할됩니다</string>
     <string name="split_video">동영상 분할</string>

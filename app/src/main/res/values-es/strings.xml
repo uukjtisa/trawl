@@ -279,11 +279,7 @@
     <string name="second">segundo</string>
     <string name="clear_all_cookies_desc">¿Borrar definitivamente todas las cookies almacenadas en la aplicación\?</string>
     <string name="temporary_directory_desc">Almacena archivos temporales en el directorio seleccionado</string>
-    <string name="sponsor">Patrocinador</string>
-    <string name="sponsor_desc">Apoya esta aplicación patrocinando en GitHub</string>
-    <string name="sponsor_msg">Trawl será siempre gratuito y de código abierto para todos. Si te gusta, ¡considera la posibilidad de patrocinarme en GitHub!</string>
     <string name="feedback">Comentario</string>
-    <string name="sponsors">Patrocinadores</string>
     <string name="audio_format">Formato del audio</string>
     <string name="no_downloaded_media">Ningún medio descargado</string>
     <string name="beta_features">Beta</string>
@@ -297,7 +293,6 @@
     <string name="feature_unavailable">Característica no disponible</string>
     <string name="no_custom_command_tasks">No hay tareas de comando personalizadas</string>
     <string name="msg_from_developer">Mensaje del desarrollador</string>
-    <string name="sponsor_msg2">¡Muchas gracias!</string>
     <string name="download_video_desc">Descargar los vídeos desde la URL</string>
     <string name="convert_subtitle">Convertir subtítulos</string>
     <string name="split_video_msg">El video se dividirá en %1$d capítulos</string>

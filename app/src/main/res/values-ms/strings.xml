@@ -285,12 +285,8 @@
     <string name="unlimited">Tidak terhad</string>
     <string name="audio_quality">Kualiti audio</string>
     <string name="audio_quality_desc">Hadkan kadar bit audio apabila terdapat pelbagai kualiti</string>
-    <string name="sponsor_desc">Sokong aplikasi ini dengan menaja di Github</string>
     <string name="clip_video_dialog_msg">Muat turun mengguna ciri ini akan diwakilkan kepada FFmpeg untuk memuat turun bahagian video yang dipilih, ciri ini masih dalam percubaan dan pemotongan tidak akan menjadi tepat sepenuhnya, tidak semua formag sokong ciri ini dan anda mungkin akan mengalami kelajuan muat turun yang lebih perlahan.</string>
     <string name="clip_video">Video klip</string>
     <string name="temporary_directory_desc">Simpan fail sementara dalam direktori dalaman</string>
-    <string name="sponsor">Taja</string>
     <string name="feedback">Maklum balas</string>
-    <string name="sponsors">Penaja</string>
-    <string name="sponsor_msg">Trawl akan sentiasa menjadi percuma dan sumber terbuka untuk semua orang. Jika anda suka, sila pertimbangkan untuk menaja saya di GitHub!</string>
 </resources>

@@ -1,5 +1,9 @@
 package com.junkfood.seal.ui.common
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: removed the DONATE / SUPPORT_DEVELOPER / CRYPTO_DONATION / SPONSORS routes
+// along with the pages behind them.
+
 object Route {
 
     const val HOME = "home"
@@ -29,15 +33,11 @@ object Route {
     const val COOKIE_GENERATOR_WEBVIEW = "cookie_webview"
     const val SUBTITLE_PREFERENCES = "subtitle_preferences"
     const val AUTO_UPDATE = "auto_update"
-    const val DONATE = "donate"
     const val TROUBLESHOOTING = "troubleshooting"
     const val SEALPLUS_EXTRAS = "sealplus_extras"
     const val SECURITY_SETTINGS = "security_settings"
     const val ONBOARDING = "onboarding"
-    const val SUPPORT_DEVELOPER = "support_developer"
-    const val CRYPTO_DONATION = "crypto_donation"
     const val HIDDEN_CONTENT = "hidden_content"
-    const val SPONSORS = "sponsors"
     const val MORE_TOOLS = "more_tools"
     const val BATCH_URL_IMPORT = "batch_url_import"
     const val VIDEO_INFO_DOWNLOAD = "video_info_download"

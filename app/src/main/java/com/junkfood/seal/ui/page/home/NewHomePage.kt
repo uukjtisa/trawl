@@ -41,7 +41,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material.icons.outlined.Cancel
@@ -156,10 +155,6 @@ import com.junkfood.seal.util.toFileSizeText
 import com.junkfood.seal.util.getErrorReport
 import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.matchUrlFromClipboard
-import com.junkfood.seal.util.SPONSOR_DIALOG_FREQUENCY
-import com.junkfood.seal.util.SPONSOR_DIALOG_LAST_SHOWN
-import com.junkfood.seal.util.SPONSOR_FREQ_OFF
-import com.junkfood.seal.util.SPONSOR_FREQ_WEEKLY
 import com.junkfood.seal.util.BatteryUtil
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.PreferenceUtil.getLong
@@ -199,7 +194,6 @@ fun NewHomePage(
     modifier: Modifier = Modifier,
     onMenuOpen: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
-    onNavigateToSupport: () -> Unit = {},
     onNavigateToBatchUrlImport: () -> Unit = {},
     onNavigateToVideoInfoDownload: () -> Unit = {},
     onNavigateToThumbnailDownload: () -> Unit = {},
@@ -250,7 +244,6 @@ fun NewHomePage(
     var showNotificationPermissionDialog by remember { mutableStateOf(false) }
     var showBatteryOptimizationDialog by remember { mutableStateOf(false) }
     var permissionsChecked by remember { mutableStateOf(false) }
-    var showSponsorDialog by remember { mutableStateOf(false) }
     
     // Check notification permission
     val hasNotificationPermission = remember(lifecycleRefreshTrigger) {
@@ -319,20 +312,6 @@ fun NewHomePage(
                 showNotificationPermissionDialog = true
             } else if (shouldPromptBatteryDialog()) {
                 showBatteryOptimizationDialog = true
-            }
-        }
-        // Sponsor support dialog — delay slightly so permissions dialogs get priority
-        delay(600L)
-        val frequency = SPONSOR_DIALOG_FREQUENCY.getInt()
-        if (frequency != SPONSOR_FREQ_OFF) {
-            val lastShown = SPONSOR_DIALOG_LAST_SHOWN.getLong()
-            val intervalMs = if (frequency == SPONSOR_FREQ_WEEKLY)
-                7L * 24 * 60 * 60 * 1000
-            else
-                30L * 24 * 60 * 60 * 1000
-            val now = System.currentTimeMillis()
-            if (lastShown == 0L || now - lastShown >= intervalMs) {
-                showSponsorDialog = true
             }
         }
     }
@@ -664,21 +643,6 @@ fun NewHomePage(
         )
     }
 
-    // Sponsor support dialog
-    if (showSponsorDialog) {
-        SponsorSupportDialog(
-            onDismiss = {
-                showSponsorDialog = false
-                SPONSOR_DIALOG_LAST_SHOWN.updateLong(System.currentTimeMillis())
-            },
-            onSupport = {
-                showSponsorDialog = false
-                SPONSOR_DIALOG_LAST_SHOWN.updateLong(System.currentTimeMillis())
-                onNavigateToSupport()
-            },
-        )
-    }
-
     // Exit confirmation dialog
     if (showExitDialog) {
         AlertDialog(
@@ -724,13 +688,6 @@ fun NewHomePage(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToSupport) {
-                        Icon(
-                            imageVector = Icons.Outlined.AttachMoney,
-                            contentDescription = "Support Developer",
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
-                    }
                     IconButton(onClick = onNavigateToDownloads) {
                         Icon(
                             imageVector = Icons.Outlined.FileDownload,

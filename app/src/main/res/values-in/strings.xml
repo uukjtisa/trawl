@@ -279,11 +279,7 @@
     <string name="clear_all_cookies">Hapus semua kuki</string>
     <string name="minute">menit</string>
     <string name="temporary_directory_desc">Simpan berkas sementara di direktori internal</string>
-    <string name="sponsor">Sponsor</string>
-    <string name="sponsor_desc">Dukung aplikasi ini dengan mensponsori di GitHub</string>
-    <string name="sponsor_msg">Trawl akan selalu gratis dan sumbernya terbuka untuk semua orang. Jika Anda menyukainya, silakan sponsori saya di GitHub!</string>
     <string name="feedback">Masukan</string>
-    <string name="sponsors">Sponsor</string>
     <string name="no_downloaded_media">Tidak ada media yang terunduh</string>
     <string name="beta_features">Beta</string>
     <string name="enable_experimental_feature">Nyalakan fitur percobaan?</string>
@@ -297,7 +293,6 @@
     <string name="okay">Oke</string>
     <string name="no_custom_command_tasks">Tidak ada tugas perintah khusus</string>
     <string name="msg_from_developer">Pesan dari pengembang</string>
-    <string name="sponsor_msg2">Terima kasih banyak!</string>
     <string name="download_video_desc">Unduh video dari URL</string>
     <string name="convert_subtitle">Ubah terjemahan</string>
     <string name="split_video">Pisahkan video</string>

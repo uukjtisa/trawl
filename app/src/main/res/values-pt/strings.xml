@@ -119,7 +119,6 @@
     <string name="audio_format_preference">Formato áudio preferido</string>
     <string name="no_custom_command_tasks">Nenhuma tarefa de comando personalizada</string>
     <string name="msg_from_developer">Mensagem do programador</string>
-    <string name="sponsor_msg2">Muito obrigado!</string>
     <string name="download_video_desc">Descarregar vídeos a partir do URL</string>
     <string name="convert_subtitle">Converter legendas</string>
     <string name="convert_subtitle_desc">Converter as legendas para outro formato</string>
@@ -272,14 +271,12 @@
     <string name="update_channel">Canal de atualização</string>
     <string name="apply">Aplicar</string>
     <string name="unlimited">Ilimitado</string>
-    <string name="sponsor_msg">O Trawl será sempre gratuito e de código aberto para todos. Se gostar, por favor considere patrocinar-me no GitHub!</string>
     <string name="lowest_bitrate">Taxa de bits mais baixa</string>
     <string name="audio_quality">Qualidade do áudio</string>
     <string name="audio_quality_desc">Limitar a taxa de bits de áudio quando estão presentes várias qualidades</string>
     <string name="feedback">Feedback</string>
     <string name="stable_channel">Estável</string>
     <string name="auto_update">Atualização automática</string>
-    <string name="sponsors">Patrocinadores</string>
     <string name="format_sorting">Ordenação de formatos</string>
     <string name="audio_format">Formato de áudio</string>
     <string name="format_sorting_desc">Ordenar formatos com a opção -S do yt-dlp</string>
@@ -302,8 +299,6 @@
     <string name="clear_all_cookies_desc">Eliminar definitivamente todos os cookies armazenados na aplicação\?</string>
     <string name="temporary_directory_desc">Armazenar ficheiros temporários no diretório interno</string>
     <string name="split_video">Dividir o vídeo</string>
-    <string name="sponsor">Patrocinador</string>
-    <string name="sponsor_desc">Apoie esta aplicação patrocinando-a no GitHub</string>
     <string name="split_video_msg">O vídeo será dividido em %1$d capítulos</string>
     <string name="copy_and_exit">Copiar e sair</string>
     <string name="expand">Expandir</string>

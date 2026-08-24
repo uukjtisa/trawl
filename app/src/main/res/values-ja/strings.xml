@@ -267,7 +267,6 @@
     <string name="beta_features">ベータ</string>
     <string name="enable_experimental_feature">実験的な機能を有効にしますか？</string>
     <string name="clip_video_desc">形式の選択ページでクリップ動画を作成する</string>
-    <string name="sponsor_msg2">ありがとうございます！</string>
     <string name="switch_to_github_builds">GitHubビルドに切り替える</string>
     <string name="okay">了解</string>
     <string name="got_it">わかった</string>
@@ -289,14 +288,10 @@
     <string name="clip_end">終了</string>
     <string name="no_custom_command_tasks">カスタムコマンドのタスクなし</string>
     <string name="feedback">フィードバック</string>
-    <string name="sponsors">スポンサー</string>
     <string name="clear_all_cookies_desc">アプリ内に保存したクッキーをすべて削除しますか？</string>
     <string name="audio_quality_desc">音質が複数あるときにビットレートを制限する</string>
     <string name="audio_quality">音質</string>
     <string name="clear_all_cookies">すべてのクッキーを消去</string>
-    <string name="sponsor">スポンサー</string>
-    <string name="sponsor_desc">GitHubでスポンサーになって本アプリを支援する</string>
-    <string name="sponsor_msg">Trawlはいつでも無料で、誰でも使えるオープンソースです。もし気に入っていただけたなら、GitHubで私のスポンサーになることを検討してください！</string>
     <string name="temporary_directory_desc">内部ディレクトリーに一時ファイルを保存する</string>
     <string name="ytdlp_update_action">yt-dlp を更新</string>
     <string name="commands">コマンド</string>

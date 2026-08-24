@@ -278,11 +278,7 @@
     <string name="rename">إعادة التسمية</string>
     <string name="clear_all_cookies_desc">هل تريد حذف جميع ملفات تعريف الارتباط المحفوظة في التطبيق؟</string>
     <string name="temporary_directory_desc">تخزين الملفات المؤقتة في الدليل الداخلي</string>
-    <string name="sponsor">الراعي</string>
-    <string name="sponsor_desc">ادعم هذا التطبيق من خلال الرعاية على GitHub</string>
-    <string name="sponsor_msg">Trawl سيبقى دائمًا مجانيًا ومفتوح المصدر للجميع. إذا أعجبك، يُرجى التفكير في دعمي كراعياً على GitHub!</string>
     <string name="feedback">التعليقات</string>
-    <string name="sponsors">الرعاة</string>
     <string name="audio_format">صيغة الصوت</string>
     <string name="no_downloaded_media">لا توجد وسائط منزلة</string>
     <string name="beta_features">تجريبية</string>
@@ -296,7 +292,6 @@
     <string name="feature_unavailable">الميزة غير متوفرة</string>
     <string name="no_custom_command_tasks">لا توجد مهام أوامر مخصصة</string>
     <string name="msg_from_developer">رسالة من المطور</string>
-    <string name="sponsor_msg2">شكرًا جزيلا!</string>
     <string name="convert_subtitle">تحويل الترجمة</string>
     <string name="unknown_error_title">عفواً! حدث خطأ ما</string>
     <string name="copy_and_exit">النسخ والخروج</string>

@@ -87,10 +87,8 @@
     <string name="stable_channel">יציב</string>
     <string name="enable_auto_update">הפעלת עדכון אוטומטי</string>
     <string name="discard">השלכה</string>
-    <string name="sponsor">חסות</string>
     <string name="feedback">משוב</string>
     <string name="convert_subtitle">המרת כתוביות</string>
-    <string name="sponsor_msg2">תודה רבה לך!</string>
     <string name="split_video">פיצול וידאו</string>
     <string name="convert_subtitle_desc">המר את הכתוביות לפורמט אחר</string>
     <string name="unknown_error_title">אופס! משהו השתבש</string>
@@ -111,7 +109,6 @@
     <string name="video_title_sample_text">כותרת סרטון לדוגמה</string>
     <string name="download_subtitles">הורדת כתוביות</string>
     <string name="subtitle_language">שפת כתוביות</string>
-    <string name="sponsors">נותני חסות</string>
     <string name="rename">שינוי שם</string>
     <string name="audio_format">פורמט אודיו</string>
     <string name="switch_to_github_builds">מעבר ל-GitHub builds</string>
@@ -145,7 +142,6 @@
     <string name="show_logs">הצג יומן</string>
     <string name="logs">לוג</string>
     <string name="edit_shortcuts_desc">ערוך את הקיצורים המותאמים אישית שניתן להשתמש בהם כדי ליצור תבניות פקודות.</string>
-    <string name="sponsor_msg">Trawl יהיה תמיד קוד פתוח ובחינם לכולם. אם אתה אוהב את זה, בבקשה שקול לתת לי חסות ב-GitHub!</string>
     <string name="clear_all_cookies_desc">האם למחוק לצמיתות את כל העוגיות המאוחסנות באפליקציה?</string>
     <string name="clip_video_desc">צור קטעי וידאו בדף בחירת הפורמט</string>
     <string name="legacy">מיושן</string>
@@ -262,7 +258,6 @@
 \n
 \nתיתכן חוסר יציבות בגרסאות אלה, אז אנא אל תהסס לשלוח לנו משוב אם אתה נתקל בבעיות כלשהן, כדי לעזור לנו לשפר את האפליקציה בעתיד.</string>
     <string name="auto_update">עדכון אוטומטי</string>
-    <string name="sponsor_desc">תמכו באפליקציה זו על ידי מתן חסות ב-GitHub</string>
     <string name="subtitle">כתוביות</string>
     <string name="clip_video">חיתוך וידאו</string>
     <string name="clip_start">התחלה</string>
@@ -560,18 +555,6 @@
     <string name="smart_notifications">התראות חכמות</string>
     <string name="smart_notifications_desc">התאם אישית את התנהגות ההתראות עבור מצבי משימה שונים</string>
     <string name="source_url">כתובת מקור</string>
-    <string name="sponsor_dialog_frequency_desc">בחר כמה פעמים להציג את תזכורת התמיכה</string>
-    <string name="sponsor_dialog_frequency_title">תזכורת תמיכה</string>
-    <string name="sponsor_dialog_message">Trawl נבנה בלב ונשמה — חינמי, קוד פתוח, וללא פרסומות. התמיכה שלך עוזרת לממן פיתוח פעיל, עדכונים מהירים, ביצועים טובים יותר ותכונות חדשות מרגשות.</string>
-    <string name="sponsor_dialog_monthly">חודשי</string>
-    <string name="sponsor_dialog_off">כבוי</string>
-    <string name="sponsor_dialog_subtitle">מונע על ידי התמיכה שלך</string>
-    <string name="sponsor_dialog_title">שמור על Trawl חינמי ופורח</string>
-    <string name="sponsor_dialog_weekly">שבועי</string>
-    <string name="sponsor_feature_features">תכונות חדשות ותיקוני באגים</string>
-    <string name="sponsor_feature_performance">שיפורי ביצועים</string>
-    <string name="sponsor_feature_updates">פיתוח ועדכונים פעילים</string>
-    <string name="sponsor_support_section">תמיכה וחסות</string>
     <string name="status_merging">ממזג...</string>
     <string name="status_paused">מושהה</string>
     <string name="support_us">תמוך בנו ✨</string>

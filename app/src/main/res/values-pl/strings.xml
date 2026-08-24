@@ -185,7 +185,6 @@
     <string name="video_audio_merge_hint">Wybrano wideo i dźwięk — zostaną automatycznie połączone podczas pobierania.</string>
     <string name="download_and_merge">Pobierz i połącz</string>
     <string name="msg_from_developer">Wiadomość od twórcy</string>
-    <string name="sponsor_msg2">Dziękuję bardzo!</string>
     <string name="status_error">Błąd</string>
     <string name="switch_to_github_builds">przejście na kompilacje z GitHub</string>
     <string name="okay">Ok</string>
@@ -250,8 +249,6 @@
     <string name="update">Aktualizacja</string>
     <string name="sponsorblock_desc">Usuń lub oznacz segmenty filmów za pomocą API SponsorBlock</string>
     <string name="dynamic_color_desc">Zastosuj kolory z tapety do motywu aplikacji</string>
-    <string name="sponsor">Sponsor</string>
-    <string name="sponsor_desc">Wesprzyj aplikację poprzez wsparcie na GitHub</string>
     <string name="download_with_cellular">Pobierz przy pomocy sieci komórkowej</string>
     <string name="network">Sieć</string>
     <string name="rate_limit">Ograniczenie prędkości</string>
@@ -282,8 +279,6 @@
     <string name="temporary_directory_desc">Przechowuj pliki tymczasowe w katalogu wewnętrznym</string>
     <string name="running_tasks">Uruchomione zadania</string>
     <string name="show_logs">Pokaż logi</string>
-    <string name="sponsors">Sponsorzy</string>
-    <string name="sponsor_msg">Trawl zawsze będzie darmowy i z otwartym kodem źródłowym. Jeśli Ci się spodoba, rozważ wsparcie mnie na GitHub!</string>
     <string name="feedback">Informacja zwrotna</string>
     <string name="subtitle_sponsorblock">Podczas usuwania segmentów SponsorBlock napisy mogą wyświetlać się w niewłaściwym czasie.</string>
     <string name="filesize_mb">%.2f MB</string>

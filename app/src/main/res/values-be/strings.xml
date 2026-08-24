@@ -289,15 +289,10 @@
     <string name="import_from_preferences">Імпарт</string>
     <string name="title">Назва</string>
     <string name="clear_all_cookies_desc">Назаўсёды выдаліць усе файлы cookie, якія захоўваюцца ў праграме\?</string>
-    <string name="sponsor">Спонсар</string>
-    <string name="sponsor_desc">Падтрымайце гэтую праграму, спансіруючы яго на GitHub</string>
-    <string name="sponsor_msg">Trawl заўсёды будзе бясплатным і адкрытым для ўсіх. Калі вам гэта падабаецца, калі ласка, падумайце аб тым, каб стаць спонсарам мяне на GitHub!</string>
     <string name="feedback">Зваротная сувязь</string>
-    <string name="sponsors">Спонсары</string>
     <string name="temporary_directory_desc">Захоўвайце часовыя файлы ва ўнутраным каталогу</string>
     <string name="no_custom_command_tasks">Няма карыстацкіх камандных задач</string>
     <string name="msg_from_developer">Паведамленне ад распрацоўніка</string>
-    <string name="sponsor_msg2">Вялікі дзякуй!</string>
     <string name="download_video_desc">Спампаваць відэа з URL-адрасу</string>
     <string name="convert_subtitle">Канвертаваць субтытры</string>
     <string name="convert_subtitle_desc">Канвертаваць субтытры ў іншы фармат</string>

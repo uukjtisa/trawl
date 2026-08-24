@@ -279,11 +279,7 @@
     <string name="second">секунда</string>
     <string name="minute">минута</string>
     <string name="temporary_directory_desc">Хранить временные файлы во внутреннем каталоге</string>
-    <string name="sponsor">Спонсировать</string>
-    <string name="sponsor_desc">Поддержать приложение путём спонсирования на GitHub</string>
     <string name="feedback">Обратная связь</string>
-    <string name="sponsors">Спонсоры</string>
-    <string name="sponsor_msg">Trawl всегда будет бесплатным и с открытым исходным кодом для всех. Если вам нравится это приложение, пожалуйста, подумайте о спонсорстве на GitHub!</string>
     <string name="audio_format">Формат аудио</string>
     <string name="beta_features">Бета</string>
     <string name="enable_experimental_feature">Включить экспериментальную функцию\?</string>
@@ -296,7 +292,6 @@
     <string name="clip_video_dialog_msg">Загрузки с использованием этой функции будут делегированы FFmpeg для загрузки выбранных фрагментов видео, эта функция все ещё является экспериментальной, и нарезка будет не совсем точной, не все форматы поддерживают эту функцию, и вы можете столкнуться с более низкой скоростью загрузки.</string>
     <string name="auto_update_disabled_msg">Автообновление недоступно для сборок %1$s. Если на вашем устройстве не установлено приложение %1$s или вы хотите предварительно ознакомиться с новыми функциями Trawl, рассмотрите вариант %2$s.</string>
     <string name="no_custom_command_tasks">Нет пользовательских командных задач</string>
-    <string name="sponsor_msg2">Большое спасибо!</string>
     <string name="msg_from_developer">Сообщение от разработчика</string>
     <string name="download_video_desc">Скачать видео с URL-адреса</string>
     <string name="convert_subtitle">Конвертировать субтитры</string>

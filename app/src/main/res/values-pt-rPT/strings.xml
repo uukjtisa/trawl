@@ -153,15 +153,12 @@
     <string name="release">Versão mais recente</string>
     <string name="download_desc">Em seguida, clique em \"Descarregar\" depois de ajustar as definições.</string>
     <string name="audio_directory">Pasta áudio</string>
-    <string name="sponsor_msg">O Trawl será sempre gratuito e de código aberto para todos. Se gostar, por favor considere patrocinar-me no GitHub!</string>
     <string name="crop_artwork">Cortar arte</string>
     <string name="subtitle_sponsorblock">As legendas podem ser desfasadas no tempo ao remover segmentos SponsorBlock.</string>
     <string name="start">Iniciar</string>
     <string name="to">Terminar</string>
     <string name="filesize_gb">%.2f GB</string>
-    <string name="sponsor_msg2">Muito obrigado!</string>
     <string name="task_canceled">Descarregar tarefa cancelada</string>
-    <string name="sponsor_desc">Apoie esta aplicação patrocinando-a no GitHub</string>
     <string name="version">Versão</string>
     <string name="yt_dlp_update_fail">Não foi possível instalar a versão mais recente do yt-dlp. Certifique-se de que está ligado à Internet.</string>
     <string name="enable_experimental_feature">Ativar a funcionalidade experimental?</string>
@@ -212,7 +209,6 @@
     <string name="open_url">Abrir ligação</string>
     <string name="restart">Reiniciar</string>
     <string name="options">Opções</string>
-    <string name="sponsor">Patrocinador</string>
     <string name="convert_audio_format_desc">A recodificação de ficheiros de áudio causará perda de qualidade de áudio e aumento do tamanho do ficheiro.</string>
     <string name="not_convert">Não convertido</string>
     <string name="auto_subtitle">Legendas automáticas</string>
@@ -355,7 +351,6 @@
     <string name="proxy">Proxy</string>
     <string name="multiselect_item_count">%1$d vídeo(s), %2$d ficheiro(s) áudio</string>
     <string name="format_settings_desc">Formato do ficheiro, qualidade do vídeo, legendas</string>
-    <string name="sponsors">Patrocinadores</string>
     <string name="credits">Créditos</string>
     <string name="copy_link">Copiar ligação</string>
     <string name="fetching_info">Obtenção de informações sobre o vídeo…</string>

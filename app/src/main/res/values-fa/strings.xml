@@ -280,7 +280,6 @@
     <string name="beta_features">آزمایشی</string>
     <string name="enable_experimental_feature">ویژگی آزمایشی فعال شود؟</string>
     <string name="clip_video_desc">در صفحه انتخاب فرمت کلیپ های ویدیویی بسازید</string>
-    <string name="sponsor_msg2">بسیار از شما متشکرم!</string>
     <string name="audio_format">فرمت صوتی</string>
     <string name="no_downloaded_media">رسانه دانلود شده ای وجود ندارد</string>
     <string name="auto_update_disabled_msg">به‌روزرسانی خودکار برای ساخت‌های %1$s در دسترس نیست. اگر %1$s را روی دستگاه خود نصب نکرده‌اید، یا می‌خواهید ویژگی‌های جدید آینده را در Trawl پیش‌نمایش کنید، لطفاً %2$s را در نظر بگیرید.</string>
@@ -292,11 +291,7 @@
     <string name="feature_unavailable">ویژگی در دسترس نیست</string>
     <string name="prefix">پیشوند</string>
     <string name="no_custom_command_tasks">بدون وظایف دستوری سفارشی</string>
-    <string name="sponsor">حامی مالی</string>
-    <string name="sponsor_desc">با حمایت مالی در GitHub از این برنامه حمایت کنید</string>
-    <string name="sponsor_msg">Trawl همیشه رایگان و منبع باز برای همه خواهد بود. اگر دوست دارید، لطفاً در GitHub از من حمایت کنید!</string>
     <string name="feedback">بازخورد</string>
-    <string name="sponsors">حامیان</string>
     <string name="temporary_directory_desc">دخیره فایل های موقت را در دایرکتوری داخلی</string>
     <string name="clear_download_archive">خالی کردن بایگانی دانلود؟</string>
     <string name="save">ذخیره</string>

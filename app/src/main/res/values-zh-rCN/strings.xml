@@ -280,11 +280,7 @@
     <string name="clear_all_cookies">清除所有 Cookies</string>
     <string name="clear_all_cookies_desc">确定要删除储存在应用中的所有 Cookies 吗？</string>
     <string name="temporary_directory_desc">将临时文件储存在内部目录中</string>
-    <string name="sponsor">赞助</string>
-    <string name="sponsor_desc">在 GitHub 上赞助以支持本应用</string>
-    <string name="sponsor_msg">Trawl 将永远保持免费与开源，如果你想要支持它的持续开发与改进，请考虑在 GitHub 上赞助我！</string>
     <string name="feedback">反馈</string>
-    <string name="sponsors">赞助</string>
     <string name="no_downloaded_media">下载记录空空如也</string>
     <string name="beta_features">测试</string>
     <string name="enable_experimental_feature">启用试验性功能吗？</string>
@@ -296,7 +292,6 @@
     <string name="okay">好</string>
     <string name="got_it">好</string>
     <string name="feature_unavailable">此功能不可用</string>
-    <string name="sponsor_msg2">感激不尽！</string>
     <string name="convert_subtitle">转换字幕格式</string>
     <string name="convert_subtitle_desc">将字幕文件转换为另一格式</string>
     <string name="split_video">切分视频</string>

@@ -1,5 +1,8 @@
 package com.junkfood.seal.ui.page
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: dropped the donation destinations and the home screen's support shortcut.
+
 import android.webkit.CookieManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -46,9 +49,6 @@ import com.junkfood.seal.ui.page.onboarding.OnboardingScreen
 import com.junkfood.seal.ui.page.settings.SettingsPage
 import com.junkfood.seal.ui.page.settings.about.AboutPage
 import com.junkfood.seal.ui.page.settings.about.CreditsPage
-import com.junkfood.seal.ui.page.settings.about.CryptoDonationPage
-import com.junkfood.seal.ui.page.settings.about.SponsorsPage
-import com.junkfood.seal.ui.page.settings.about.SupportDeveloperPage
 import com.junkfood.seal.ui.page.settings.about.UpdatePage
 import com.junkfood.seal.ui.page.settings.appearance.AppearancePreferences
 import com.junkfood.seal.ui.page.settings.appearance.DarkThemePreferences
@@ -155,12 +155,6 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                         onNavigateToDownloads = {
                             view.slightHapticFeedback()
                             navController.navigate(Route.DOWNLOADS) {
-                                launchSingleTop = true
-                            }
-                        },
-                        onNavigateToSupport = {
-                            view.slightHapticFeedback()
-                            navController.navigate(Route.DONATE) {
                                 launchSingleTop = true
                             }
                         },
@@ -317,19 +311,9 @@ fun NavGraphBuilder.settingsGraph(
                 onNavigateBack = onNavigateBack,
                 onNavigateToCreditsPage = { onNavigateTo(Route.CREDITS) },
                 onNavigateToUpdatePage = { onNavigateTo(Route.AUTO_UPDATE) },
-                onNavigateToDonatePage = { onNavigateTo(Route.DONATE) },
                 onNavigateToOnboarding = { onNavigateTo(Route.ONBOARDING) },
             )
         }
-        animatedComposable(Route.DONATE) {
-            SupportDeveloperPage(
-                onNavigateBack = onNavigateBack,
-                onNavigateToSponsors = { onNavigateTo(Route.SPONSORS) },
-                onNavigateToCrypto = { onNavigateTo(Route.CRYPTO_DONATION) }
-            )
-        }
-        animatedComposable(Route.SPONSORS) { SponsorsPage(onNavigateBack = onNavigateBack) }
-        animatedComposable(Route.CRYPTO_DONATION) { CryptoDonationPage(onNavigateBack = onNavigateBack) }
         animatedComposable(Route.CREDITS) { CreditsPage(onNavigateBack) }
         animatedComposable(Route.AUTO_UPDATE) { UpdatePage(onNavigateBack) }
         animatedComposable(Route.APPEARANCE) {

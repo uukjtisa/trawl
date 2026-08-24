@@ -117,10 +117,7 @@
     <string name="second">দ্বিতীয়</string>
     <string name="clear_all_cookies_desc">অ্যাপে সেভ সব কুকি মুছে ফেলবেন?</string>
     <string name="temporary_directory_desc">টেম্পোরারি ডিরেক্টরিতে ফাইল সেভ করুন</string>
-    <string name="sponsor">স্পন্সর</string>
     <string name="feedback">ফিডব্যাক</string>
-    <string name="sponsor_desc">GitHub-এ স্পনসর করে এই অ্যাপটিকে সাপোর্ট করুন</string>
-    <string name="sponsors">স্পনসর</string>
     <string name="proxy_desc">ইন্টারনেট কানেকশনের জন্য প্রক্সি ব্যবহার করুন</string>
     <string name="proxy">প্রক্সি</string>
     <string name="legacy">লেগাসি</string>
@@ -271,7 +268,6 @@
     <string name="crop_artwork">ক্রপ আর্টওয়ার্ক</string>
     <string name="crop_artwork_desc">এমবেডড ছবি ক্রপ করুন</string>
     <string name="download_selection_desc">প্লেলিস্ট \"%1$s\" থেকে ডাউনলোড করতে ভিডিও সিলেক্ট করুন</string>
-    <string name="sponsor_msg">সীল সর্বদা ফ্রি এবং ওবদ-সোর্স থাকবে। আপনার যদি প্রোজেক্টটি পছন্দ হয়, অনুগ্রহ করে আমাকে GitHub-এ স্পনসর করার কথা বিবেচনা করবেন</string>
     <string name="download_video_desc">URL থেকে ভিডিও ডাউনলোড করুন</string>
     <string name="copy_link">লিংক কপি করুন</string>
     <string name="copy_error_report">ইরর রিপোর্ট</string>
@@ -319,7 +315,6 @@
     <string name="clip_video_desc">ফরম্যাট সিলেক্ট পেজে ভিডিও ক্লিপ তৈরি করুন</string>
     <string name="switch_to_github_builds">GitHub বিল্ডে স্যুইচ করা হচ্ছে</string>
     <string name="feature_unavailable">ফিচার আনএভেলেবেল</string>
-    <string name="sponsor_msg2">আপনাকে অনেক ধন্যবাদ!</string>
     <string name="quality">কোয়ালিটি</string>
     <string name="enable_notifications">নোটিফিকেশন চালু করবেন?</string>
     <string name="custom_command_directory">কাস্টম কমান্ড ডিরেক্টরি</string>

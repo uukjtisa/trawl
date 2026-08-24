@@ -284,11 +284,7 @@
     <string name="minute">minute</string>
     <string name="clear_all_cookies">Effacer tous les cookies</string>
     <string name="clear_all_cookies_desc">Supprimer définitivement tous les cookies stockés dans l\'application ?</string>
-    <string name="sponsor">Sponsor</string>
-    <string name="sponsor_desc">Soutenez cette application en la parrainant sur GitHub</string>
-    <string name="sponsor_msg">Trawl sera toujours libre et gratuit pour tout le monde. Si vous l\'aimez, pensez à me parrainer sur GitHub !</string>
     <string name="feedback">Remarques</string>
-    <string name="sponsors">Sponsors</string>
     <string name="temporary_directory_desc">Stocker les fichiers temporaires dans le répertoire interne</string>
     <string name="okay">D\'accord</string>
     <string name="got_it">Compris</string>
@@ -297,7 +293,6 @@
     <string name="auto_update_disabled_msg">La mise à jour automatique n\'est pas disponible pour les versions %1$s. Si vous n\'avez pas installé %1$s sur votre appareil, ou si vous souhaitez avoir un aperçu des nouvelles fonctionnalités de Trawl, veuillez consulter %2$s.</string>
     <string name="switch_to_github_builds">passer aux moutures GitHub</string>
     <string name="msg_from_developer">Message du développeur</string>
-    <string name="sponsor_msg2">Merci beaucoup !</string>
     <string name="convert_subtitle">Convertir les sous-titres</string>
     <string name="convert_subtitle_desc">Convertir les sous-titres dans un autre format</string>
     <string name="split_video">Séparer la vidéo</string>

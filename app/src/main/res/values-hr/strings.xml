@@ -265,7 +265,6 @@
     <string name="rename">Preimenuj</string>
     <string name="temporary_directory_desc">Pohranite privremene datoteke u unutarnji direktorij</string>
     <string name="second">sekunda</string>
-    <string name="sponsor">Sponzoriraj</string>
     <string name="minute">minuta</string>
     <string name="clear_all_cookies">Očisti sve kolačiće</string>
     <string name="clip_video_dialog_msg">Preuzimanja izvršena ovom značajkom bit će izaslani FFmpeg-u kako bi preuzeo odabrane dijelove videozapisa. Ova značajka je još u razvoju te je moguće da izrezivanje ne bude posve točno uz moguću sporiju brzinu preuzimanja.</string>
@@ -290,15 +289,12 @@
     <string name="enable_auto_update">Omogući automatsko ažuriranje</string>
     <string name="unlimited">Neograničeno</string>
     <string name="audio_format_preference">Preferirani format zvuka</string>
-    <string name="sponsor_desc">Podržite razvoj ove aplikacije njenim sponzoriranjem na GitHub-u</string>
-    <string name="sponsor_msg">Trawl će uvijek biti besplatan i otvorenog koda za sve. Ako vam se sviđa, razmislite o tome da me sponzorirate na GitHub-u!</string>
     <string name="audio_format">Audio format</string>
     <string name="enable_experimental_feature">Omogućiti eksperimentalne značajke\?</string>
     <string name="auto_update_disabled_msg">Automatsko ažuriranje nije dostupno za %1$s inačice. Ako nemate %1$s instaliran na svom uređaju ili želite pregledati nadolazeće nove značajke u Trawl-u, razmislite o %2$s.</string>
     <string name="okay">U redu</string>
     <string name="got_it">Razumijem</string>
     <string name="msg_from_developer">Obavijest od razvojnog programera</string>
-    <string name="sponsor_msg2">Hvala vam puno!</string>
     <string name="expand">Proširi</string>
     <string name="new_task">Novi zadatak preuzimanja</string>
     <string name="start">Pokreni</string>
@@ -307,7 +303,6 @@
     <string name="clip_end">Kraj</string>
     <string name="update_channel">Kanal ažuriranja</string>
     <string name="clear_all_cookies_desc">Zauvijek izbrisati sve kolačiće pohranjene u aplikaciji\?</string>
-    <string name="sponsors">Sponzori</string>
     <string name="feedback">Povratne informacije</string>
     <string name="ytdlp_update_action">Ažuriraj yt-dlp</string>
     <string name="disable">Onemogući</string>

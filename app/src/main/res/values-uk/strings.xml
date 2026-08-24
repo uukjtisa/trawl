@@ -279,11 +279,7 @@
     <string name="unlimited">Без обмежень</string>
     <string name="clear_all_cookies_desc">Назавжди видалити всі файли cookie, які зберігаються у застосунку\?</string>
     <string name="temporary_directory_desc">Зберігати тимчасові файли у внутрішній теці</string>
-    <string name="sponsor">Спонсорувати</string>
     <string name="feedback">Зворотний зв\'язок</string>
-    <string name="sponsors">Спонсори</string>
-    <string name="sponsor_desc">Підтримайте цей застосунок, спонсоруючи нас на GitHub</string>
-    <string name="sponsor_msg">Trawl завжди буде безплатним і відкритим для всіх. Якщо вам це подобається, подумайте про те, щоб стати моїм спонсором на GitHub!</string>
     <string name="no_downloaded_media">Немає завантажених медіа</string>
     <string name="beta_features">Бета</string>
     <string name="clip_video_desc">Створюйте відеокліпи на сторінці вибору формату</string>
@@ -297,7 +293,6 @@
     <string name="feature_unavailable">Функція недоступна</string>
     <string name="no_custom_command_tasks">Немає спеціальних командних завдань</string>
     <string name="msg_from_developer">Допис від розробника</string>
-    <string name="sponsor_msg2">Велике спасибі!</string>
     <string name="download_video_desc">Завантажити відео з URL-адреси</string>
     <string name="convert_subtitle">Конвертувати субтитри</string>
     <string name="convert_subtitle_desc">Конвертуйте субтитри в інший формат</string>

@@ -1,5 +1,11 @@
 package com.junkfood.seal.ui.page.settings.about
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: removed the Sponsor card and the GitHub Sponsors link. Upstream ATTRIBUTION
+// in this file is deliberately untouched -- crediting JunkFood02 and MaheshTechnicals is
+// a project requirement, and it is a separate thing from soliciting money for them.
+// Step 12 rebuilds this page; the credit survives that rebuild, it does not shrink.
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,7 +28,6 @@ import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.UpdateDisabled
-import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -76,7 +81,6 @@ const val YtdlpRepository = "https://github.com/yt-dlp/yt-dlp"
 private const val githubIssueUrl = "https://github.com/MaheshTechnicals/Sealplus/issues"
 private const val telegramChannelUrl = "https://t.me/maheshtechnicals"
 private const val youtubeChannelUrl = "https://youtube.com/@maheshtechnicals"
-private const val githubSponsor = "https://github.com/sponsors/JunkFood02"
 private const val TAG = "AboutPage"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,7 +89,6 @@ fun AboutPage(
     onNavigateBack: () -> Unit,
     onNavigateToCreditsPage: () -> Unit,
     onNavigateToUpdatePage: () -> Unit,
-    onNavigateToDonatePage: () -> Unit,
     onNavigateToOnboarding: () -> Unit = {},
 ) {
     val scrollBehavior =
@@ -219,13 +222,6 @@ fun AboutPage(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            CommunityCard(
-                                title = stringResource(R.string.sponsor),
-                                description = stringResource(R.string.sponsor_desc),
-                                icon = Icons.Outlined.VolunteerActivism,
-                                onClick = onNavigateToDonatePage,
-                                modifier = Modifier.weight(1f),
-                            )
                             CommunityCard(
                                 title = stringResource(R.string.telegram_channel),
                                 description = telegramChannelUrl,

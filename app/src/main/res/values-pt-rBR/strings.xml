@@ -278,12 +278,8 @@
     <string name="audio_format_preference">Formato de áudio preferido</string>
     <string name="audio_quality">Qualidade do áudio</string>
     <string name="format_sorting">Classificação de formatos</string>
-    <string name="sponsors">Patrocinadores</string>
-    <string name="sponsor_desc">Apoie este aplicativo patrocinando no GitHub</string>
-    <string name="sponsor">Patrocinar</string>
     <string name="temporary_directory_desc">Armazenar arquivos temporários no diretório interno</string>
     <string name="feedback">Feedback</string>
-    <string name="sponsor_msg">Trawl sempre será livre e de código aberto para todos. Se você gostou, por favor, considere me patrocinar no GitHub!</string>
     <string name="audio_format">Formato de áudio</string>
     <string name="no_downloaded_media">Nenhuma mídia baixada</string>
     <string name="beta_features">Beta</string>
@@ -295,7 +291,6 @@
     <string name="got_it">Entendi</string>
     <string name="feature_unavailable">Recurso não disponível</string>
     <string name="auto_update_disabled_msg">A atualização automática não está disponível para as versões do %1$s. Se você não tem o %1$s instalado em seu dispositivo, ou gostaria de visualizar novos recursos em desenvolvimento no aplicativo Trawl, por favor, considere %2$s.</string>
-    <string name="sponsor_msg2">Muito obrigado!</string>
     <string name="msg_from_developer">Mensagem do desenvolvedor</string>
     <string name="convert_subtitle">Converter legendas</string>
     <string name="convert_subtitle_desc">Converter legendas para outro formato</string>

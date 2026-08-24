@@ -324,11 +324,7 @@
     <string name="clear_all_cookies">Clear all cookies</string>
     <string name="clear_all_cookies_desc">Delete all the cookies stored in the app for good?</string>
     <string name="temporary_directory_desc">Store temporary files in the internal directory</string>
-    <string name="sponsor">Sponsor</string>
-    <string name="sponsor_desc">Support this app by sponsoring on GitHub</string>
-    <string name="sponsor_msg">Trawl will be always free and open source for everyone. If you like it, please consider sponsoring me on GitHub!</string>
     <string name="feedback">Feedback</string>
-    <string name="sponsors">Sponsors</string>
     <string name="audio_format">Audio format</string>
     <string name="original">Original</string>
     <string name="no_downloaded_media">No downloaded media</string>
@@ -345,7 +341,6 @@
     <string name="feature_unavailable">Feature not available</string>
     <string name="no_custom_command_tasks">No custom command tasks</string>
     <string name="msg_from_developer">Message from developer</string>
-    <string name="sponsor_msg2">Thank you very much!</string>
     <string name="download_video_desc">Download videos from the URL</string>
     <string name="convert_subtitle">Convert subtitles</string>
     <string name="convert_subtitle_desc">Convert the subtitles to another format</string>
@@ -632,21 +627,8 @@
     <string name="aria2c_connections">Aria2c Connections</string>
     <string name="aria2c_connections_desc">%d connections per download</string>
     
-    <!-- Sponsor Support Dialog -->
     <string name="support_us">Support Us ✨</string>
     <string name="maybe_later">Maybe Later</string>
-    <string name="sponsor_dialog_title">Keep Trawl Free &amp; Thriving</string>
-    <string name="sponsor_dialog_subtitle">Powered by your support</string>
-    <string name="sponsor_dialog_message">Trawl is built with passion — free, open-source, and ad-free. Your support helps fund active development, faster updates, better performance, and exciting new features. Every contribution, big or small, makes a real difference.</string>
-    <string name="sponsor_dialog_frequency_title">Support Reminder</string>
-    <string name="sponsor_dialog_frequency_desc">Choose how often to show the sponsor reminder</string>
-    <string name="sponsor_dialog_off">Off</string>
-    <string name="sponsor_dialog_weekly">Weekly</string>
-    <string name="sponsor_dialog_monthly">Monthly</string>
-    <string name="sponsor_support_section">Support &amp; Sponsorship</string>
-    <string name="sponsor_feature_updates">Active development &amp; updates</string>
-    <string name="sponsor_feature_performance">Performance improvements</string>
-    <string name="sponsor_feature_features">New features &amp; bug fixes</string>
 
     <!-- Permission strings -->
     <string name="notification_permission_required">Notification Permission Required</string>

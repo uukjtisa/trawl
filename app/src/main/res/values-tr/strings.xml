@@ -292,11 +292,7 @@
     <string name="download_and_merge">İndir ve birleştir</string>
     <string name="clear_all_cookies_desc">Uygulamaya kaydedilmiş tüm çerezleri kalıcı olarak silmek istediğinize emin misiniz?</string>
     <string name="temporary_directory_desc">Geçici dosyaları cihazın dahili depolamasında tutar</string>
-    <string name="sponsor">Destek Ol</string>
-    <string name="sponsor_desc">GitHub üzerinden sponsor olarak uygulamaya destek olun</string>
-    <string name="sponsor_msg">Trawl her zaman herkes için ücretsiz ve açık kaynaklı kalacak. Eğer uygulamayı beğendiyseniz ve gelişimine katkıda bulunmak isterseniz, GitHub üzerinden bana destek olabilirsiniz!</string>
     <string name="feedback">Geri Bildirim</string>
-    <string name="sponsors">Sponsorlar</string>
     <string name="audio_format">Ses formatı</string>
     <string name="no_downloaded_media">Henüz hiçbir şey indirilmedi</string>
     <string name="beta_features">Beta</string>
@@ -312,7 +308,6 @@
     <string name="feature_unavailable">Bu özellik kullanılamıyor</string>
     <string name="no_custom_command_tasks">Özel komut işlemi bulunmuyor</string>
     <string name="msg_from_developer">Geliştiriciden bir mesaj</string>
-    <string name="sponsor_msg2">Desteğiniz için çok teşekkürler!</string>
     <string name="download_video_desc">Bağlantıdaki videoları indirir</string>
     <string name="convert_subtitle">Altyazıları dönüştür</string>
     <string name="convert_subtitle_desc">Altyazıları farklı bir formata çevirin</string>
@@ -596,21 +591,8 @@
     
     <string name="testing">Test ediliyor…</string>
     
-    <!-- Sponsor Support Dialog -->
     <string name="support_us">Bize Destek Olun ✨</string>
     <string name="maybe_later">Belki Daha Sonra</string>
-    <string name="sponsor_dialog_title">Trawl\'ın Ücretsiz ve Reklamsız Kalmasına Yardım Edin</string>
-    <string name="sponsor_dialog_subtitle">Sizin desteğinizle büyüyoruz</string>
-    <string name="sponsor_dialog_message">Trawl\'ı büyük bir tutkuyla, tamamen ücretsiz, açık kaynaklı ve reklamsız olarak geliştirdik. Yapacağınız her destek; daha sık güncelleme, yeni özellikler ve daha yüksek performans olarak size geri dönecek. Desteğinizin miktarı ne olursa olsun bizim için çok kıymetli.</string>
-    <string name="sponsor_dialog_frequency_title">Destek Hatırlatıcısı</string>
-    <string name="sponsor_dialog_frequency_desc">Bu mesajın size ne sıklıkla gösterileceğini seçebilirsiniz</string>
-    <string name="sponsor_dialog_off">Kapalı (Bir Daha Gösterme)</string>
-    <string name="sponsor_dialog_weekly">Haftada Bir</string>
-    <string name="sponsor_dialog_monthly">Ayda Bir</string>
-    <string name="sponsor_support_section">Destek ve Sponsorluk</string>
-    <string name="sponsor_feature_updates">Aktif geliştirme süreci ve hızlı güncellemeler</string>
-    <string name="sponsor_feature_performance">Uygulama hızında ve performansında iyileştirmeler</string>
-    <string name="sponsor_feature_features">Yepyeni özellikler ve hataların anında çözümü</string>
 
     <!-- Permission strings -->
     <string name="notification_permission_required">Bildirim İzni Gerekli</string>

@@ -292,11 +292,7 @@
     <string name="clear_all_cookies">Бүх күүкийг устгана уу</string>
     <string name="clear_all_cookies_desc">Апп-д хадгалагдсан бүх күүкиг бүрмөсөн устгах уу?</string>
     <string name="temporary_directory_desc">Түр зуурын файлуудыг дотоод директорт хадгалах</string>
-    <string name="sponsor">Ивээн тэтгэгч</string>
-    <string name="sponsor_desc">GitHub дээр ивээн тэтгэж энэ програмыг дэмжээрэй</string>
-    <string name="sponsor_msg">Trawl нь үргэлж үнэ төлбөргүй, хүн бүрт нээлттэй эх сурвалж байх болно. Хэрэв танд таалагдаж байвал GitHub дээр намайг ивээн тэтгэх талаар бодож үзээрэй!</string>
     <string name="feedback">Санал хүсэлт</string>
-    <string name="sponsors">Ивээн тэтгэгчид</string>
     <string name="audio_format">Аудио формат</string>
     <string name="no_downloaded_media">Татаж авсан медиа байхгүй</string>
     <string name="beta_features">Бета</string>
@@ -310,7 +306,6 @@
     <string name="feature_unavailable">Онцлог боломжгүй</string>
     <string name="no_custom_command_tasks">Тусгай тушаалын даалгавар байхгүй</string>
     <string name="msg_from_developer">Хөгжүүлэгчээс ирсэн мессеж</string>
-    <string name="sponsor_msg2">Маш их баярлалаа!</string>
     <string name="download_video_desc">URL-аас видео татаж авах</string>
     <string name="convert_subtitle">Хадмал орчуулгыг хөрвүүлэх</string>
     <string name="convert_subtitle_desc">Хадмал орчуулгыг өөр формат руу хөрвүүлэх</string>

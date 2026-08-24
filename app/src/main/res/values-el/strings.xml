@@ -214,9 +214,6 @@
     <string name="rename">Μετονομασία</string>
     <string name="minute">λεπτό</string>
     <string name="temporary_directory_desc">Αποθήκευση προσωρινών αρχείων στον εσωτερικό κατάλογο</string>
-    <string name="sponsor">Χορηγός</string>
-    <string name="sponsor_desc">Υποστηρίξτε αυτή την εφαρμογή με χορηγία στο GitHub</string>
-    <string name="sponsor_msg">Η Trawl θα είναι πάντα δωρεάν και ανοιχτού κώδικα για όλους. Αν σας αρέσει, παρακαλώ σκεφτείτε να με χρηματοδοτήσετε στο GitHub!</string>
     <string name="feedback">Ανατροφοδότηση</string>
     <string name="audio_format">Μορφή ήχου</string>
     <string name="beta_features">Beta</string>
@@ -225,7 +222,6 @@
     <string name="okay">Εντάξει</string>
     <string name="got_it">Το πήρα</string>
     <string name="msg_from_developer">Μήνυμα από τον προγραμματιστή</string>
-    <string name="sponsor_msg2">Σας ευχαριστώ πολύ!</string>
     <string name="convert_subtitle">Μετατροπή υποτίτλων</string>
     <string name="convert_subtitle_desc">Μετατροπή των υποτίτλων σε άλλη μορφή</string>
     <string name="split_video_msg">Το βίντεο θα χωριστεί σε %1$d κεφάλαια</string>
@@ -331,7 +327,6 @@
     <string name="second">δεύτερο</string>
     <string name="clear_all_cookies">Διαγραφή όλων των cookies</string>
     <string name="clear_all_cookies_desc">Να διαγράψετε οριστικά όλα τα cookies που είναι αποθηκευμένα στην εφαρμογή;</string>
-    <string name="sponsors">Χορηγοί</string>
     <string name="no_downloaded_media">Δεν υπάρχουν κατεβασμένα πολυμέσα</string>
     <string name="enable_experimental_feature">Ενεργοποίηση πειραματικής λειτουργίας;</string>
     <string name="clip_video_dialog_msg">Οι λήψεις που χρησιμοποιούν αυτή τη λειτουργία θα ανατεθούν στο FFmpeg για να κατεβάσει επιλεγμένα τμήματα του βίντεο, αυτή η λειτουργία είναι ακόμα πειραματική και η κοπή δεν θα είναι απόλυτα ακριβής, δεν υποστηρίζουν όλες οι μορφές αυτή τη λειτουργία και ενδέχεται να έχετε χαμηλότερες ταχύτητες λήψης.</string>
