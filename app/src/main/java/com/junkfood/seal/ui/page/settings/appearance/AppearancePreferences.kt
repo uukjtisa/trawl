@@ -1,5 +1,10 @@
 package com.junkfood.seal.ui.page.settings.appearance
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: added the seven-swatch Trawl theme picker and the switch that hides the
+// inherited palette. The standalone 'Gradient Dark' toggle is gone -- that look is now
+// one of the seven themes, and two controls for one thing is one too many.
+
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -83,6 +88,24 @@ import com.kyant.monet.a3
 import io.material.hct.Hct
 import java.util.Locale
 import kotlinx.coroutines.Job
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.junkfood.seal.ui.common.LocalShowSealTheme
+import com.junkfood.seal.ui.theme.LocalTrawlTheme
+import com.junkfood.seal.ui.theme.TrawlTheme
+import com.junkfood.seal.ui.theme.colorScheme
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -211,6 +234,7 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                         onClick = { PreferenceUtil.switchDynamicColor() },
                     )
                 }
+                TrawlThemePicker()
                 val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
                 PreferenceSwitchWithDivider(
                     title = stringResource(id = R.string.dark_theme),
@@ -222,15 +246,13 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     },
                     onClick = { onNavigateTo(Route.DARK_THEME) },
                 )
-                if (isDarkTheme) {
-                    PreferenceSwitch(
-                        title = "Gradient Dark",
-                        description = "Premium dark mode with vibrant gradients and glassmorphism effects",
-                        icon = Icons.Outlined.DarkMode,
-                        isChecked = com.junkfood.seal.ui.common.LocalGradientDarkMode.current,
-                        onClick = { PreferenceUtil.switchGradientDarkMode() },
-                    )
-                }
+                PreferenceSwitch(
+                    title = stringResource(R.string.show_seal_theme),
+                    description = stringResource(R.string.show_seal_theme_desc),
+                    icon = Icons.Outlined.Palette,
+                    isChecked = LocalShowSealTheme.current,
+                    onClick = { PreferenceUtil.switchShowSealTheme() },
+                )
                 PreferenceItem(
                     title = stringResource(R.string.language),
                     icon = Icons.Outlined.Language,
@@ -327,6 +349,101 @@ fun RowScope.ColorButtonImpl(
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+// --- Trawl theme picker ------------------------------------------------------------------------
+// 1:1 with design/v0.1.0-baseline-mockup-ui.html lines 304-309 (.swatches / .swatch) and the
+// renderer at line 1411: a 52dp cell, a 44dp chip at radius 13, a 2dp border that is transparent
+// until selected, and a hard diagonal split at 55% between the theme's background and its primary.
+// The split is what makes two dark themes distinguishable at this size -- a single flat primary
+// chip would make Ember and Hearth look identical.
+
+private val SwatchCell = 52.dp
+private val SwatchChip = 44.dp
+private val SwatchRadius = 13.dp
+
+@Composable
+private fun ThemeSwatch(theme: TrawlTheme, selected: Boolean, onClick: () -> Unit) {
+    val scheme = remember(theme) { theme.colorScheme() }
+    val border by
+        animateColorAsState(
+            targetValue =
+                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+            label = "swatchBorder",
+        )
+    Column(
+        modifier =
+            Modifier.width(SwatchCell)
+                .clip(RoundedCornerShape(SwatchRadius))
+                .clickable(onClick = onClick)
+                .semantics { this.selected = selected },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(SwatchChip)
+                    .clip(RoundedCornerShape(SwatchRadius))
+                    .background(
+                        Brush.linearGradient(
+                            0.55f to scheme.background,
+                            0.55f to scheme.primary,
+                            start = Offset.Zero,
+                            end = Offset.Infinite,
+                        )
+                    )
+                    .border(2.dp, border, RoundedCornerShape(SwatchRadius))
+        )
+        Text(
+            text = theme.displayName,
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 9.5.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color =
+                if (selected) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            modifier = Modifier.padding(top = 5.dp),
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TrawlThemePicker() {
+    val current = LocalTrawlTheme.current
+    val showLegacy = LocalShowSealTheme.current
+    val isDark = LocalDarkTheme.current.isDarkTheme()
+    val dynamic = LocalDynamicColorSwitch.current
+
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
+        Text(
+            text = stringResource(R.string.theme),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            // Say plainly when the picker cannot take effect, rather than letting someone tap
+            // seven swatches and watch nothing happen.
+            text =
+                if (!isDark || dynamic) stringResource(R.string.theme_light_mode_note)
+                else stringResource(R.string.theme_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(9.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp),
+        ) {
+            TrawlTheme.visible(showLegacy).forEach { theme ->
+                ThemeSwatch(theme = theme, selected = theme == current) {
+                    PreferenceUtil.modifyTrawlTheme(theme)
                 }
             }
         }

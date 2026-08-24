@@ -747,5 +747,11 @@
     <string name="pinned_badge">Pinned</string>
     <string name="no_comments_available">No comments to show</string>
     <string name="more_comments_export_hint">+%1$d more comments — export to view all</string>
+    <!-- Trawl appearance -->
+    <string name="theme">Theme</string>
+    <string name="theme_desc">Ember is the default.</string>
+    <string name="show_seal_theme">Show Seal + theme</string>
+    <string name="show_seal_theme_desc">Keeps the inherited purple gradient theme selectable for comparison. Off removes it from the list entirely.</string>
+    <string name="theme_light_mode_note">Trawl\'s palettes apply in dark mode.</string>
 </resources>
 

@@ -681,3 +681,88 @@ and D-02 already accepted it.
 - Search: "GPL v3 section 5(a) modified files notice", "trademark vs copyright in open source forks",
   "Android notification small icon alpha mask", "adaptive icon monochrome layer",
   "git core.autocrlf gitattributes text=auto", "rebranding a fork checklist".
+
+---
+
+# D-13 · Seven palettes as literal hex, and a machine that checks them
+
+**Date.** 2026-08-25 · **Step.** 5 of the v0.1.0 plan
+
+## Copy the numbers; never re-derive them
+
+Material's colour system wants a *seed* — give it one colour and it generates a scheme. That is
+the wrong tool here. The mockup specifies 18 tokens per theme, chosen by eye against each other;
+a generator handed `#E0925A` would produce a different, plausible, wrong set. So the palettes are
+**literal hex transcribed from the mockup**, in a `Palette` holder whose fields are named after
+the CSS custom properties they came from (`surfvar` → `surfVar`), so the two files can be diffed
+line by line without a translation table.
+
+**And then the transcription is verified mechanically.** `design/verify_tokens.py` parses the CSS
+blocks out of the mockup and the `Palette` declarations out of the Kotlin and compares all
+**112 tokens**. A human checking 7 themes × 16 values by eye will miss a digit; a wrong digit in
+a dark palette is invisible until someone notices a surface is subtly off. This is the same
+discipline as the hit-count assertions in D-12: *an unverified claim of fidelity is just a hope.*
+
+The verifier immediately earned its keep by catching an edge it could not parse — `sealplus`
+writes `--onprimary:#fff` in three-digit shorthand. The Kotlin was right; the checker was
+incomplete. Fixed there, because **a verifier that cries wolf gets switched off**, and then it
+protects nothing.
+
+## Tokens Material has no slot for
+
+Five of the design's tokens — the raised surface, three ambient wash stops, and the mote colour —
+have no Material role. Two bad options were available: bend an unrelated role (`surfaceTint`
+pressed into service as "mote colour"), or drop them. Both are worse than a second holder.
+`TrawlTokens` sits beside `ColorScheme` in its own CompositionLocal. **The cost is that themable
+colour now lives in two places and both must be updated together**; the benefit is that no future
+reader has to discover that one Material role secretly means something else.
+
+The ok/warn/bad trio is defined once on `.screen` in the mockup rather than per theme, so it is a
+default on `TrawlTokens` rather than a field of `Palette` — matching where the contract puts it.
+
+## Dark only, and saying so out loud
+
+Every screen in the contract is dark. There is no light variant to transcribe, so **the palettes
+apply in dark mode only**; light mode keeps the inherited Monet scheme. Forcing `#100B08` text
+values onto a light background would not be "the theme in light mode", it would be unreadable.
+
+Likewise **dynamic colour wins over the picker when it is on.** "Use my wallpaper" and "use Ember"
+are contradictory instructions and the more specific one should win; dynamic colour is opt-in,
+the theme is a default.
+
+The important part is the third one: when either condition makes the picker inert, **the picker
+says so** ("Trawl's palettes apply in dark mode") instead of letting someone tap seven swatches
+and watch nothing happen. A control that silently does nothing teaches the user that the app is
+broken, and they are not wrong.
+
+## The inherited gradient becomes a theme, not a rival switch
+
+Seal Plus's gradient look was a *separate boolean* (`GRADIENT_DARK_MODE`, defaulting **on**) that
+overrode everything else. That default is what made the inherited look the app's identity. It is
+now simply `TrawlTheme.SEAL_PLUS`, one of seven, and the standalone toggle is gone — **two
+controls for one thing is one too many**, and they would have fought.
+
+Worth recording: the mockup's `sealplus` token block matches `GradientDarkColors` *exactly*,
+because the mockup was transcribed from that file. The two agreeing is the check passing, not a
+coincidence.
+
+Keeping it at all is deliberate, and it is the same call as O-02: the fork did not orphan the
+extras it inherited, so it does not orphan the palette that came with them. Its display name is
+**"Seal +"** — attribution for a look someone else designed. The app still titles itself Trawl
+while wearing it.
+
+## Hiding a theme must not strand whoever is wearing it
+
+`switchShowSealTheme(false)` also moves anyone currently on the legacy palette back to the
+default. Without that, the picker would render a list that does not contain the active selection
+— **a picker that cannot show what is currently chosen is lying about what the app is doing**, and
+the user has no way back except guessing which switch did it.
+
+**What it costs.** Seven palettes are seven things to update whenever the design moves, and the
+verifier makes that cost *visible* rather than optional — change the mockup and the check fails
+until the Kotlin follows. That is the intent.
+
+**Further reading.**
+- Search: "Material 3 ColorScheme roles", "design tokens vs generated palettes",
+  "CompositionLocal for design tokens Compose", "dynamic color vs custom theme precedence",
+  "why disabled controls should explain themselves".

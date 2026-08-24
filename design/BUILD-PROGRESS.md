@@ -25,8 +25,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **2 — Identity** (app name, applicationId, launcher icon)
 - [x] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
 - [x] **4 — Strip donation surfaces**
-- [~] **5 — Theme foundation** (7 palettes + extended tokens)
-- [ ] **6 — Typography, shape, bundled fonts**
+- [x] **5 — Theme foundation** (7 palettes + extended tokens)
+- [~] **6 — Typography, shape, bundled fonts**
 - [ ] **7 — Glass system** (Off/Subtle/Full, default Off)
 - [ ] **8 — Ambient motion + download effects**
 - [ ] **9 — Home screen**
@@ -56,10 +56,10 @@ Ticked only when the behaviour is real in the app, not merely coded.
       (misleading, must go).
 
 ### Themes — step 5
-- [ ] 7 Seven themes: Ember (default), Hearth, Grove, Plum, Snow, Slate, Seal Plus
-- [ ] 8 "Show Seal Plus theme" toggle removes it from the picker
+- [x] 7 Seven themes: Ember (default), Hearth, Grove, Plum, Snow, Slate, Seal Plus
+- [x] 8 "Show Seal Plus theme" toggle removes it from the picker
 - [ ] 9 Seal Plus theme still titles the app Trawl + faint "Seal + theme"
-- [ ] 10 Warm low-blue dark is the house direction
+- [x] 10 Warm low-blue dark is the house direction
 
 ### Glass — step 7
 - [ ] 11 Glass setting Off / Subtle / Full, default **Off**
@@ -138,7 +138,7 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 66 Home donation dialog
 - [x] 67 Crypto donation page
 - [x] 68 Sponsor / Support Developer pages
-- [ ] 69 Gradient theme as default
+- [x] 69 Gradient theme as default
 - [ ] 70 "Built on" out of the drawer (→ About)
       — PAIRED WITH STEP 12, do not do it earlier. The real app's equivalent is
       "Powered by Mahesh Technicals" on the splash screen, which is currently the most
@@ -160,3 +160,7 @@ added. APK verified: no Seal text in any locale. |
 | 4 | done — 7 pages/dialogs deleted (2,944 lines), 8 files edited, 227 string
 elements dropped across 39 locales. SponsorBlock (a yt-dlp video feature, unrelated to
 donations) verified intact. APK 94.5 MB → 87.6 MB. |
+| 5 | done — 7 palettes as literal hex + TrawlTokens for the 5 tokens Material has no
+slot for; themeId/showSealTheme prefs; swatch picker in Look and feel; gradient default
+flipped off and folded in as one theme. `design/verify_tokens.py` proves all 112 tokens
+match the mockup exactly. |

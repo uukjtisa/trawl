@@ -1,5 +1,10 @@
 package com.junkfood.seal.ui.theme
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: SealTheme now applies one of Trawl's seven palettes in dark mode and
+// publishes the extended design tokens Material has no slot for. The inherited
+// gradient branch is kept for the light/dynamic path but is no longer the default.
+
 import android.os.Build
 import android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -16,6 +21,7 @@ import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextDirection
 import com.google.android.material.color.MaterialColors
 import com.junkfood.seal.ui.common.LocalFixedColorRoles
+import com.junkfood.seal.ui.common.LocalDynamicColorSwitch
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.kyant.monet.LocalTonalPalettes
 import com.kyant.monet.dynamicColorScheme
@@ -39,6 +45,8 @@ fun SealTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     isHighContrastModeEnabled: Boolean = false,
     isGradientDarkEnabled: Boolean = LocalGradientDarkMode.current,
+    trawlTheme: TrawlTheme = LocalTrawlTheme.current,
+    isDynamicColorEnabled: Boolean = LocalDynamicColorSwitch.current,
     content: @Composable () -> Unit,
 ) {
     val view = LocalView.current
@@ -59,47 +67,73 @@ fun SealTheme(
         }
     }
 
+    // Trawl's palettes are DARK palettes -- every screen in the design contract is dark, and
+    // there is no light variant to transcribe. So they apply in dark mode only; in light mode the
+    // inherited Monet scheme is still the honest answer, because forcing these values onto a light
+    // background would put unreadable text on screen rather than a different look.
+    //
+    // Dynamic colour, when the user has switched it on, wins over the picker. It is the more
+    // specific request: "use my wallpaper" cannot be honoured and overridden at the same time.
+    val useTrawlPalette = darkTheme && !isDynamicColorEnabled
+
     val colorScheme =
-        dynamicColorScheme(!darkTheme).run {
-            when {
-                // Gradient Dark mode overrides all other themes
-                isGradientDarkEnabled && darkTheme -> copy(
-                    primary = GradientDarkColors.GradientPrimaryEnd,
-                    onPrimary = GradientDarkColors.OnPrimary,
-                    primaryContainer = GradientDarkColors.GradientPrimaryStart,
-                    onPrimaryContainer = GradientDarkColors.OnPrimary,
-                    secondary = GradientDarkColors.GradientSecondaryEnd,
-                    onSecondary = GradientDarkColors.OnPrimary,
-                    secondaryContainer = GradientDarkColors.GradientSecondaryStart,
-                    onSecondaryContainer = GradientDarkColors.OnPrimary,
-                    tertiary = GradientDarkColors.GradientAccentEnd,
-                    onTertiary = GradientDarkColors.OnPrimary,
-                    tertiaryContainer = GradientDarkColors.GradientAccentStart,
-                    onTertiaryContainer = GradientDarkColors.OnPrimary,
-                    background = GradientDarkColors.Background,
-                    onBackground = GradientDarkColors.OnBackground,
-                    surface = GradientDarkColors.Surface,
-                    onSurface = GradientDarkColors.OnSurface,
-                    surfaceVariant = GradientDarkColors.SurfaceVariant,
-                    onSurfaceVariant = GradientDarkColors.OnSurface,
-                    surfaceContainer = GradientDarkColors.SurfaceContainer,
-                    surfaceContainerLow = GradientDarkColors.SurfaceContainerLow,
-                    surfaceContainerHigh = GradientDarkColors.SurfaceContainerHigh,
-                    surfaceContainerLowest = GradientDarkColors.Background,
-                    surfaceContainerHighest = GradientDarkColors.SurfaceContainerHigh,
-                    outline = GradientDarkColors.GlassWhiteBorder,
-                    outlineVariant = GradientDarkColors.GlassSurface,
-                )
-                isHighContrastModeEnabled && darkTheme -> copy(
-                    surface = Color.Black,
-                    background = Color.Black,
-                    surfaceContainerLowest = Color.Black,
-                    surfaceContainerLow = surfaceContainerLowest,
-                    surfaceContainer = surfaceContainerLow,
-                    surfaceContainerHigh = surfaceContainerLow,
-                    surfaceContainerHighest = surfaceContainer,
-                )
-                else -> this
+        if (useTrawlPalette) {
+            trawlTheme.colorScheme().run {
+                if (isHighContrastModeEnabled)
+                    copy(
+                        surface = Color.Black,
+                        background = Color.Black,
+                        surfaceContainerLowest = Color.Black,
+                        surfaceContainerLow = surfaceContainerLowest,
+                        surfaceContainer = surfaceContainerLow,
+                        surfaceContainerHigh = surfaceContainerLow,
+                        surfaceContainerHighest = surfaceContainer,
+                    )
+                else this
+            }
+        } else {
+            dynamicColorScheme(!darkTheme).run {
+                when {
+                    isGradientDarkEnabled && darkTheme ->
+                        copy(
+                            primary = GradientDarkColors.GradientPrimaryEnd,
+                            onPrimary = GradientDarkColors.OnPrimary,
+                            primaryContainer = GradientDarkColors.GradientPrimaryStart,
+                            onPrimaryContainer = GradientDarkColors.OnPrimary,
+                            secondary = GradientDarkColors.GradientSecondaryEnd,
+                            onSecondary = GradientDarkColors.OnPrimary,
+                            secondaryContainer = GradientDarkColors.GradientSecondaryStart,
+                            onSecondaryContainer = GradientDarkColors.OnPrimary,
+                            tertiary = GradientDarkColors.GradientAccentEnd,
+                            onTertiary = GradientDarkColors.OnPrimary,
+                            tertiaryContainer = GradientDarkColors.GradientAccentStart,
+                            onTertiaryContainer = GradientDarkColors.OnPrimary,
+                            background = GradientDarkColors.Background,
+                            onBackground = GradientDarkColors.OnBackground,
+                            surface = GradientDarkColors.Surface,
+                            onSurface = GradientDarkColors.OnSurface,
+                            surfaceVariant = GradientDarkColors.SurfaceVariant,
+                            onSurfaceVariant = GradientDarkColors.OnSurface,
+                            surfaceContainer = GradientDarkColors.SurfaceContainer,
+                            surfaceContainerLow = GradientDarkColors.SurfaceContainerLow,
+                            surfaceContainerHigh = GradientDarkColors.SurfaceContainerHigh,
+                            surfaceContainerLowest = GradientDarkColors.Background,
+                            surfaceContainerHighest = GradientDarkColors.SurfaceContainerHigh,
+                            outline = GradientDarkColors.GlassWhiteBorder,
+                            outlineVariant = GradientDarkColors.GlassSurface,
+                        )
+                    isHighContrastModeEnabled && darkTheme ->
+                        copy(
+                            surface = Color.Black,
+                            background = Color.Black,
+                            surfaceContainerLowest = Color.Black,
+                            surfaceContainerLow = surfaceContainerLowest,
+                            surfaceContainer = surfaceContainerLow,
+                            surfaceContainerHigh = surfaceContainerLow,
+                            surfaceContainerHighest = surfaceContainer,
+                        )
+                    else -> this
+                }
             }
         }
 
@@ -114,6 +148,7 @@ fun SealTheme(
     CompositionLocalProvider(
         LocalFixedColorRoles provides FixedColorRoles.fromTonalPalettes(tonalPalettes),
         LocalTextStyle provides textStyle,
+        LocalTrawlTokens provides trawlTheme.tokens(),
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

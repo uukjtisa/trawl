@@ -16,6 +16,7 @@ import com.junkfood.seal.App.Companion.isDebugBuild
 import com.junkfood.seal.App.Companion.isFDroidBuild
 import com.junkfood.seal.R
 import com.junkfood.seal.database.objects.CommandTemplate
+import com.junkfood.seal.ui.theme.TrawlTheme
 import com.junkfood.seal.download.Task
 import com.junkfood.seal.ui.theme.DEFAULT_SEED_COLOR
 import com.junkfood.seal.util.PreferenceUtil.getInt
@@ -92,6 +93,12 @@ const val RATE_LIMIT = "rate_limit"
 const val MAX_RATE = "max_rate"
 private const val HIGH_CONTRAST = "high_contrast"
 private const val GRADIENT_DARK_MODE = "gradient_dark_mode"
+
+// Trawl appearance. THEME_ID holds a TrawlTheme.id; SHOW_SEAL_THEME governs only whether
+// the inherited palette appears in the picker, never whether it still works for someone
+// already using it.
+const val THEME_ID = "trawl_theme_id"
+const val SHOW_SEAL_THEME = "show_seal_theme"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -248,6 +255,7 @@ private val StringPreferenceDefaults =
         SUBTITLE_LANGUAGE to "en.*,.*-orig",
         OUTPUT_TEMPLATE to DownloadUtil.OUTPUT_TEMPLATE_ID,
         CUSTOM_OUTPUT_TEMPLATE to DownloadUtil.OUTPUT_TEMPLATE_ID,
+        THEME_ID to TrawlTheme.Default.id,
     )
 
 private val BooleanPreferenceDefaults =
@@ -473,6 +481,8 @@ object PreferenceUtil {
 
     data class AppSettings(
         val darkTheme: DarkThemePreference = DarkThemePreference(),
+        val trawlTheme: TrawlTheme = TrawlTheme.Default,
+        val showSealTheme: Boolean = true,
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -493,7 +503,9 @@ object PreferenceUtil {
                     kv.decodeBool(DYNAMIC_COLOR, DynamicColors.isDynamicColorAvailable()),
                 seedColor = kv.decodeInt(THEME_COLOR, DEFAULT_SEED_COLOR),
                 paletteStyleIndex = kv.decodeInt(PALETTE_STYLE, 0),
-                isGradientDarkModeEnabled = kv.decodeBool(GRADIENT_DARK_MODE, true),
+                isGradientDarkModeEnabled = kv.decodeBool(GRADIENT_DARK_MODE, false),
+                trawlTheme = TrawlTheme.fromId(kv.decodeString(THEME_ID)),
+                showSealTheme = kv.decodeBool(SHOW_SEAL_THEME, true),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -534,6 +546,32 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun modifyTrawlTheme(theme: TrawlTheme) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(trawlTheme = theme) }
+            kv.encode(THEME_ID, theme.id)
+        }
+    }
+
+    /**
+     * Hiding the inherited palette must not strand whoever is wearing it, so switching this off
+     * while it is active also moves them to the default. A picker that cannot show its own
+     * current selection is a picker that lies about what the app is doing.
+     */
+    fun switchShowSealTheme(enabled: Boolean = !mutableAppSettingsStateFlow.value.showSealTheme) {
+        applicationScope.launch(Dispatchers.IO) {
+            val fallingBack = !enabled && mutableAppSettingsStateFlow.value.trawlTheme.isLegacy
+            mutableAppSettingsStateFlow.update {
+                it.copy(
+                    showSealTheme = enabled,
+                    trawlTheme = if (fallingBack) TrawlTheme.Default else it.trawlTheme,
+                )
+            }
+            kv.encode(SHOW_SEAL_THEME, enabled)
+            if (fallingBack) kv.encode(THEME_ID, TrawlTheme.Default.id)
         }
     }
 

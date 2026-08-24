@@ -1,5 +1,8 @@
 package com.junkfood.seal.ui.common
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: publishes the selected Trawl palette and its extended tokens to the tree.
+
 import android.os.Build
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -14,6 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.junkfood.seal.ui.theme.DEFAULT_SEED_COLOR
 import com.junkfood.seal.ui.theme.FixedColorRoles
+import com.junkfood.seal.ui.theme.LocalTrawlTheme
+import com.junkfood.seal.ui.theme.LocalTrawlTokens
+import com.junkfood.seal.ui.theme.tokens
 import com.junkfood.seal.util.DarkThemePreference
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.paletteStyles
@@ -27,6 +33,9 @@ val LocalWindowWidthState = staticCompositionLocalOf { WindowWidthSizeClass.Comp
 val LocalDynamicColorSwitch = compositionLocalOf { false }
 val LocalPaletteStyleIndex = compositionLocalOf { 0 }
 val LocalGradientDarkMode = compositionLocalOf { false }
+/** Whether the inherited palette is offered in the picker. See PreferenceUtil. */
+val LocalShowSealTheme = compositionLocalOf { true }
+
 val LocalFixedColorRoles = staticCompositionLocalOf {
     FixedColorRoles.fromColorSchemes(
         lightColors = lightColorScheme(),
@@ -54,6 +63,9 @@ fun SettingsProvider(windowWidthSizeClass: WindowWidthSizeClass, content: @Compo
             LocalWindowWidthState provides windowWidthSizeClass,
             LocalDynamicColorSwitch provides isDynamicColorEnabled,
             LocalGradientDarkMode provides isGradientDarkModeEnabled,
+            LocalTrawlTheme provides trawlTheme,
+            LocalTrawlTokens provides trawlTheme.tokens(),
+            LocalShowSealTheme provides showSealTheme,
             content = content,
         )
     }
