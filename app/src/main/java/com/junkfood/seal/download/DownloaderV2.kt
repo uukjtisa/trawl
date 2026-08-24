@@ -1,5 +1,8 @@
 package com.junkfood.seal.download
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: wake lock tag renamed to Trawl (surfaces in battery diagnostics).
+
 import android.app.PendingIntent
 import android.content.Context
 import android.net.ConnectivityManager
@@ -139,7 +142,7 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
     // real fix is holding the CPU awake for the download's duration in the first place.
     private val wakeLock: PowerManager.WakeLock by lazy {
         val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as PowerManager
-        powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SealPlus::DownloadWakeLock")
+        powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Trawl::DownloadWakeLock")
             .apply { setReferenceCounted(false) }
     }
 

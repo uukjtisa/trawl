@@ -614,3 +614,70 @@ legibly at 0.76 scale before the user commits to it.
   UI navigation", "Android Recents interaction model", "Material 3 navigation drawer current
   destination", "hide vs disable controls usability"
 
+---
+
+# D-12 · De-branding is a correctness job, not a find-and-replace
+
+**Date.** 2026-08-25 · **Step.** 3 of the v0.1.0 plan
+
+**The instruction.** "all must be come Trawl even the trawl is downloading etc.. make sure no seal
+plus or seal is left. unless its in the settings or about page etc."
+
+**What that sounded like.** Rename a product string in about a dozen places.
+
+**What it actually was.** Two of the "Seal" occurrences were not branding at all — they were
+defects that a purely cosmetic sweep would have shipped:
+
+1. **`UpdateUtil` pointed the auto-updater at `MaheshTechnicals/Sealplus`.** Trawl would have
+   checked upstream's releases, told its user an update was available, downloaded Seal Plus's APK
+   and offered to install it. A different application, arriving through Trawl's own update prompt.
+   This is the single worst bug that was sitting in the tree, and nothing about it looks like a bug
+   in a grep — it reads as a constant with the wrong word in it.
+2. **`ic_stat_seal` was upstream's logo as a full-colour PNG.** Wrong twice: it put Seal Plus's
+   mark in the status bar for every notification Trawl posts, *and* Android alpha-masks and tints
+   the notification small icon, so a photographic raster renders as a featureless white blob. The
+   slot wants a monochrome silhouette. Upstream's icon was broken on its own terms; ours is a
+   vector drawn for the size it is displayed at.
+
+**The generalisation.** When a fork inherits a name, the name is load-bearing in places that are
+not text: update endpoints, issue trackers, storage paths, keystore aliases, wake-lock tags, theme
+style IDs, notification assets. **A rebrand sweep must ask of every hit "what does this actually
+do?", because a fraction of them are wired to the internet or the filesystem and will keep serving
+the original product.** The dangerous ones are exactly the ones that look most boring.
+
+**Where the line was drawn.** He scoped it himself: *"unless its in the settings or about page"* —
+so attribution stays. Concretely:
+
+| Kept | Why |
+|---|---|
+| `AboutPage` upstream links, credit card | Attribution. It is a project requirement, not merely a licence one — it may move, it may not shrink. |
+| The Weblate link on the Languages page | Trawl's translations *are* upstream's, contributed through that project; sending a translator there still improves the strings Trawl ships. |
+| `namespace com.junkfood.seal`, `Route.SEALPLUS_EXTRAS`, `NOTIFICATION_GROUP_ID` | Never rendered. Renaming them buys nothing and breaks `git merge` from both upstreams forever. |
+
+| Changed | Why it was not cosmetic |
+|---|---|
+| Update endpoint | Would have installed a different app over Trawl. |
+| Issue tracker link | Files Trawl's bugs on a project that cannot fix them, and spams a maintainer who did not ask for it. |
+| `Downloads/SealPlus`, `.SealPlus` private dir | User-visible folders on their own storage. |
+| `Theme.SealPlus` style IDs | Not user-visible, but step 5 rebuilds theming and should not do so under the upstream product's name. |
+| Keystore alias, wake-lock tag | Safe to change *only* because `applicationId` changed too, so every install is new — there is no existing key or lock to orphan. Worth stating, because on a plain rename this would be a data-loss bug. |
+
+**What the method was.** Every replacement carried an **expected hit count**, and the script failed
+loudly on a mismatch. A find-and-replace that silently matches zero times is indistinguishable from
+one that worked, and that is how a fork ships upstream's name in the one string nobody re-grepped —
+the exact failure mode already recorded in this folder's history for a wrong degree name.
+
+**A side-effect worth recording.** The sweep silently rewrote CRLF to LF on 41 files. Git normalises
+on commit, so *the commits were never wrong* — which is precisely why it would have gone unnoticed
+until some later byte-for-byte check disagreed with itself. The whole Trawl contribution, 61 files,
+had drifted to LF against a 373-file CRLF tree. Fixed, and pinned in `.gitattributes` so the
+convention no longer depends on one machine's `core.autocrlf`.
+
+**What it costs.** Fifteen inherited files now carry §5(a) notices and will conflict on any upstream
+merge that touches the same lines. That is the price of the fork being honest about what it changed,
+and D-02 already accepted it.
+
+**Further reading.**
+- Search: "GPL v3 section 5(a) modified files notice", "trademark vs copyright in open source forks",
+  "Android notification small icon alpha mask", "adaptive icon monochrome layer",
+  "git core.autocrlf gitattributes text=auto", "rebranding a fork checklist".

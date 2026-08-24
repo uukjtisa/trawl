@@ -1,5 +1,9 @@
 package com.junkfood.seal.ui.page.home
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: the 'Seal+' wordmark (and its glowing plus) replaced with Trawl's name.
+// Step 9 replaces this block outright with the mockup's brand header.
+
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -748,7 +752,7 @@ fun NewHomePage(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Seal+ Branding with animated glowing "+"
+            // Trawl wordmark
             item {
                 Box(
                     modifier = Modifier
@@ -756,15 +760,12 @@ fun NewHomePage(
                         .padding(vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Seal",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        AnimatedGlowingPlus()
-                    }
+                    Text(
+                        text = "Trawl",
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
 
@@ -2673,7 +2674,7 @@ fun AnimatedGlowingPlus() {
 
 /**
  * Quick-access row for the 4 More Tools (Batch URL Import, Thumbnail Download, Video Info
- * Download, Comment Download), placed between the "Seal+" branding and the URL input field.
+ * Download, Comment Download), placed between the Trawl wordmark and the URL input field.
  *
  * Icon-only by design — no labels/section header — so it reads as a native strip of shortcuts
  * baked into the home screen rather than a bolted-on section. Colors reuse the same

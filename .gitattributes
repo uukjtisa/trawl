@@ -1,0 +1,26 @@
+# Trawl: pin line-ending handling so it does not depend on any one machine's core.autocrlf.
+# GPL v3 (c) 2026 Nicanor III W. Cariasa - added 2026-08-25 for the Trawl fork.
+#
+# The inherited tree is uniformly CRLF in the working copy and LF in the object store. Declaring
+# it here means a checkout on another machine, or a CI runner, reproduces the same bytes instead
+# of quietly renormalising the whole repo on its first commit.
+
+* text=auto
+
+# Scripts whose interpreter cares, regardless of host OS.
+gradlew      text eol=lf
+*.sh         text eol=lf
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+
+# Never touch these.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.gif  binary
+*.ttf  binary
+*.otf  binary
+*.jar  binary
+*.keystore binary
+*.apk  binary

@@ -1,5 +1,8 @@
 package com.junkfood.seal.ui.page.downloadv2.configure
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: dialog artwork uses Trawl's mark.
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -461,7 +464,7 @@ private fun DownloadDialogContent(
                             strokeWidth = 5.dp,
                         )
                         Image(
-                            painter = painterResource(R.drawable.splash_logo),
+                            painter = painterResource(R.drawable.trawl_mark),
                             contentDescription = null,
                             modifier = Modifier.size(52.dp),
                         )

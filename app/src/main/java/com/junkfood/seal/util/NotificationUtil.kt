@@ -1,5 +1,10 @@
 package com.junkfood.seal.util
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: notification small icon is Trawl's mark. Upstream shipped a full-colour
+// PNG here, which Android alpha-masks into a white blob; the replacement is a
+// monochrome vector, which is what this slot actually wants.
+
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -42,9 +47,9 @@ object NotificationUtil {
     private lateinit var serviceNotification: Notification
 
     //    private var builder =
-    //        NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_stat_seal)
+    //        NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_stat_trawl)
     private val commandNotificationBuilder =
-        NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_stat_seal)
+        NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_stat_trawl)
 
     private fun applySmartNotificationSettings(
         builder: NotificationCompat.Builder,
@@ -200,7 +205,7 @@ object NotificationUtil {
             ?.takeIf { it.isNotEmpty() }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_seal)
+            .setSmallIcon(R.drawable.ic_stat_trawl)
             .setContentTitle(title)
             .setProgress(PROGRESS_MAX, progress, isIndeterminate)
             .setOngoing(true)
@@ -226,7 +231,7 @@ object NotificationUtil {
 
         val builder =
             NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_seal)
+                .setSmallIcon(R.drawable.ic_stat_trawl)
                 .setContentText(text)
                 .setOngoing(false)
                 .setAutoCancel(true)
@@ -247,7 +252,7 @@ object NotificationUtil {
 
         val builder =
             NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_seal)
+                .setSmallIcon(R.drawable.ic_stat_trawl)
                 .setContentText(text)
                 .setOngoing(false)
                 .setAutoCancel(true)
@@ -265,7 +270,7 @@ object NotificationUtil {
         //        notificationManager.cancel(notificationId)
         val builder =
             NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_seal)
+                .setSmallIcon(R.drawable.ic_stat_trawl)
                 .setContentText(text)
                 .setProgress(0, 0, false)
                 .setAutoCancel(true)
@@ -280,7 +285,7 @@ object NotificationUtil {
     fun makeServiceNotification(intent: PendingIntent, text: String? = null): Notification {
         serviceNotification =
             NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_seal)
+                .setSmallIcon(R.drawable.ic_stat_trawl)
                 .setContentTitle(context.getString(R.string.service_title))
                 .setContentText(text)
                 .setOngoing(true)
@@ -327,7 +332,7 @@ object NotificationUtil {
                     PendingIntent.FLAG_UPDATE_CURRENT,
             )
         NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_seal)
+            .setSmallIcon(R.drawable.ic_stat_trawl)
             .setContentTitle(title)
             .setContentText(context.getString(textId))
             .setOngoing(false)
@@ -367,7 +372,7 @@ object NotificationUtil {
             )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_seal)
+            .setSmallIcon(R.drawable.ic_stat_trawl)
             .setContentTitle(
                 "[${templateName}_${taskUrl}] " +
                     context.getString(R.string.execute_command_notification)

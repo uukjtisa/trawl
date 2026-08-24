@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Trawl notification small icon. NEW FILE (Trawl project, 2026-08-25).
+
+    Replaces the inherited ic_stat_seal, which was wrong twice over:
+      1. It was Seal Plus's logo, so every notification Trawl posted advertised another app.
+      2. It was a full-colour PNG (drawable/ic_stat_seal_base.png, wrapped in a <bitmap>).
+         Android alpha-masks the small icon and tints it with the notification accent, so a
+         photographic raster renders as a featureless white blob in the status bar. That slot
+         wants a monochrome silhouette, which is what this is.
+
+    Deliberately SIMPLER than trawl_mark.xml: the fine mesh in the full mark turns to mush at
+    status-bar size, so this keeps only bridle, mouth, bag and a single mesh line. Strokes are
+    heavier for the same reason — at 24dp the 48-unit viewport halves every width.
+
+    Art spans x 8.5..39.5 and y 5.2..43.5, comfortably inside the 44-of-48 square Android
+    reserves for small-icon content.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48"
+    android:tint="#FFFFFF">
+    <!-- bridle -->
+    <path
+        android:pathData="M13.5,13.4 L24,5.2"
+        android:strokeColor="#FFFFFF" android:strokeWidth="2.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path
+        android:pathData="M34.5,13.4 L24,5.2"
+        android:strokeColor="#FFFFFF" android:strokeWidth="2.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- mouth -->
+    <path
+        android:pathData="M8.5,14 H39.5"
+        android:strokeColor="#FFFFFF" android:strokeWidth="3.4"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- bag -->
+    <path
+        android:pathData="M8.5,14 C8.5,27.5 14.1,36.8 24,43.5 C33.9,36.8 39.5,27.5 39.5,14"
+        android:strokeColor="#FFFFFF" android:strokeWidth="3.4"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- one mesh line only; the full lattice is illegible at 24dp -->
+    <path
+        android:pathData="M11.4,25.4 H36.6"
+        android:strokeColor="#FFFFFF" android:strokeWidth="2.6"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

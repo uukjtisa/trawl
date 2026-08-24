@@ -1,5 +1,8 @@
 package com.junkfood.seal.ui.page.splash
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: Seal Plus wordmark, logo and copyright line replaced with Trawl's.
+
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -160,8 +163,8 @@ fun SplashScreen(
                 
                 // Main Logo
                 Image(
-                    painter = painterResource(id = R.drawable.splash_logo),
-                    contentDescription = "Seal Plus Logo",
+                    painter = painterResource(id = R.drawable.trawl_mark),
+                    contentDescription = "Trawl logo",
                     modifier = Modifier
                         .size(160.dp)
                         .scale(logoScale)
@@ -227,7 +230,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(4.dp))
             
             Text(
-                text = "© 2026 Seal Plus",
+                text = "© 2026 Trawl",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isGradientDark) {
                     GradientDarkColors.OnSurface.copy(alpha = 0.4f)

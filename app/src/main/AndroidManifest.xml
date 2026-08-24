@@ -2,7 +2,7 @@
 <!--
     Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
     Change: added the SYSTEM_ALERT_WINDOW permission below, for Trawl's floating
-    download bubble. Everything else in this file is unchanged from Seal Plus.
+    download bubble. Everything else in this file is unchanged from Seal Plus, except the theme style rename below.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
@@ -99,14 +99,14 @@
             android:name=".CrashReportActivity"
             android:exported="false"
             android:label="CrashReportActivity"
-            android:theme="@style/Theme.SealPlus" />
+            android:theme="@style/Theme.Trawl" />
         <activity
             android:name=".QuickDownloadActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:label="@string/title_activity_share"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.SealPlus.Dialog">
+            android:theme="@style/Theme.Trawl.Dialog">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
@@ -149,7 +149,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="unspecified"
-            android:theme="@style/Theme.SealPlus">
+            android:theme="@style/Theme.Trawl">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

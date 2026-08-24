@@ -1,5 +1,8 @@
 package com.junkfood.seal.ui.page
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: drawer header now shows Trawl's mark and name instead of Seal Plus's.
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -234,8 +237,8 @@ fun DrawerHeader(
         ) {
             // App Logo - left side, vertically centered, reduced for balance
             Image(
-                painter = painterResource(id = R.drawable.splash_logo),
-                contentDescription = "Seal Plus Logo",
+                painter = painterResource(id = R.drawable.trawl_mark),
+                contentDescription = "Trawl logo",
                 modifier = Modifier.size(76.dp)
             )
             
@@ -249,7 +252,7 @@ fun DrawerHeader(
             ) {
                 // App Name - refined typography with tighter line height
                 Text(
-                    text = "Seal Plus",
+                    text = "Trawl",
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,

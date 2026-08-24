@@ -1,5 +1,8 @@
 package com.junkfood.seal.ui.page.onboarding
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: welcome copy rebranded to Trawl.
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
@@ -62,7 +65,7 @@ fun OnboardingScreen(
     val pages = listOf(
         OnboardingPage(
             icon = Icons.Filled.VideoLibrary,
-            title = "Welcome to Seal Plus",
+            title = "Welcome to Trawl",
             description = "Your ultimate video downloader powered by yt-dlp. Download videos, audio, and playlists from your favorite platforms with ease.",
             gradient = GradientBrushes.Primary
         ),

@@ -1,5 +1,9 @@
 package com.junkfood.seal.util
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: keystore alias renamed to Trawl. Safe: the keystore is scoped to the app's
+// UID and the applicationId changed, so no existing key can be orphaned.
+
 import android.content.Context
 import android.os.Build
 import android.util.Base64
@@ -21,7 +25,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
 private const val TAG = "AuthenticationManager"
-private const val KEYSTORE_ALIAS = "SealPlusAuthKey"
+private const val KEYSTORE_ALIAS = "TrawlAuthKey"
 private const val TRANSFORMATION = "AES/GCM/NoPadding"
 
 // PBKDF2 parameters

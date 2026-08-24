@@ -1,5 +1,9 @@
 package com.junkfood.seal.util
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: download and private directories renamed SealPlus -> Trawl. Safe to change
+// outright rather than migrate: the applicationId changed too, so every install is new.
+
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
@@ -23,7 +27,7 @@ import okhttp3.internal.closeQuietly
 const val AUDIO_REGEX = "(mp3|aac|opus|m4a)$"
 const val THUMBNAIL_REGEX = "\\.(jpg|png)$"
 const val SUBTITLE_REGEX = "\\.(lrc|vtt|srt|ass|json3|srv.|ttml)$"
-private const val PRIVATE_DIRECTORY_SUFFIX = ".SealPlus"
+private const val PRIVATE_DIRECTORY_SUFFIX = ".Trawl"
 
 object FileUtil {
     private val TEMP_SUFFIXES =
@@ -264,7 +268,7 @@ object FileUtil {
     fun Context.getInternalTempDir() = File(filesDir, "tmp")
 
     internal fun getExternalDownloadDirectory() =
-        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "SealPlus")
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Trawl")
             .also { it.mkdirs() }
 
     fun getDocsDirectory(): File =

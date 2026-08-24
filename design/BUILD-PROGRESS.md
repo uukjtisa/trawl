@@ -23,8 +23,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 - [x] **1 — Progress tracker + logging tag**
 - [x] **2 — Identity** (app name, applicationId, launcher icon)
-- [~] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
-- [ ] **4 — Strip donation surfaces**
+- [x] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
+- [~] **4 — Strip donation surfaces**
 - [ ] **5 — Theme foundation** (7 palettes + extended tokens)
 - [ ] **6 — Typography, shape, bundled fonts**
 - [ ] **7 — Glass system** (Off/Subtle/Full, default Off)
@@ -49,7 +49,11 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 3 Launcher icon = trawl-net mark (square / round / monochrome)
 - [ ] 4 Mascot = the fish
 - [ ] 5 Version line `v0.1.0 · niccc2007`
-- [ ] 6 No user-visible "Seal"/"Seal Plus" outside attribution contexts
+- [~] 6 No user-visible "Seal"/"Seal Plus" outside attribution contexts
+      — zero Seal text ships in any of the 62 locales (verified in the APK, not the
+      source). Outstanding only inside About, which step 12 rebuilds: upstream release /
+      README / issue URLs (attribution, staying) and `sealplus.in` shown as "Website"
+      (misleading, must go).
 
 ### Themes — step 5
 - [ ] 7 Seven themes: Ember (default), Hearth, Grove, Plum, Snow, Slate, Seal Plus
@@ -145,4 +149,6 @@ Ticked only when the behaviour is real in the app, not merely coded.
 |---|---|
 | 1 | done — `TrawlLog` (tag `Trawl`) + this tracker. Compiles. |
 | 2 | done — appId `dev.niccc2007.trawl`, v0.1.0, net-mark icon (vector + monochrome + rasters). `Trawl-0.1.0-arm64-v8a.apk` builds. |
-| 3 | in progress |
+| 3 | done — 62 locales + 15 Kotlin files swept; auto-updater and notification icon
+repointed off upstream; Seal artwork, splash logo and dead demo file deleted; `.gitattributes`
+added. APK verified: no Seal text in any locale. |

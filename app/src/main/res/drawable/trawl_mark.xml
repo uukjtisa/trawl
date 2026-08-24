@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Trawl app mark. NEW FILE (Trawl project, 2026-08-25).
+
+    Replaces the inherited splash_logo.png, which was Seal Plus's own logo and was being drawn
+    on the splash screen, the navigation drawer header and the download dialog. Shipping a fork
+    under someone else's mark is a trademark problem, not a licence one — GPL v3 grants the code,
+    not the branding — so the raster was deleted rather than merely unreferenced.
+
+    Same 48-unit net geometry as the launcher icon (see ic_launcher_monochrome.xml for the
+    construction notes). A vector rather than a PNG because the three call sites draw it at
+    76dp, 160dp and dialog size; one raster cannot be crisp at all three.
+
+    Accent is Ember's primary, #E0925A — the default theme's own colour, per the design tokens
+    in design/v0.1.0-implementation-spec.html.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- bridle: two tow ropes converging on the warp, so the net reads as being HAULED -->
+    <path
+        android:pathData="M13.5,13.4 L24,5.2"
+        android:strokeColor="#E0925A" android:strokeWidth="2.2"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path
+        android:pathData="M34.5,13.4 L24,5.2"
+        android:strokeColor="#E0925A" android:strokeWidth="2.2"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- mouth -->
+    <path
+        android:pathData="M8.5,14 H39.5"
+        android:strokeColor="#E0925A" android:strokeWidth="2.6"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- bag -->
+    <path
+        android:pathData="M8.5,14 C8.5,27.5 14.1,36.8 24,43.5 C33.9,36.8 39.5,27.5 39.5,14"
+        android:strokeColor="#E0925A" android:strokeWidth="2.6"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- vertical mesh -->
+    <path
+        android:pathData="M16,14 C16,24.4 18.7,31.9 24,37.6"
+        android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.9"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path
+        android:pathData="M32,14 C32,24.4 29.3,31.9 24,37.6"
+        android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.9"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- horizontal mesh -->
+    <path
+        android:pathData="M10.6,23.4 H37.4"
+        android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.9"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path
+        android:pathData="M13.7,31.4 H34.3"
+        android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.9"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

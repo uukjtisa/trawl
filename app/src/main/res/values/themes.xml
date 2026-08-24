@@ -1,11 +1,17 @@
+<!--
+    Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+    Changes: style names Theme.SealPlus / Theme.SealPlus.Dialog renamed to Theme.Trawl /
+    Theme.Trawl.Dialog. Not user-visible, but leaving a fork's activities themed under the
+    upstream product's name makes the theme work in step 5 read as if it belongs to Seal Plus.
+-->
 <resources>
 
-    <style name="Theme.SealPlus" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Trawl" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="Theme.SealPlus.Dialog" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Trawl.Dialog" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>

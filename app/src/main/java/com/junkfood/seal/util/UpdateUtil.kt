@@ -1,5 +1,10 @@
 package com.junkfood.seal.util
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: the update check targets Trawl's repository, not upstream's.
+// Left pointing at MaheshTechnicals/Sealplus, Trawl would offer its users an
+// 'update' that installs a different application over it.
+
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -32,8 +37,8 @@ import java.util.concurrent.TimeUnit
 
 object UpdateUtil {
 
-    private const val OWNER = "MaheshTechnicals"
-    private const val REPO = "Sealplus"
+    private const val OWNER = "uukjtisa"
+    private const val REPO = "Trawl"
     private const val ARM64 = "arm64-v8a"
     private const val ARM32 = "armeabi-v7a"
     private const val X86 = "x86"

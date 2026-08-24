@@ -1,5 +1,10 @@
 package com.junkfood.seal.ui.page.settings.troubleshooting
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: the issue tracker link points at Trawl's own repository.
+// Filing Trawl's bugs on upstream's tracker would be noise for them and a dead end
+// for the user, since upstream cannot fix code it does not ship.
+
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -70,12 +75,12 @@ fun TroubleShootingPage(
                         modifier = Modifier,
                         text = stringResource(R.string.issue_tracker_hint),
                     )
-                    val knownIssueUrlSeal = "https://github.com/MaheshTechnicals/Sealplus/issues"
+                    val knownIssueUrl = "https://github.com/uukjtisa/Trawl/issues"
                     PreferenceItem(
-                        title = "Seal Issue Tracker",
+                        title = "Trawl Issue Tracker",
                         description = null,
                         icon = Icons.AutoMirrored.Outlined.OpenInNew,
-                        onClick = { uriHandler.openUri(knownIssueUrlSeal) },
+                        onClick = { uriHandler.openUri(knownIssueUrl) },
                     )
 
                     val knownIssueUrlYtdlp = "https://github.com/yt-dlp/yt-dlp/issues/3766"
