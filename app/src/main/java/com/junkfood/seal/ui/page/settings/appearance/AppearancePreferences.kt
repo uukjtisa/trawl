@@ -106,6 +106,9 @@ import com.junkfood.seal.ui.common.LocalShowSealTheme
 import com.junkfood.seal.ui.theme.LocalTrawlTheme
 import com.junkfood.seal.ui.theme.TrawlTheme
 import com.junkfood.seal.ui.theme.colorScheme
+import com.junkfood.seal.ui.component.TrawlSegmented
+import com.junkfood.seal.ui.theme.GlassLevel
+import com.junkfood.seal.ui.theme.LocalGlassLevel
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -235,6 +238,21 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     )
                 }
                 TrawlThemePicker()
+                TrawlSettingRow(
+                    title = stringResource(R.string.glass_surfaces),
+                    description = stringResource(R.string.glass_surfaces_desc),
+                ) {
+                    TrawlSegmented(
+                        options =
+                            listOf(
+                                GlassLevel.OFF to stringResource(R.string.glass_off),
+                                GlassLevel.SUBTLE to stringResource(R.string.glass_subtle),
+                                GlassLevel.FULL to stringResource(R.string.glass_full),
+                            ),
+                        selected = LocalGlassLevel.current,
+                        onSelect = { PreferenceUtil.modifyGlassLevel(it) },
+                    )
+                }
                 val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
                 PreferenceSwitchWithDivider(
                     title = stringResource(id = R.string.dark_theme),

@@ -16,6 +16,7 @@ import com.junkfood.seal.App.Companion.isDebugBuild
 import com.junkfood.seal.App.Companion.isFDroidBuild
 import com.junkfood.seal.R
 import com.junkfood.seal.database.objects.CommandTemplate
+import com.junkfood.seal.ui.theme.GlassLevel
 import com.junkfood.seal.ui.theme.TrawlTheme
 import com.junkfood.seal.download.Task
 import com.junkfood.seal.ui.theme.DEFAULT_SEED_COLOR
@@ -99,6 +100,9 @@ private const val GRADIENT_DARK_MODE = "gradient_dark_mode"
 // already using it.
 const val THEME_ID = "trawl_theme_id"
 const val SHOW_SEAL_THEME = "show_seal_theme"
+// Glass ships OFF (D-06): a decorative flourish should be opt-in, and the blur behind it
+// only exists on API 31+.
+const val GLASS_LEVEL = "glass_level"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -256,6 +260,7 @@ private val StringPreferenceDefaults =
         OUTPUT_TEMPLATE to DownloadUtil.OUTPUT_TEMPLATE_ID,
         CUSTOM_OUTPUT_TEMPLATE to DownloadUtil.OUTPUT_TEMPLATE_ID,
         THEME_ID to TrawlTheme.Default.id,
+        GLASS_LEVEL to GlassLevel.Default.id,
     )
 
 private val BooleanPreferenceDefaults =
@@ -483,6 +488,7 @@ object PreferenceUtil {
         val darkTheme: DarkThemePreference = DarkThemePreference(),
         val trawlTheme: TrawlTheme = TrawlTheme.Default,
         val showSealTheme: Boolean = true,
+        val glassLevel: GlassLevel = GlassLevel.Default,
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -506,6 +512,7 @@ object PreferenceUtil {
                 isGradientDarkModeEnabled = kv.decodeBool(GRADIENT_DARK_MODE, false),
                 trawlTheme = TrawlTheme.fromId(kv.decodeString(THEME_ID)),
                 showSealTheme = kv.decodeBool(SHOW_SEAL_THEME, true),
+                glassLevel = GlassLevel.fromId(kv.decodeString(GLASS_LEVEL)),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -546,6 +553,13 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun modifyGlassLevel(level: GlassLevel) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(glassLevel = level) }
+            kv.encode(GLASS_LEVEL, level.id)
         }
     }
 

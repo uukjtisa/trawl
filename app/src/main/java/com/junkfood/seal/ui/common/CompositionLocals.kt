@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.junkfood.seal.ui.theme.DEFAULT_SEED_COLOR
 import com.junkfood.seal.ui.theme.FixedColorRoles
+import com.junkfood.seal.ui.theme.LocalGlassLevel
 import com.junkfood.seal.ui.theme.LocalTrawlTheme
 import com.junkfood.seal.ui.theme.LocalTrawlTokens
 import com.junkfood.seal.ui.theme.tokens
@@ -66,6 +67,7 @@ fun SettingsProvider(windowWidthSizeClass: WindowWidthSizeClass, content: @Compo
             LocalTrawlTheme provides trawlTheme,
             LocalTrawlTokens provides trawlTheme.tokens(),
             LocalShowSealTheme provides showSealTheme,
+            LocalGlassLevel provides glassLevel,
             content = content,
         )
     }

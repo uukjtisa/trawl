@@ -860,3 +860,81 @@ geometric ramp. Material has five shape slots and the design uses nine radii, so
 - Search: "Android downloadable fonts requires Play Services", "Compose FontVariation.Settings
   variable font weight", "fontTools varLib instancer pin axis", "Fraunces optical size axis",
   "SIL OFL reserved font name modified copy", "OFL GPL compatibility aggregate work".
+
+---
+
+# D-15 · Compose has no backdrop blur, so the backdrop is built by hand
+
+**Date.** 2026-08-25 · **Step.** 7 of the v0.1.0 plan
+
+## The mismatch nobody warns you about
+
+The mockup's glass is CSS `backdrop-filter: blur()` — it blurs **what is behind** an element.
+Compose's `Modifier.blur()` blurs the composable's **own content**. They sound like the same
+feature and are opposites: applied to an app bar, `Modifier.blur()` smears the bar's own title
+while leaving the artwork scrolling underneath perfectly sharp.
+
+Compose 1.11.2 ships no backdrop API — checked, not assumed: the only blur class in
+`androidx.compose.ui` is `draw/BlurKt`. The usual answer is the third-party `haze` library, which
+exists precisely because this gap does.
+
+## Built from the primitives instead of taking the dependency
+
+`GraphicsLayer` and `RenderEffect` *are* both present, and they are what haze is made of, so:
+
+- `GlassBackdrop` wraps the content behind the chrome, records it into a `GraphicsLayer`, and
+  hangs a `BlurEffect` on that layer.
+- `Modifier.trawlGlass()` draws the already-blurred layer, translated by its own offset from the
+  backdrop's origin so the blurred pixels line up with what is genuinely behind it, clipped to its
+  own shape.
+
+The blur samples **beyond** the clip, which is what makes the edges pull in their neighbours
+rather than fading to nothing — a detail that separates real frosted glass from a grey rectangle.
+
+The structural rule this creates is easy to get wrong: **chrome goes outside `GlassBackdrop`, in
+the same Box.** Wrap the chrome too and the recording already contains the bar, so the bar blurs
+a picture of itself. Documented at the call site because there is no way for the type system to
+prevent it.
+
+Rejected `haze` because one modifier is not worth a dependency in an app whose whole pitch is
+that its source is inspectable — and a dependency here would have to be carried, updated and
+licence-audited forever for a flourish that ships **off**.
+
+## Every degradation lands in the right place
+
+This is the part that mattered most, because a decorative effect must never be able to make the
+app unusable:
+
+| Situation | Result |
+|---|---|
+| Glass off (the default) | Opaque `surfaceContainer` + `outline` hairline — exactly the mockup's default state |
+| API < 31 (no RenderEffect) | Exact tint and hairline, no blur |
+| No `GlassBackdrop` in the tree | Exact tint and hairline, no blur |
+
+It can never render as an invisible panel or a black rectangle. Callers do not branch on the
+setting either — `trawlGlass` is correct at every level, so a screen cannot forget to handle
+"off".
+
+**Cost, stated plainly:** when glass is on, a full-screen layer is recorded every frame. That is
+simply what backdrop blur costs; it is why it is opt-in, and why `GlassBackdrop` degenerates to a
+plain `Box` — no layer, no recording — the moment the setting is off.
+
+## A correctness bug worth naming
+
+`layer.renderEffect = ...` was first written straight in the composable body. That is wrong even
+though it works: **composition can run several times for one frame and can be abandoned**, so
+mutating a shared object from the body is a race that happens to look fine. Moved into a
+`SideEffect`, which is exactly the primitive for "apply this to a non-Compose object once the
+composition has actually committed".
+
+## Honest status
+
+`trawlGlass` **has not rendered anywhere yet.** Its first real consumers are the app bar and URL
+field (step 9), the switcher (step 11) and the bubble (step 14). The system and the setting are
+done and compile; a runtime bug in the sampling maths would surface at those steps, not this one.
+Recorded rather than glossed, because "step 7 complete" should not be read as "seen working".
+
+**Further reading.**
+- Search: "Compose backdrop blur GraphicsLayer record", "haze library Compose why",
+  "RenderEffect createBlurEffect API 31", "Compose SideEffect vs composition side effects",
+  "backdrop-filter performance cost".

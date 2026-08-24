@@ -27,8 +27,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **4 — Strip donation surfaces**
 - [x] **5 — Theme foundation** (7 palettes + extended tokens)
 - [x] **6 — Typography, shape, bundled fonts**
-- [~] **7 — Glass system** (Off/Subtle/Full, default Off)
-- [ ] **8 — Ambient motion + download effects**
+- [x] **7 — Glass system** (Off/Subtle/Full, default Off)
+- [~] **8 — Ambient motion + download effects**
 - [ ] **9 — Home screen**
 - [ ] **10 — Links history**
 - [ ] **11 — Motion system + window switcher**
@@ -62,8 +62,11 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 10 Warm low-blue dark is the house direction
 
 ### Glass — step 7
-- [ ] 11 Glass setting Off / Subtle / Full, default **Off**
+- [x] 11 Glass setting Off / Subtle / Full, default **Off**
 - [ ] 12 Glass on chrome only — never list rows
+      — the system exists but has NOT rendered anywhere yet; first consumers are the app
+      bar / URL field (step 9), switcher (step 11) and bubble (step 14). A runtime bug in
+      the sampling maths surfaces there, not here.
 
 ### Ambient + FX — step 8
 - [ ] 13 Ambient motion Off / Subtle / Full (blobs, grain, motes)
@@ -167,3 +170,8 @@ match the mockup exactly. |
 | 6 | done — Inter + Fraunces bundled as variable fonts with unused axes pinned
 (1,208 KB → 747 KB), TrawlTypography + TrawlShapes wired into MaterialTheme, superseded
 Type.kt/Shape.kt deleted, OFL licences added to licenses/ and ATTRIBUTION.md. |
+| 7 | done — GlassBackdrop records the content behind chrome into a GraphicsLayer and
+blurs it; Modifier.trawlGlass samples it aligned and clipped. Compose has no backdrop API,
+so this is built from GraphicsLayer + RenderEffect rather than taking a dependency.
+Degrades to the exact tint + hairline with glass off, below API 31, or with no backdrop.
+Reusable TrawlSegmented control added (used again in steps 8 and 11). |

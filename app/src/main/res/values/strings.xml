@@ -753,5 +753,10 @@
     <string name="show_seal_theme">Show Seal + theme</string>
     <string name="show_seal_theme_desc">Keeps the inherited purple gradient theme selectable for comparison. Off removes it from the list entirely.</string>
     <string name="theme_light_mode_note">Trawl\'s palettes apply in dark mode.</string>
+    <string name="glass_surfaces">Glass surfaces</string>
+    <string name="glass_surfaces_desc">Frosted chrome on the bar, URL field and tool strip. Off by default — the blur behind it needs Android 12 or newer.</string>
+    <string name="glass_off">Off</string>
+    <string name="glass_subtle">Subtle</string>
+    <string name="glass_full">Full</string>
 </resources>
 
