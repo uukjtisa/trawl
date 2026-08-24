@@ -109,6 +109,10 @@ import com.junkfood.seal.ui.theme.colorScheme
 import com.junkfood.seal.ui.component.TrawlSegmented
 import com.junkfood.seal.ui.theme.GlassLevel
 import com.junkfood.seal.ui.theme.LocalGlassLevel
+import androidx.compose.material.icons.outlined.AutoAwesome
+import com.junkfood.seal.ui.theme.LocalDownloadFx
+import com.junkfood.seal.ui.theme.LocalMotionLevel
+import com.junkfood.seal.ui.theme.MotionLevel
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -263,6 +267,28 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                         PreferenceUtil.modifyDarkThemePreference(if (isDarkTheme) OFF else ON)
                     },
                     onClick = { onNavigateTo(Route.DARK_THEME) },
+                )
+                TrawlSettingRow(
+                    title = stringResource(R.string.ambient_motion),
+                    description = stringResource(R.string.ambient_motion_desc),
+                ) {
+                    TrawlSegmented(
+                        options =
+                            listOf(
+                                MotionLevel.OFF to stringResource(R.string.glass_off),
+                                MotionLevel.SUBTLE to stringResource(R.string.glass_subtle),
+                                MotionLevel.FULL to stringResource(R.string.glass_full),
+                            ),
+                        selected = LocalMotionLevel.current,
+                        onSelect = { PreferenceUtil.modifyMotionLevel(it) },
+                    )
+                }
+                PreferenceSwitch(
+                    title = stringResource(R.string.download_effects),
+                    description = stringResource(R.string.download_effects_desc),
+                    icon = Icons.Outlined.AutoAwesome,
+                    isChecked = LocalDownloadFx.current,
+                    onClick = { PreferenceUtil.switchDownloadFx() },
                 )
                 PreferenceSwitch(
                     title = stringResource(R.string.show_seal_theme),

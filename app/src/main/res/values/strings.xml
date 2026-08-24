@@ -758,5 +758,9 @@
     <string name="glass_off">Off</string>
     <string name="glass_subtle">Subtle</string>
     <string name="glass_full">Full</string>
+    <string name="ambient_motion">Ambient motion</string>
+    <string name="ambient_motion_desc">Drifting light, grain and floating motes behind the content. Nothing moves faster than 34 seconds.</string>
+    <string name="download_effects">Download effects</string>
+    <string name="download_effects_desc">A light sweep across the progress bar, a slow glow on the active card, and a wash that rises as a download completes.</string>
 </resources>
 

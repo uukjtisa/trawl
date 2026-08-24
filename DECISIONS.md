@@ -938,3 +938,71 @@ Recorded rather than glossed, because "step 7 complete" should not be read as "s
 - Search: "Compose backdrop blur GraphicsLayer record", "haze library Compose why",
   "RenderEffect createBlurEffect API 31", "Compose SideEffect vs composition side effects",
   "backdrop-filter performance cost".
+
+---
+
+# D-16 · One clock for all ambient motion, and a gradient where a blur would break
+
+**Date.** 2026-08-25 · **Step.** 8 of the v0.1.0 plan
+
+## The constraint is the feature
+
+The design states its own limit: **nothing moves faster than 34 seconds, nothing sits above ~8%
+opacity.** That is not timidity, it is the whole thesis — ambient motion you can consciously
+notice on a utility app is a distraction, and a downloader is something people open to do one
+thing quickly. This is meant to be felt only when the eye rests.
+
+Every number here is transcribed rather than invented: drift periods 34/42/50s at Full and
+54/66s at Subtle, grain at .05/.085, 14 motes rising over 16-36s each.
+
+## One clock, not fourteen
+
+The obvious Compose approach is `rememberInfiniteTransition` per animated thing. With 14 motes,
+3 blobs and 2 washes that is 19 animation clocks, each driving recomposition, permanently, behind
+every screen.
+
+Instead there is **a single elapsed-seconds value** updated in a `withFrameNanos` loop and read
+**inside draw lambdas**. A state read in a draw scope invalidates only the draw phase, so all the
+ambient motion in the app costs **zero recompositions**. At `MotionLevel.OFF` the loop never
+starts, so the cost is not merely small, it is nothing.
+
+**The clock is monotonic and never wraps.** This mattered: a wrapping clock (which is what
+`rememberInfiniteTransition` gives you) makes every derived phase jump at the wrap point, and
+with 14 motes on 14 independent periods that is a visible stutter across the whole field every
+cycle. Accumulating elapsed time avoids the problem rather than hiding it.
+
+## Where a faithful translation would have been the wrong translation
+
+The blobs are `filter: blur(46px)` on solid ellipses. The literal port is `Modifier.blur(46.dp)`,
+and it would have been a bad bug: **`Modifier.blur()` is a no-op below API 31.** `minSdk` is 24.
+On those devices the "subtle ambient wash" would render as **three hard-edged discs of saturated
+colour sitting behind the interface** — not a degraded effect, a broken screen.
+
+So the blobs are drawn as radial gradients that hold their colour to ~45% and then fall away.
+Visually equivalent at this radius, correct on every API level, and cheaper than a full-screen
+blur pass every frame. **A translation that is literal but wrong is not fidelity.**
+
+The grain got the same treatment for a different reason: it is an inline SVG `feTurbulence`, and
+Android has no such filter. A 140x140 noise tile is generated once and repeated — **seeded**, so
+it is identical on every launch. An unseeded tile would differ run to run, which is exactly the
+kind of "why does it look slightly different today" that nobody can ever reproduce.
+
+## Two small refusals
+
+- **The sweep is suppressed on a failed download** (`.bar:not(.err)` in the mockup, honoured
+  here). A cheerful shimmer travelling across a failed task is the interface being upbeat about
+  bad news, and it undermines the error state sitting right next to it.
+- **Blobs still draw at `MotionLevel.OFF`.** "Motion off" means *stop moving*, not "go flat
+  black" — the wash is the theme's ambient colour, not an animation. Turning off motion should
+  not silently also turn off the palette.
+
+## A Kotlin trap worth remembering
+
+`Easing` is a `fun interface`, so `SweepEasing(x)` does not compile — there is no `invoke`
+operator, and the error surfaces as **"Unresolved reference"**, which points at the name rather
+than the call. It is `SweepEasing.transform(x)`.
+
+**Further reading.**
+- Search: "Compose withFrameNanos animation loop", "state read in draw phase skips
+  recomposition", "Modifier.blur API 31 minSdk", "feTurbulence equivalent Android",
+  "Compose fun interface Easing transform".

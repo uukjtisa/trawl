@@ -28,8 +28,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **5 — Theme foundation** (7 palettes + extended tokens)
 - [x] **6 — Typography, shape, bundled fonts**
 - [x] **7 — Glass system** (Off/Subtle/Full, default Off)
-- [~] **8 — Ambient motion + download effects**
-- [ ] **9 — Home screen**
+- [x] **8 — Ambient motion + download effects**
+- [~] **9 — Home screen**
 - [ ] **10 — Links history**
 - [ ] **11 — Motion system + window switcher**
 - [ ] **12 — About page**
@@ -69,9 +69,10 @@ Ticked only when the behaviour is real in the app, not merely coded.
       the sampling maths surfaces there, not here.
 
 ### Ambient + FX — step 8
-- [ ] 13 Ambient motion Off / Subtle / Full (blobs, grain, motes)
-- [ ] 14 Nothing faster than 34 s, nothing above 8% opacity
-- [ ] 15 Download effects: progress sweep, breathing card, haul wash
+- [x] 13 Ambient motion Off / Subtle / Full (blobs, grain, motes)
+- [x] 14 Nothing faster than 34 s, nothing above 8% opacity
+- [~] 15 Download effects: progress sweep, breathing card, haul wash
+      — all three built and settable; they attach to the download card in step 9.
 
 ### Intro — step 13
 - [ ] 16 Curtain → mask rise → sheen → FLIP travel → stagger
@@ -175,3 +176,8 @@ blurs it; Modifier.trawlGlass samples it aligned and clipped. Compose has no bac
 so this is built from GraphicsLayer + RenderEffect rather than taking a dependency.
 Degrades to the exact tint + hairline with glass off, below API 31, or with no backdrop.
 Reusable TrawlSegmented control added (used again in steps 8 and 11). |
+| 8 | done — AmbientBackground (3 drifting blobs, seeded grain tile, 14 motes) plus
+HaulWash, Modifier.progressSweep and Modifier.breathe, all on ONE monotonic clock read in
+draw lambdas so ambient motion costs zero recompositions. motionLevel + downloadFx prefs
+and their settings rows. Blobs are radial gradients, not blur: Modifier.blur is a no-op
+below API 31 and minSdk is 24. |

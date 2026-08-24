@@ -17,6 +17,7 @@ import com.junkfood.seal.App.Companion.isFDroidBuild
 import com.junkfood.seal.R
 import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.ui.theme.GlassLevel
+import com.junkfood.seal.ui.theme.MotionLevel
 import com.junkfood.seal.ui.theme.TrawlTheme
 import com.junkfood.seal.download.Task
 import com.junkfood.seal.ui.theme.DEFAULT_SEED_COLOR
@@ -103,6 +104,10 @@ const val SHOW_SEAL_THEME = "show_seal_theme"
 // Glass ships OFF (D-06): a decorative flourish should be opt-in, and the blur behind it
 // only exists on API 31+.
 const val GLASS_LEVEL = "glass_level"
+// Ambient motion defaults to Subtle, not Off: the design's whole point is that it is
+// felt rather than noticed, and nothing in it moves faster than 34 seconds.
+const val MOTION_LEVEL = "motion_level"
+const val DOWNLOAD_FX = "download_fx"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -261,6 +266,7 @@ private val StringPreferenceDefaults =
         CUSTOM_OUTPUT_TEMPLATE to DownloadUtil.OUTPUT_TEMPLATE_ID,
         THEME_ID to TrawlTheme.Default.id,
         GLASS_LEVEL to GlassLevel.Default.id,
+        MOTION_LEVEL to MotionLevel.Default.id,
     )
 
 private val BooleanPreferenceDefaults =
@@ -489,6 +495,8 @@ object PreferenceUtil {
         val trawlTheme: TrawlTheme = TrawlTheme.Default,
         val showSealTheme: Boolean = true,
         val glassLevel: GlassLevel = GlassLevel.Default,
+        val motionLevel: MotionLevel = MotionLevel.Default,
+        val downloadFx: Boolean = true,
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -513,6 +521,8 @@ object PreferenceUtil {
                 trawlTheme = TrawlTheme.fromId(kv.decodeString(THEME_ID)),
                 showSealTheme = kv.decodeBool(SHOW_SEAL_THEME, true),
                 glassLevel = GlassLevel.fromId(kv.decodeString(GLASS_LEVEL)),
+                motionLevel = MotionLevel.fromId(kv.decodeString(MOTION_LEVEL)),
+                downloadFx = kv.decodeBool(DOWNLOAD_FX, true),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -553,6 +563,20 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun modifyMotionLevel(level: MotionLevel) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(motionLevel = level) }
+            kv.encode(MOTION_LEVEL, level.id)
+        }
+    }
+
+    fun switchDownloadFx(enabled: Boolean = !mutableAppSettingsStateFlow.value.downloadFx) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(downloadFx = enabled) }
+            kv.encode(DOWNLOAD_FX, enabled)
         }
     }
 
