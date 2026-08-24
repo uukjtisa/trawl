@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+    Change: launcher background recoloured from Seal Plus's #FFFFFF to Trawl's warm ground,
+    so the amber net mark sits on the same lamp-lit dark the app itself uses.
+-->
 <resources>
-    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="ic_launcher_background">#241A12</color>
 </resources>

@@ -56,5 +56,10 @@ private const val ALPHA = VARIANT * 1
 private const val BETA = VARIANT * 2
 private const val RELEASE_CANDIDATE = VARIANT * 3
 
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Change: Trawl versions independently of Seal Plus and starts at 0.1.0.
+// versionCode therefore drops from 300_000_400 to 1_000_400 (the same formula below).
+// That is safe ONLY because the applicationId also changes, so this is a fresh install
+// rather than a downgrade over an existing Seal Plus.
 val currentVersion: Version =
-    Version.Stable(versionMajor = 3, versionMinor = 0, versionPatch = 0)
+    Version.Stable(versionMajor = 0, versionMinor = 1, versionPatch = 0)

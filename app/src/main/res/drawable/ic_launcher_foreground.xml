@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Trawl launcher foreground. NEW FILE (Trawl project, 2026-08-25); replaces the inherited
+    ic_launcher_foreground.png, which was a raster and had no monochrome counterpart.
+
+    The mark is a trawl net: haul line, open mouth, tapering bag, mesh. Strokes only and purely
+    geometric so it survives being masked, shrunk and tinted — see DECISIONS.md D-07 for why the
+    fish mascot deliberately does NOT appear here.
+
+    Art is authored in a 48-unit square and placed by the <group> transform into the 72dp safe
+    zone of the 108dp adaptive canvas: scale 1.375 (48 -> 66) then translate 21 on both axes,
+    so the art occupies 21..87 of 108 and nothing is clipped by any launcher mask.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="1.375"
+        android:scaleY="1.375"
+        android:translateX="21"
+        android:translateY="21">
+        <!-- bridle: two tow ropes converging on the warp, so the net reads as being HAULED
+             rather than sitting there. The earlier vertical+crossbar version read as a "+". -->
+        <path
+            android:pathData="M13.5,13.4 L24,5.2"
+            android:strokeColor="#E0925A" android:strokeWidth="2.2"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <path
+            android:pathData="M34.5,13.4 L24,5.2"
+            android:strokeColor="#E0925A" android:strokeWidth="2.2"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <!-- mouth -->
+        <path
+            android:pathData="M8.5,14 H39.5"
+            android:strokeColor="#E0925A" android:strokeWidth="2.6"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <!-- bag -->
+        <path
+            android:pathData="M8.5,14 C8.5,27.5 14.1,36.8 24,43.5 C33.9,36.8 39.5,27.5 39.5,14"
+            android:strokeColor="#E0925A" android:strokeWidth="2.6"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <!-- vertical mesh -->
+        <path
+            android:pathData="M16,14 C16,24.4 18.7,31.9 24,37.6"
+            android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.85"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <path
+            android:pathData="M32,14 C32,24.4 29.3,31.9 24,37.6"
+            android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.85"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <!-- horizontal mesh -->
+        <path
+            android:pathData="M10.6,23.4 H37.4"
+            android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.85"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <path
+            android:pathData="M13.7,31.4 H34.3"
+            android:strokeColor="#E0925A" android:strokeWidth="1.9" android:strokeAlpha="0.85"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+    </group>
+</vector>

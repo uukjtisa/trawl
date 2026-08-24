@@ -6,13 +6,24 @@ N−1 is complete and compiles.
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
+> **Resuming cold (e.g. after a compaction)?** Everything needed is on disk: the approved plan
+> at `.claude/plans/now-hte-plan-in-wondrous-cake.md`, the UI contract at
+> `design/v0.1.0-implementation-spec.html`, the baseline at
+> `design/v0.1.0-baseline-mockup-ui.html`, rationale in `DECISIONS.md`, and this tracker.
+> Work happens on branch **`trawl`** — `main` stays a clean upstream mirror, so
+> `git diff main..trawl` is exactly Trawl's own contribution. Pick up at the first step below
+> that is not `[x]`, in order, and do not skip. Build gate:
+> `./gradlew assembleGenericDebug -PnoSplits -Dorg.gradle.java.home="D:\Program Files\Android-Studio\jbr"`
+> Device: HUAWEI NCO-LX1, Android 12 / API 31, arm64-v8a. One install only, at step 15.
+
+
 ---
 
 ## Steps
 
 - [x] **1 — Progress tracker + logging tag**
-- [~] **2 — Identity** (app name, applicationId, launcher icon)
-- [ ] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
+- [x] **2 — Identity** (app name, applicationId, launcher icon)
+- [~] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
 - [ ] **4 — Strip donation surfaces**
 - [ ] **5 — Theme foundation** (7 palettes + extended tokens)
 - [ ] **6 — Typography, shape, bundled fonts**
@@ -33,9 +44,9 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 Ticked only when the behaviour is real in the app, not merely coded.
 
 ### Identity — step 2/3
-- [ ] 1 App name → Trawl
-- [ ] 2 `applicationId` → `dev.niccc2007.trawl`
-- [ ] 3 Launcher icon = trawl-net mark (square / round / monochrome)
+- [x] 1 App name → Trawl
+- [x] 2 `applicationId` → `dev.niccc2007.trawl`
+- [x] 3 Launcher icon = trawl-net mark (square / round / monochrome)
 - [ ] 4 Mascot = the fish
 - [ ] 5 Version line `v0.1.0 · niccc2007`
 - [ ] 6 No user-visible "Seal"/"Seal Plus" outside attribution contexts
@@ -133,4 +144,5 @@ Ticked only when the behaviour is real in the app, not merely coded.
 | Step | Result |
 |---|---|
 | 1 | done — `TrawlLog` (tag `Trawl`) + this tracker. Compiles. |
-| 2 | in progress |
+| 2 | done — appId `dev.niccc2007.trawl`, v0.1.0, net-mark icon (vector + monochrome + rasters). `Trawl-0.1.0-arm64-v8a.apk` builds. |
+| 3 | in progress |

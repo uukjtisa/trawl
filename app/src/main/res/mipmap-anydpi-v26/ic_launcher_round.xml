@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+    Change: added the <monochrome> layer, which upstream did not declare. Android 13+ tints it
+    to the user's wallpaper for themed icons; without it the launcher falls back to the full
+    colour icon and Trawl looks out of place on a themed home screen.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background"/>
     <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome"/>
 </adaptive-icon>

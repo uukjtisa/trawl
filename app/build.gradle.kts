@@ -1,4 +1,8 @@
 @file:Suppress("UnstableApiUsage")
+// Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+// Changes: applicationId -> dev.niccc2007.trawl, versionCode aligned to Trawl 0.1.0,
+// and the APK output name changed from SealPlus-* to Trawl-*.
+
 
 import java.io.FileInputStream
 import java.util.Properties
@@ -42,10 +46,13 @@ android {
     buildFeatures { buildConfig = true }
 
     defaultConfig {
-        applicationId = "com.maheshtechnicals.sealplus"
+        // Trawl ships under its own identity. The Kotlin `namespace` below deliberately
+        // stays com.junkfood.seal: it is invisible to users, and renaming it would rewrite
+        // every file and break `git merge` from both upstreams forever.
+        applicationId = "dev.niccc2007.trawl"
         minSdk = 24
         targetSdk = 37
-        versionCode = 300_000_400
+        versionCode = 1_000_400
         check(versionCode == currentVersionCode)
 
         versionName = baseVersionName
@@ -87,7 +94,7 @@ android {
                     output.versionCode.set(baseAbiCode + (output.versionCode.get() ?: 0))
                 }
 
-                output.outputFileName.set("SealPlus-${baseVersionName}-${name ?: "universal"}.apk")
+                output.outputFileName.set("Trawl-${baseVersionName}-${name ?: "universal"}.apk")
             }
         }
     }
