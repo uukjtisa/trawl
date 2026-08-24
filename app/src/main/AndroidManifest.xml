@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+    Change: added the SYSTEM_ALERT_WINDOW permission below, for Trawl's floating
+    download bubble. Everything else in this file is unchanged from Seal Plus.
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -23,6 +28,24 @@
         was accidentally "fixing" the underlying Doze CPU-suspend issue by waking the device.
     -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!--
+        SYSTEM_ALERT_WINDOW ("Display over other apps") - ADDED BY TRAWL, 2026-08-25.
+
+        Backs the floating download bubble: a draggable overlay showing each running
+        download as a progress ring, above other apps.
+
+        This is a *special* permission, not a normal runtime one. It cannot be requested
+        with the standard permission dialog - the user must be sent to
+        Settings.ACTION_MANAGE_OVERLAY_PERMISSION, and the grant is read back with
+        Settings.canDrawOverlays(context). Some OEM ROMs refuse or silently revoke it.
+
+        Therefore the bubble is strictly an ENHANCEMENT. Download progress must remain
+        fully visible in the DownloadService foreground notification and on the home
+        screen when this permission is absent. Never make the bubble the only place
+        progress is shown. See DECISIONS.md D-08.
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <queries>
         <intent>

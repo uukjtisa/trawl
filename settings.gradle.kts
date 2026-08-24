@@ -24,7 +24,9 @@ develocity {
         termsOfUseAgree.set("yes")
         
         // Publish to scans.gradle.com
-        publishing.onlyIf { true }
+        // Trawl: build scans upload build/machine metadata to a public service.
+        // Disabled for a personal fork. (Modified from Seal Plus, 2026-08-24)
+        publishing.onlyIf { false }
         
         // Add build metadata
         tag(if (System.getenv("CI") != null) "CI" else "Local")

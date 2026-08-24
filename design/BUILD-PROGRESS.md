@@ -1,0 +1,136 @@
+# Trawl v0.1.0 — build progress
+
+Live task list for the 1:1 implementation of `v0.1.0-baseline-mockup-ui.html`.
+Updated at the end of **every** step. Steps run in strict order; step N does not start until
+N−1 is complete and compiles.
+
+Legend: `[ ]` not started · `[~]` in progress · `[x]` done
+
+---
+
+## Steps
+
+- [x] **1 — Progress tracker + logging tag**
+- [~] **2 — Identity** (app name, applicationId, launcher icon)
+- [ ] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
+- [ ] **4 — Strip donation surfaces**
+- [ ] **5 — Theme foundation** (7 palettes + extended tokens)
+- [ ] **6 — Typography, shape, bundled fonts**
+- [ ] **7 — Glass system** (Off/Subtle/Full, default Off)
+- [ ] **8 — Ambient motion + download effects**
+- [ ] **9 — Home screen**
+- [ ] **10 — Links history**
+- [ ] **11 — Motion system + window switcher**
+- [ ] **12 — About page**
+- [ ] **13 — Intro sequence**
+- [ ] **14 — Quick download + floating bubble**
+- [ ] **15 — Ship v0.1.0** (build, install, verify against the spec)
+
+---
+
+## Acceptance checklist (70 items)
+
+Ticked only when the behaviour is real in the app, not merely coded.
+
+### Identity — step 2/3
+- [ ] 1 App name → Trawl
+- [ ] 2 `applicationId` → `dev.niccc2007.trawl`
+- [ ] 3 Launcher icon = trawl-net mark (square / round / monochrome)
+- [ ] 4 Mascot = the fish
+- [ ] 5 Version line `v0.1.0 · niccc2007`
+- [ ] 6 No user-visible "Seal"/"Seal Plus" outside attribution contexts
+
+### Themes — step 5
+- [ ] 7 Seven themes: Ember (default), Hearth, Grove, Plum, Snow, Slate, Seal Plus
+- [ ] 8 "Show Seal Plus theme" toggle removes it from the picker
+- [ ] 9 Seal Plus theme still titles the app Trawl + faint "Seal + theme"
+- [ ] 10 Warm low-blue dark is the house direction
+
+### Glass — step 7
+- [ ] 11 Glass setting Off / Subtle / Full, default **Off**
+- [ ] 12 Glass on chrome only — never list rows
+
+### Ambient + FX — step 8
+- [ ] 13 Ambient motion Off / Subtle / Full (blobs, grain, motes)
+- [ ] 14 Nothing faster than 34 s, nothing above 8% opacity
+- [ ] 15 Download effects: progress sweep, breathing card, haul wash
+
+### Intro — step 13
+- [ ] 16 Curtain → mask rise → sheen → FLIP travel → stagger
+- [ ] 17 ~2.4 s, reduced-motion safe, cannot strand
+- [ ] 18 Mark + fish paired; fish swims up and flaps
+- [ ] 19 Accent rule draws under "Trawl"
+- [ ] 20 Tagline "hauls it up"
+- [ ] 21 Intro on/off setting
+
+### Home — step 9
+- [ ] 22 Brand header, default on, switchable off
+- [ ] 23 URL bar with FAST pill
+- [ ] 24 Fast tray: one-tap qualities + More…
+- [ ] 25 Quick-tools strip, one surface, four labelled cells
+- [ ] 26 Downloading section, multi-task with queue
+- [ ] 27 Recent list
+- [ ] 28 End-of-list mascot
+- [ ] 29 FAB
+
+### Links history — step 10
+- [ ] 30 Screen: thumbnail, title, URL, status pill
+- [ ] 31 Filters All / Saved / Missing / Failed
+- [ ] 32 One-tap re-download at remembered quality
+- [ ] 33 Day grouping
+- [ ] 34 Empty state with mascot
+- [ ] 35 "All links ›" entry from Home
+
+### Switcher — step 11
+- [ ] 36 Drawer behaves as a window switcher
+- [ ] 37 Transition style Simple / Fancy
+- [ ] 38 Fancy = flat scale + translate, no 3D rotation
+- [ ] 39 Menu items stagger from the left
+- [ ] 40 Tap the pushed-back card to return — no X
+- [ ] 41 Swap content while small, then zoom in
+- [ ] 42 Stacked-cards switcher glyph
+- [ ] 43 Gear removed from bar, opt-in to restore
+- [ ] 44 Restored gear replays the switcher move
+- [ ] 45 History button behaves identically, own toggle
+- [ ] 46 Shortcuts hide on the screen they point at
+- [ ] 47 Keep switcher open: pick → preview → tap to enter
+- [ ] 48 Menu highlights the active window
+
+### About — step 12
+- [ ] 49 Signature banner: niccc2007, sheen, watermark, rule, mascot
+- [ ] 50 Portfolio link
+- [ ] 51 GitHub link
+- [ ] 52 Upstream credit card (required, may not shrink)
+- [ ] 53 Licence row
+- [ ] 54 Version row
+
+### Quick download — step 14
+- [ ] 55 Dialog matching the real share-intent flow
+- [ ] 56 Reachable from the bubble
+- [ ] 57 Source badge, URL chip, preview, quality chips, More…
+
+### Floating bubble — step 14
+- [ ] 58 Draggable overlay, default on
+- [ ] 59 One conic ring per download, ≤4 then a count
+- [ ] 60 Accent running · green done · red + pulse on error
+- [ ] 61 Expandable panel: progress, pause, retry
+- [ ] 62 Drag onto the bottom-centre X to dismiss
+- [ ] 63 Off-switch in its own panel and in Settings
+- [ ] 64 Multi-queue: 3 concurrent, rest queued
+- [ ] 65 Permission gate degrading to the notification
+
+### Removals — step 4
+- [ ] 66 Home donation dialog
+- [ ] 67 Crypto donation page
+- [ ] 68 Sponsor / Support Developer pages
+- [ ] 69 Gradient theme as default
+- [ ] 70 "Built on" out of the drawer (→ About)
+
+---
+
+## Log
+
+| Step | Result |
+|---|---|
+| 1 | done — `TrawlLog` (tag `Trawl`) + this tracker. Compiles. |
+| 2 | in progress |
