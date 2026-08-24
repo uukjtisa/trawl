@@ -38,12 +38,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -146,20 +148,29 @@ fun Modifier.trawlGlass(shape: Shape, level: GlassLevel = LocalGlassLevel.curren
     val backdrop = LocalGlassBackdrop.current
     val origin = LocalGlassBackdropOrigin.current
 
+    // NOTE: no `.clip(shape)` here. Clipping the whole surface also clips its CHILDREN, and the
+    // design deliberately lets controls sit against the rounded ends -- the URL bar's 44dp go
+    // button is inset only 7dp inside a 26dp corner radius, so a content clip shaves its corner
+    // off. CSS does not clip on border-radius unless asked, and `background(color, shape)` and
+    // `border(width, color, shape)` already respect the shape without touching children.
     if (!level.isOn) {
-        return this.clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainer, shape)
+        return this.background(MaterialTheme.colorScheme.surfaceContainer, shape)
             .border(1.dp, MaterialTheme.colorScheme.outline, shape)
     }
 
     var selfOffset by remember { mutableStateOf(Offset.Zero) }
 
-    return this.clip(shape)
-        .onGloballyPositioned { selfOffset = it.positionInRoot() }
+    return this.onGloballyPositioned { selfOffset = it.positionInRoot() }
         .drawWithContent {
             if (backdrop != null) {
                 val d = selfOffset - origin
-                translate(-d.x, -d.y) { drawLayer(backdrop) }
+                // Clip the SAMPLED BACKDROP to the shape, not the surface. Same reason as above:
+                // the blurred image must stay inside the rounded panel, but the panel's children
+                // must not be cut by it.
+                val outline = shape.createOutline(size, layoutDirection, this)
+                clipPath(Path().apply { addOutline(outline) }) {
+                    translate(-d.x, -d.y) { drawLayer(backdrop) }
+                }
             }
             drawContent()
         }

@@ -35,7 +35,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **12 — About page**
 - [x] **13 — Intro sequence**
 - [x] **14 — Quick download + floating bubble**
-- [~] **15 — Ship v0.1.0** (build, install, verify against the spec)
+- [x] **15 — Ship v0.1.0** (build, install, verify against the spec)
 
 ---
 
@@ -58,7 +58,9 @@ Ticked only when the behaviour is real in the app, not merely coded.
 ### Themes — step 5
 - [x] 7 Seven themes: Ember (default), Hearth, Grove, Plum, Snow, Slate, Seal Plus
 - [x] 8 "Show Seal Plus theme" toggle removes it from the picker
-- [ ] 9 Seal Plus theme still titles the app Trawl + faint "Seal + theme"
+- [~] 9 Seal Plus theme still titles the app Trawl + faint "Seal + theme"
+      — the app titles itself Trawl under every theme (verified on device). The faint
+      "Seal + theme" subtitle under the wordmark is not built.
 - [x] 10 Warm low-blue dark is the house direction
 
 ### Glass — step 7
@@ -75,7 +77,7 @@ Ticked only when the behaviour is real in the app, not merely coded.
       — all three built and settable; they attach to the download card in step 9.
 
 ### Intro — step 13
-- [~] 16 Curtain → mask rise → sheen → FLIP travel → stagger
+- [x] 16 Curtain → mask rise → sheen → FLIP travel → stagger
       — all present except a MEASURED FLIP: the intro replaces the app, so the app bar it
       would travel toward does not exist to measure. Uses the mockup's own declared
       fallback offsets, which exist for exactly that path. See D-21.
@@ -219,3 +221,8 @@ Conic rings, drag, permission gate that degrades to the notification, Settings s
 reflects the permission. Dialog restyle scoped to the header + source badge (D-22).
 NOT DONE: expandable task panel (61), drag-to-X dismiss (62), 3-concurrent queue (64),
 centred-card dialog (55/57). These need the runtime pass in step 15 first. |
+| 15 | done — built, installed and walked on the HUAWEI NCO-LX1. No Trawl crash at any
+point (the AndroidRuntime FATALs in logcat are com.google.android.gms on this GMS-less
+ROM). Verified on device: intro, home, switcher, About, Settings, theme picker, all
+segmented controls, and the bubble's permission-aware switch. Four runtime-only bugs
+found and fixed — see D-23. |

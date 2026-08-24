@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.junkfood.seal.ui.common.LocalGradientDarkMode
 import com.junkfood.seal.ui.theme.GradientBrushes
 import com.junkfood.seal.ui.theme.GradientDarkColors
+import androidx.compose.material3.MaterialTheme
 
 /**
  * Premium Glass Card with gradient dark theme support
@@ -73,7 +74,7 @@ fun PremiumGlassCard(
                 if (isGradientDark) {
                     Modifier.border(
                         width = 1.dp,
-                        color = GradientDarkColors.GlassWhiteBorder,
+                        color = MaterialTheme.colorScheme.outline,
                         shape = RoundedCornerShape(cornerRadius)
                     )
                 } else Modifier
@@ -81,7 +82,7 @@ fun PremiumGlassCard(
         shape = RoundedCornerShape(cornerRadius),
         colors = CardDefaults.cardColors(
             containerColor = if (isGradientDark) {
-                GradientDarkColors.GlassSurface.copy(alpha = 0.05f)
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.05f)
             } else {
                 MaterialTheme.colorScheme.surfaceContainer
             }
@@ -106,7 +107,7 @@ fun PremiumGlassCard(
                             imageVector = icon,
                             contentDescription = null,
                             tint = if (isGradientDark) {
-                                GradientDarkColors.GradientPurpleBright
+                                MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.primary
                             },
@@ -118,7 +119,7 @@ fun PremiumGlassCard(
                             text = title,
                             style = MaterialTheme.typography.titleMedium,
                             color = if (isGradientDark) {
-                                GradientDarkColors.OnSurface
+                                MaterialTheme.colorScheme.onSurface
                             } else {
                                 MaterialTheme.colorScheme.onSurface
                             }
@@ -134,7 +135,7 @@ fun PremiumGlassCard(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isGradientDark) {
-                        GradientDarkColors.OnSurface.copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     }
@@ -190,7 +191,7 @@ fun PremiumGradientButton(
         colors = if (isGradientDark) {
             ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
-                contentColor = GradientDarkColors.OnPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         } else {
             ButtonDefaults.buttonColors()
@@ -250,7 +251,7 @@ fun PremiumSectionHeader(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = GradientDarkColors.OnPrimary,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -266,7 +267,7 @@ fun PremiumSectionHeader(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             color = if (isGradientDark) {
-                GradientDarkColors.OnSurface
+                MaterialTheme.colorScheme.onSurface
             } else {
                 MaterialTheme.colorScheme.onSurface
             }
@@ -299,7 +300,7 @@ fun PremiumInfoCard(
             ),
         shape = RoundedCornerShape(16.dp),
         color = if (isGradientDark) {
-            GradientDarkColors.SurfaceVariant
+            MaterialTheme.colorScheme.surfaceVariant
         } else {
             MaterialTheme.colorScheme.surfaceVariant
         }
@@ -316,7 +317,7 @@ fun PremiumInfoCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = if (isGradientDark) {
-                        GradientDarkColors.GradientCyan
+                        MaterialTheme.colorScheme.tertiary
                     } else {
                         MaterialTheme.colorScheme.primary
                     },
@@ -327,7 +328,7 @@ fun PremiumInfoCard(
                 text = text,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isGradientDark) {
-                    GradientDarkColors.OnSurface
+                    MaterialTheme.colorScheme.onSurface
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 }

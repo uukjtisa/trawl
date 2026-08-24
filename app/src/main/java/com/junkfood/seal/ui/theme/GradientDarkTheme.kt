@@ -15,6 +15,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -272,4 +274,62 @@ fun pageTransitionAnimation(
         label = "page_transition"
     )
     return animatedProgress
+}
+
+// ── Trawl: theme-derived gradients ───────────────────────────────────────────────────────────
+// Added by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
+//
+// GradientBrushes above are top-level `val`s built from Seal Plus's hardcoded purples, so they
+// cannot see the active theme. That was invisible while the gradient look WAS the app; with
+// seven palettes it means the onboarding renders violet while the rest of the app is Ember --
+// and onboarding is the first thing a new user ever sees.
+//
+// These are @Composable so they read the live scheme. The legacy Seal + palette produces the
+// original purples through exactly this path, so nothing is lost by using them everywhere.
+object TrawlGradients {
+    val Primary: Brush
+        @Composable get() =
+            Brush.linearGradient(
+                listOf(
+                    MaterialTheme.colorScheme.primary,
+                    LocalTrawlTokens.current.primaryDeep,
+                ),
+                start = Offset.Zero,
+                end = Offset.Infinite,
+            )
+
+    val Secondary: Brush
+        @Composable get() =
+            Brush.linearGradient(
+                listOf(
+                    LocalTrawlTokens.current.primaryDeep,
+                    MaterialTheme.colorScheme.primary,
+                    LocalTrawlTokens.current.accent,
+                ),
+                start = Offset.Zero,
+                end = Offset.Infinite,
+            )
+
+    val Accent: Brush
+        @Composable get() =
+            Brush.linearGradient(
+                listOf(
+                    LocalTrawlTokens.current.accent,
+                    MaterialTheme.colorScheme.primary,
+                ),
+                start = Offset.Zero,
+                end = Offset.Infinite,
+            )
+
+    val Vibrant: Brush
+        @Composable get() =
+            Brush.linearGradient(
+                listOf(
+                    MaterialTheme.colorScheme.primary,
+                    LocalTrawlTokens.current.accent,
+                    LocalTrawlTokens.current.primaryDeep,
+                ),
+                start = Offset.Zero,
+                end = Offset.Infinite,
+            )
 }

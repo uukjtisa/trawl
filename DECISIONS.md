@@ -1417,3 +1417,66 @@ of work once the flow has been exercised on a real device.
 - Search: "ComposeView in Service setViewTreeLifecycleOwner", "TYPE_APPLICATION_OVERLAY
   BadTokenException", "SYSTEM_ALERT_WINDOW revoked at runtime", "FLAG_NOT_FOCUSABLE overlay",
   "foreground service specialUse type".
+
+---
+
+# D-23 · What only the device could tell me
+
+**Date.** 2026-08-25 · **Step.** 15 of the v0.1.0 plan
+
+Fourteen steps compiled cleanly before anything ran. The plan accepted that risk knowingly and
+said step 15 would need a fix pass. It did — and every bug it found was invisible to the compiler.
+
+## The intro never ran, and nothing said so
+
+`SHOW_INTRO` was added to the constants, to `AppSettings`, and to the settings flow — but **not to
+`BooleanPreferenceDefaults`**. `MainActivity` decided with `SHOW_INTRO.getBoolean()`, which falls
+back to that map and therefore to **false**, while the settings screen read
+`decodeBool(SHOW_INTRO, true)` and cheerfully showed the toggle as ON.
+
+**Two sources of truth for one default, disagreeing.** A whole feature silently absent, with a
+switch insisting it was enabled. Nothing crashed, nothing warned, and no amount of reading the
+intro's own code would have found it.
+
+Fixed by making the defaults map the only place a default lives, and having the flow read
+*through* it rather than repeat literals. Four other Trawl booleans had the same latent split.
+
+## Two bugs from translating CSS too literally
+
+- **`Modifier.clip(shape)` is not `border-radius`.** `trawlGlass` clipped the whole surface, so
+  the URL bar's 44dp go button — inset 7dp inside a 26dp corner — had its corner shaved off. CSS
+  does not clip children on `border-radius`; `background(color, shape)` and `border(w, c, shape)`
+  already respect the shape without touching content. The clip now applies only to the sampled
+  backdrop, which is the one thing that genuinely must stay inside the panel.
+- **The app bar said "Home".** That is what a *drawer* calls this destination. The contract puts
+  the mark and the name there, which answers the question someone arriving from a share sheet
+  actually has: which app am I in?
+
+## The theme stopped at the edge of the new code
+
+Onboarding rendered violet against an Ember app, because inherited screens reach past
+`MaterialTheme` into `GradientDarkColors` — Seal Plus's hardcoded palette — **39 times across four
+files**. Invisible while the gradient look *was* the app; glaring the moment there are seven
+palettes.
+
+The fix is a mapping, not a rewrite, and it is safe for every theme **including Seal +**, because
+that theme's `ColorScheme` is built from exactly those values. The legacy look still arrives —
+through the theme instead of around it. `Theme.kt` and `GradientDarkTheme.kt` are untouched: one
+is where the legacy palette is legitimately mapped, the other is the palette.
+
+`GradientBrushes` needed the same treatment and could not have it — they are top-level `val`s, so
+they cannot read a theme at all. `TrawlGradients` provides `@Composable` equivalents.
+
+## A lesson about screenshots as evidence
+
+Three separate times a screenshot showed a blank screen and I nearly concluded something was
+broken. It was not: the app takes ~700ms to start, the intro runs 2.1s, and onboarding animates
+per page — so a capture at a fixed delay lands wherever it lands.
+
+**What settled it was instrumenting the sequence and reading the clock**, which showed the
+timeline ticking correctly all along. A screenshot proves what is on screen at one instant; it
+does not prove what the code is doing. When they disagree, log the code.
+
+**Further reading.**
+- Search: "single source of truth default values", "Compose Modifier.clip clips children",
+  "CSS border-radius does not clip", "hardcoded colors bypass MaterialTheme".

@@ -37,10 +37,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.junkfood.seal.ui.common.LocalDarkTheme
-import com.junkfood.seal.ui.theme.GradientBrushes
+import com.junkfood.seal.ui.theme.TrawlGradients
 import com.junkfood.seal.ui.theme.GradientDarkColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.material3.MaterialTheme
 
 /**
  * Onboarding data class for each page
@@ -67,25 +68,25 @@ fun OnboardingScreen(
             icon = Icons.Filled.VideoLibrary,
             title = "Welcome to Trawl",
             description = "Your ultimate video downloader powered by yt-dlp. Download videos, audio, and playlists from your favorite platforms with ease.",
-            gradient = GradientBrushes.Primary
+            gradient = TrawlGradients.Primary
         ),
         OnboardingPage(
             icon = Icons.Filled.Download,
             title = "Powerful Downloads",
             description = "Download in multiple formats and quality options. Choose from video, audio-only, or custom formats with advanced configuration.",
-            gradient = GradientBrushes.Secondary
+            gradient = TrawlGradients.Secondary
         ),
         OnboardingPage(
             icon = Icons.Filled.Settings,
             title = "Highly Customizable",
             description = "Extensive settings to personalize your experience. Control download directory, network preferences, themes, and much more.",
-            gradient = GradientBrushes.Accent
+            gradient = TrawlGradients.Accent
         ),
         OnboardingPage(
             icon = Icons.Filled.Security,
             title = "Privacy & Security",
             description = "Your downloads are private and secure. Optional app lock with PIN or biometric authentication keeps your content safe.",
-            gradient = GradientBrushes.Vibrant
+            gradient = TrawlGradients.Vibrant
         )
     )
     
@@ -96,7 +97,7 @@ fun OnboardingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                if (isDarkTheme) GradientDarkColors.Background
+                if (isDarkTheme) MaterialTheme.colorScheme.background
                 else MaterialTheme.colorScheme.background
             )
     ) {
@@ -129,7 +130,7 @@ fun OnboardingScreen(
                         Text(
                             text = "Skip",
                             color = if (isDarkTheme) 
-                                GradientDarkColors.OnSurface.copy(alpha = 0.7f)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             else 
                                 MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -185,7 +186,7 @@ fun OnboardingScreen(
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
                                 contentColor = if (isDarkTheme)
-                                    GradientDarkColors.GradientPrimaryEnd
+                                    MaterialTheme.colorScheme.primary
                                 else
                                     MaterialTheme.colorScheme.primary
                             )
@@ -214,7 +215,7 @@ fun OnboardingScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isDarkTheme)
-                                GradientDarkColors.GradientPrimaryEnd
+                                MaterialTheme.colorScheme.primary
                             else
                                 MaterialTheme.colorScheme.primary
                         )
@@ -310,7 +311,7 @@ fun OnboardingPageContent(
                     .clip(CircleShape)
                     .background(
                         if (isDarkTheme)
-                            GradientDarkColors.SurfaceContainer
+                            MaterialTheme.colorScheme.surfaceContainer
                         else
                             MaterialTheme.colorScheme.surfaceContainerHigh
                     )
@@ -337,7 +338,7 @@ fun OnboardingPageContent(
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = if (isDarkTheme)
-                GradientDarkColors.OnBackground
+                MaterialTheme.colorScheme.onBackground
             else
                 MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(horizontal = 32.dp)
@@ -352,7 +353,7 @@ fun OnboardingPageContent(
             textAlign = TextAlign.Center,
             lineHeight = 24.sp,
             color = if (isDarkTheme)
-                GradientDarkColors.OnSurface.copy(alpha = 0.7f)
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             else
                 MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 32.dp)
@@ -399,7 +400,7 @@ fun PageIndicators(
                     .alpha(alpha)
                     .background(
                         if (isDarkTheme)
-                            GradientDarkColors.GradientPrimaryEnd
+                            MaterialTheme.colorScheme.primary
                         else
                             MaterialTheme.colorScheme.primary
                     )
@@ -444,7 +445,7 @@ fun AnimatedBackgroundGradient(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            GradientDarkColors.GradientPrimaryEnd.copy(alpha = 0.6f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                             Color.Transparent
                         )
                     ),
@@ -462,7 +463,7 @@ fun AnimatedBackgroundGradient(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            GradientDarkColors.GradientAccentEnd.copy(alpha = 0.5f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
                             Color.Transparent
                         )
                     ),
@@ -483,7 +484,7 @@ fun AnimatedBackgroundGradient(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            GradientDarkColors.GradientSecondaryEnd.copy(alpha = 0.4f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f),
                             Color.Transparent
                         )
                     ),

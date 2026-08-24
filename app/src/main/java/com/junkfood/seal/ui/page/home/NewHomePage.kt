@@ -696,12 +696,26 @@ fun NewHomePage(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
-                    Text(
-                        text = stringResource(R.string.home),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                title = {
+                    // The contract's `.appbar .brand`: the mark and the name, not a screen
+                    // label. "Home" is what a navigation drawer calls this destination; the bar
+                    // above it should say what APP you are in, which is the question someone
+                    // arriving from a share sheet actually has.
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.trawl_mark),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onMenuOpen) {
@@ -1195,7 +1209,7 @@ fun RecentDownloadCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isGradientDark && isDarkTheme) {
-                GradientDarkColors.SurfaceVariant
+                MaterialTheme.colorScheme.surfaceVariant
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
             }
@@ -1479,7 +1493,7 @@ fun ActiveDownloadCard(
     
     val statusColor = when (downloadState) {
         is Task.DownloadState.Running -> if (isGradientDark && isDarkTheme) {
-            GradientDarkColors.GradientPrimaryStart
+            MaterialTheme.colorScheme.primaryContainer
         } else {
             MaterialTheme.colorScheme.primary
         }
@@ -1516,7 +1530,7 @@ fun ActiveDownloadCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isGradientDark && isDarkTheme) {
-                GradientDarkColors.SurfaceVariant
+                MaterialTheme.colorScheme.surfaceVariant
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
             }
@@ -1588,7 +1602,7 @@ fun ActiveDownloadCard(
                             androidx.compose.material3.Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = if (isGradientDark && isDarkTheme) {
-                                    GradientDarkColors.GradientSecondaryStart.copy(alpha = 0.3f)
+                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
                                 } else {
                                     MaterialTheme.colorScheme.secondaryContainer
                                 }
@@ -1597,7 +1611,7 @@ fun ActiveDownloadCard(
                                     text = stringResource(R.string.queue_status),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (isGradientDark && isDarkTheme) {
-                                        GradientDarkColors.GradientSecondaryEnd
+                                        MaterialTheme.colorScheme.secondary
                                     } else {
                                         MaterialTheme.colorScheme.onSecondaryContainer
                                     },
@@ -1802,7 +1816,7 @@ fun ActiveDownloadCard(
             if (downloadState is Task.DownloadState.Running || downloadState is Task.DownloadState.Paused) {
                 val barColor = when (downloadState) {
                     is Task.DownloadState.Paused -> Color(0xFFFBBF24)
-                    else -> if (isGradientDark && isDarkTheme) GradientDarkColors.GradientPrimaryStart
+                    else -> if (isGradientDark && isDarkTheme) MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.primary
                 }
                 if (progress >= 0) {

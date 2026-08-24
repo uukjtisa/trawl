@@ -32,6 +32,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -169,7 +172,11 @@ fun TrawlIntro(onFinished: () -> Unit) {
             modifier = Modifier.alpha(curtain),
         ) {
             // mark + fish, paired above the wordmark
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.alpha(markFade)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.alpha(markFade),
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.trawl_mark),
                     contentDescription = null,

@@ -78,7 +78,7 @@ import com.junkfood.seal.ui.common.ThemedIconColors
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.SealDialog
-import com.junkfood.seal.ui.theme.GradientBrushes
+import com.junkfood.seal.ui.theme.TrawlGradients
 import com.junkfood.seal.ui.theme.GradientDarkColors
 import com.junkfood.seal.util.makeToast
 
@@ -151,7 +151,7 @@ fun MoreToolsPage(
     var infoDialogTool by remember { mutableStateOf<ToolItem?>(null) }
 
     val backgroundColor = if (useGradientColors) {
-        GradientDarkColors.Background
+        MaterialTheme.colorScheme.background
     } else {
         MaterialTheme.colorScheme.background
     }
@@ -168,7 +168,7 @@ fun MoreToolsPage(
                 colors = TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = backgroundColor,
                     scrolledContainerColor = if (useGradientColors) {
-                        GradientDarkColors.Background
+                        MaterialTheme.colorScheme.background
                     } else {
                         MaterialTheme.colorScheme.surface
                     },
@@ -265,7 +265,7 @@ private fun HeroBanner(useGradientColors: Boolean) {
                 .fillMaxWidth()
                 .background(
                     if (useGradientColors) {
-                        GradientBrushes.Primary
+                        TrawlGradients.Primary
                     } else {
                         Brush.linearGradient(
                             colors = listOf(
@@ -292,7 +292,7 @@ private fun HeroBanner(useGradientColors: Boolean) {
                         imageVector = Icons.Outlined.AutoAwesome,
                         contentDescription = null,
                         tint = if (useGradientColors) {
-                            GradientDarkColors.OnPrimary
+                            MaterialTheme.colorScheme.onPrimary
                         } else {
                             MaterialTheme.colorScheme.onPrimaryContainer
                         },
@@ -305,7 +305,7 @@ private fun HeroBanner(useGradientColors: Boolean) {
                         text = stringResource(R.string.more_tools),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = if (useGradientColors) {
-                            GradientDarkColors.OnPrimary
+                            MaterialTheme.colorScheme.onPrimary
                         } else {
                             MaterialTheme.colorScheme.onPrimaryContainer
                         },
@@ -319,7 +319,7 @@ private fun HeroBanner(useGradientColors: Boolean) {
                         text = stringResource(R.string.more_tools_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (useGradientColors) {
-                            GradientDarkColors.OnPrimary.copy(alpha = 0.85f)
+                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                         } else {
                             MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         },
@@ -391,18 +391,18 @@ private fun ToolCard(
     LaunchedEffect(Unit) { visible = true }
 
     val borderColor = if (useGradientColors) {
-        GradientDarkColors.GlassWhiteBorder
+        MaterialTheme.colorScheme.outline
     } else {
         MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
     }
     val surfaceColor = if (useGradientColors) {
-        GradientDarkColors.GlassSurface.copy(alpha = 0.06f)
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.06f)
     } else {
         MaterialTheme.colorScheme.surfaceContainer
     }
-    val titleColor = if (useGradientColors) GradientDarkColors.OnSurface else MaterialTheme.colorScheme.onSurface
+    val titleColor = if (useGradientColors) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface
     val subtleColor = if (useGradientColors) {
-        GradientDarkColors.OnSurface.copy(alpha = 0.6f)
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
@@ -503,7 +503,7 @@ private fun ToolCard(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (useGradientColors) {
-                                GradientDarkColors.GradientPrimaryStart.copy(alpha = 0.2f)
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
                             } else {
                                 MaterialTheme.colorScheme.secondaryContainer
                             }
@@ -517,7 +517,7 @@ private fun ToolCard(
                             fontWeight = FontWeight.Medium,
                         ),
                         color = if (useGradientColors) {
-                            GradientDarkColors.GradientPrimaryEnd
+                            MaterialTheme.colorScheme.primary
                         } else {
                             MaterialTheme.colorScheme.onSecondaryContainer
                         },
