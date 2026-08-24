@@ -48,6 +48,7 @@ import com.junkfood.seal.ui.page.home.NewHomePage
 import com.junkfood.seal.ui.page.onboarding.OnboardingScreen
 import com.junkfood.seal.ui.page.settings.SettingsPage
 import com.junkfood.seal.ui.page.settings.about.AboutPage
+import com.junkfood.seal.ui.page.links.LinksHistoryPage
 import com.junkfood.seal.ui.page.settings.about.CreditsPage
 import com.junkfood.seal.ui.page.settings.about.UpdatePage
 import com.junkfood.seal.ui.page.settings.appearance.AppearancePreferences
@@ -158,6 +159,12 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                                 launchSingleTop = true
                             }
                         },
+                        onNavigateToLinks = {
+                            view.slightHapticFeedback()
+                            navController.navigate(Route.LINKS_HISTORY) {
+                                launchSingleTop = true
+                            }
+                        },
                         onNavigateToBatchUrlImport = {
                             navController.navigate(Route.BATCH_URL_IMPORT) {
                                 launchSingleTop = true
@@ -181,6 +188,16 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                     )
                 }
                 animatedComposable(Route.DOWNLOADS) { VideoListPage { onNavigateBack() } }
+                animatedComposable(Route.LINKS_HISTORY) {
+                    LinksHistoryPage(
+                        onNavigateBack = onNavigateBack,
+                        onRedownload = { url ->
+                            dialogViewModel.postAction(
+                                DownloadDialogViewModel.Action.ShowSheet(listOf(url))
+                            )
+                        },
+                    )
+                }
                 animatedComposableVariant(Route.TASK_LIST) {
                     TaskListPage(
                         onNavigateBack = onNavigateBack,

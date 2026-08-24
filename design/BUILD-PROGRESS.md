@@ -30,8 +30,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **7 — Glass system** (Off/Subtle/Full, default Off)
 - [x] **8 — Ambient motion + download effects**
 - [x] **9 — Home screen**
-- [~] **10 — Links history**
-- [ ] **11 — Motion system + window switcher**
+- [x] **10 — Links history**
+- [~] **11 — Motion system + window switcher**
 - [ ] **12 — About page**
 - [ ] **13 — Intro sequence**
 - [ ] **14 — Quick download + floating bubble**
@@ -93,12 +93,16 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 29 FAB
 
 ### Links history — step 10
-- [ ] 30 Screen: thumbnail, title, URL, status pill
-- [ ] 31 Filters All / Saved / Missing / Failed
-- [ ] 32 One-tap re-download at remembered quality
-- [ ] 33 Day grouping
-- [ ] 34 Empty state with mascot
-- [ ] 35 "All links ›" entry from Home
+- [x] 30 Screen: thumbnail, title, URL, status pill
+- [~] 31 Filters All / Saved / Missing / Failed
+      — THREE ship: All / Saved / Missing. **Failed is deliberately absent**: the history
+      table is written on success, so a failed download has no row and the filter could
+      never match anything. Recording failures is a schema + engine change, not a UI one.
+      See D-18. When it exists, the fourth filter is two lines.
+- [x] 32 One-tap re-download at remembered quality
+- [x] 33 Day grouping
+- [x] 34 Empty state with mascot
+- [x] 35 "All links ›" entry from Home
 
 ### Switcher — step 11
 - [ ] 36 Drawer behaves as a window switcher
@@ -185,3 +189,6 @@ below API 31 and minSdk is 24. |
 bar + FAST pill + fast tray, labelled tool strip, section head, end-of-list fish, FAB).
 ALL inherited state logic kept — the dedup/pruning comments each document a real bug.
 Download effects attached. 238 lines of orphaned composables deleted. |
+| 10 | done — LinksHistoryPage: search, filters, day grouping, status pill, one-tap
+re-download, two distinct empty states. Status is computed once on Dispatchers.IO, not
+per row. Failed filter omitted with reason (D-18). |

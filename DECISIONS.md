@@ -1087,3 +1087,59 @@ not by trusting the exit code.**
 - Search: "Compose CompositionLocal LazyListScope not composable", "Kotlin annotation applies to
   wrong declaration", "aapt2 unescaped apostrophe string resource", "Android string resource
   escaping rules".
+
+---
+
+# D-18 · The link is the durable thing, not the file — and the Failed filter cannot exist yet
+
+**Date.** 2026-08-25 · **Step.** 10 of the v0.1.0 plan
+
+## Why a second history screen is not redundant
+
+Upstream already has a downloads list, so a "links" screen looks like duplication until you ask
+what each one is *about*. Upstream's list is about **files**: delete the file and the entry goes
+with it. But the durable artifact of a download is the **link** — it is what you re-run, what you
+send someone, and what still means something after the file was deleted to free space.
+
+So this screen keeps the link and reports the file's status *against* it. "Missing" is not an
+error state; it is the normal end of a file's life, and it is exactly when you most want the link
+back.
+
+## The deviation I am not going to hide
+
+**The mockup specifies four filters: All / Saved / Missing / Failed. Trawl ships three.**
+
+`DownloadedVideoInfo` is written on *success*. A failed download never produces a row, so a
+"Failed" filter over this table would match nothing, ever — a control that is always empty and
+always lying about why.
+
+The two honest alternatives were both worse:
+
+- **Source it from the live task map.** Those failures only live as long as the process, so the
+  filter would show entries before a restart and none after, while the other three filters stayed
+  stable. Inconsistent behaviour within one control is worse than an absent control.
+- **Start recording failures.** That is a schema migration and a change to the download engine —
+  real work, outside a UI step, and not something to smuggle in under "links history".
+
+So three filters ship, and this is written down rather than quietly dropped. **Recording failed
+attempts is a genuine feature; when it exists, the fourth filter is a two-line change.** The
+mockup is not wrong, it is ahead of the data model.
+
+## Filesystem I/O and the shape of the mistake not made
+
+Status is `File.exists()` on every row. The obvious place to put that is in the row composable —
+and it would have been a real bug: `LazyColumn` recomposes rows as they scroll, so that is a disk
+hit on the main thread **every frame of every scroll**, on a list that can be hundreds long.
+
+It runs once, for the whole history, in a `produceState` on `Dispatchers.IO`. The cost is one
+pass on entry instead of an unbounded number during use.
+
+## Two empty states, because they are two different facts
+
+"No links yet" and "nothing matches that filter" mean different things, and showing the first to
+someone with 200 links and the Missing filter on would simply be false. Cheap to get right, and
+the kind of thing that makes an app feel like it is paying attention.
+
+**Further reading.**
+- Search: "Room Flow first() one-shot read", "Compose produceState IO", "LazyColumn recomposition
+  during scroll", "empty state vs no-results state".

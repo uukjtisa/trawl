@@ -212,6 +212,7 @@ fun NewHomePage(
     modifier: Modifier = Modifier,
     onMenuOpen: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
+    onNavigateToLinks: () -> Unit = {},
     onNavigateToBatchUrlImport: () -> Unit = {},
     onNavigateToVideoInfoDownload: () -> Unit = {},
     onNavigateToThumbnailDownload: () -> Unit = {},
@@ -862,7 +863,7 @@ fun NewHomePage(
                     TrawlSectionHead(
                         title = stringResource(R.string.recent),
                         actionLabel = stringResource(R.string.all_links),
-                        onAction = onNavigateToDownloads,
+                        onAction = onNavigateToLinks,
                     )
                 }
             }

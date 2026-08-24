@@ -39,6 +39,7 @@ object Route {
     const val ONBOARDING = "onboarding"
     const val HIDDEN_CONTENT = "hidden_content"
     const val MORE_TOOLS = "more_tools"
+    const val LINKS_HISTORY = "links_history"
     const val BATCH_URL_IMPORT = "batch_url_import"
     const val VIDEO_INFO_DOWNLOAD = "video_info_download"
     const val VIDEO_INFO_DETAIL = "video_info_detail"
