@@ -19,7 +19,8 @@ import com.junkfood.seal.ui.page.AppEntry
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.onboarding.OnboardingScreen
 import com.junkfood.seal.ui.page.security.LockScreen
-import com.junkfood.seal.ui.page.splash.SplashScreen
+import com.junkfood.seal.ui.page.intro.TrawlIntro
+import com.junkfood.seal.util.SHOW_INTRO
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.AuthenticationManager
 import com.junkfood.seal.util.ONBOARDING_COMPLETED
@@ -57,7 +58,18 @@ class MainActivity : AppCompatActivity() {
         setContent {
             KoinContext {
                 val windowSizeClass = calculateWindowSizeClass(this)
-                var showSplash by remember { mutableStateOf(true) }
+                // Decided ONCE, before anything is drawn, so the intro can never appear
+                // for a moment and then vanish. Reduced motion overrides the preference: a
+                // setting is a preference, an accessibility signal is an instruction.
+                val reduceMotion =
+                    android.provider.Settings.Global.getFloat(
+                        contentResolver,
+                        android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+                        1f,
+                    ) == 0f
+                var showSplash by remember {
+                    mutableStateOf(SHOW_INTRO.getBoolean() && !reduceMotion)
+                }
                 var showOnboarding by remember { mutableStateOf(!ONBOARDING_COMPLETED.getBoolean()) }
                 var isLocked by remember { mutableStateOf(false) }
                 LaunchedEffect(showOnboarding) {
@@ -75,11 +87,7 @@ class MainActivity : AppCompatActivity() {
                         Box(modifier = Modifier.fillMaxSize()) {
                             when {
                                 showSplash -> {
-                                    SplashScreen(
-                                        onSplashFinished = {
-                                            showSplash = false
-                                        }
-                                    )
+                                    TrawlIntro(onFinished = { showSplash = false })
                                 }
                                 showOnboarding -> {
                                     OnboardingScreen(

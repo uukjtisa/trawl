@@ -33,8 +33,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **10 — Links history**
 - [x] **11 — Motion system + window switcher**
 - [x] **12 — About page**
-- [~] **13 — Intro sequence**
-- [ ] **14 — Quick download + floating bubble**
+- [x] **13 — Intro sequence**
+- [~] **14 — Quick download + floating bubble**
 - [ ] **15 — Ship v0.1.0** (build, install, verify against the spec)
 
 ---
@@ -75,12 +75,15 @@ Ticked only when the behaviour is real in the app, not merely coded.
       — all three built and settable; they attach to the download card in step 9.
 
 ### Intro — step 13
-- [ ] 16 Curtain → mask rise → sheen → FLIP travel → stagger
-- [ ] 17 ~2.4 s, reduced-motion safe, cannot strand
-- [ ] 18 Mark + fish paired; fish swims up and flaps
-- [ ] 19 Accent rule draws under "Trawl"
-- [ ] 20 Tagline "hauls it up"
-- [ ] 21 Intro on/off setting
+- [~] 16 Curtain → mask rise → sheen → FLIP travel → stagger
+      — all present except a MEASURED FLIP: the intro replaces the app, so the app bar it
+      would travel toward does not exist to measure. Uses the mockup's own declared
+      fallback offsets, which exist for exactly that path. See D-21.
+- [x] 17 ~2.4 s, reduced-motion safe, cannot strand
+- [x] 18 Mark + fish paired; fish swims up and flaps
+- [x] 19 Accent rule draws under "Trawl"
+- [x] 20 Tagline "hauls it up"
+- [x] 21 Intro on/off setting
 
 ### Home — step 9
 - [x] 22 Brand header, default on, switchable off
@@ -201,3 +204,6 @@ rotated watermark, fish), portfolio + GitHub rows, the upstream credit card with
 licence, credits and version rows. Splash attribution removed IN THE SAME COMMIT.
 OPEN: the mockup says github.com/niccc2007, the identity table says uukjtisa — the
 updater (step 3) points at uukjtisa/Trawl and neither repo exists yet. Needs his call. |
+| 13 | done — TrawlIntro replaces SplashScreen (deleted, 258 lines). Three independent
+anti-stranding guarantees: never starts under reduced motion or with the setting off, tap
+to skip, and a 4s failsafe that does not depend on the timeline being correct. |

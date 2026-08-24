@@ -51,6 +51,7 @@ val LocalAnimStyle = compositionLocalOf { AnimStyle.Default }
 val LocalPinSwitcher = compositionLocalOf { false }
 val LocalQuickGear = compositionLocalOf { false }
 val LocalQuickHistory = compositionLocalOf { true }
+val LocalShowIntro = compositionLocalOf { true }
 
 val LocalFixedColorRoles = staticCompositionLocalOf {
     FixedColorRoles.fromColorSchemes(
@@ -93,6 +94,7 @@ fun SettingsProvider(windowWidthSizeClass: WindowWidthSizeClass, content: @Compo
             LocalPinSwitcher provides pinSwitcher,
             LocalQuickGear provides quickGear,
             LocalQuickHistory provides quickHistory,
+            LocalShowIntro provides showIntro,
             content = content,
         )
     }

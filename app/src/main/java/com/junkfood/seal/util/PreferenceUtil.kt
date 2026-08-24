@@ -126,6 +126,7 @@ const val ANIM_STYLE = "anim_style"
 const val PIN_SWITCHER = "pin_switcher"
 const val QUICK_GEAR = "quick_gear"
 const val QUICK_HISTORY = "quick_history"
+const val SHOW_INTRO = "show_intro"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -525,6 +526,7 @@ object PreferenceUtil {
         val pinSwitcher: Boolean = false,
         val quickGear: Boolean = false,
         val quickHistory: Boolean = true,
+        val showIntro: Boolean = true,
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -559,6 +561,7 @@ object PreferenceUtil {
                 pinSwitcher = kv.decodeBool(PIN_SWITCHER, false),
                 quickGear = kv.decodeBool(QUICK_GEAR, false),
                 quickHistory = kv.decodeBool(QUICK_HISTORY, true),
+                showIntro = kv.decodeBool(SHOW_INTRO, true),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -599,6 +602,13 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun switchShowIntro(enabled: Boolean = !mutableAppSettingsStateFlow.value.showIntro) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(showIntro = enabled) }
+            kv.encode(SHOW_INTRO, enabled)
         }
     }
 

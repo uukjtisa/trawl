@@ -807,5 +807,8 @@
     <string name="credit_seal_plus">Carried it forward when the original went quiet: current SDK, Kotlin and yt-dlp.</string>
     <string name="credit_ytdlp">The extractors that do the genuinely hard part.</string>
     <string name="fork_notice">Trawl is a fork, not an official build of either. Licensed GPL-3.0 like its upstreams — source available, modifications marked.</string>
+    <string name="intro_tagline">hauls it up</string>
+    <string name="show_intro">Opening sequence</string>
+    <string name="show_intro_desc">The short animation when Trawl starts. Skipped automatically when your system animations are off.</string>
 </resources>
 

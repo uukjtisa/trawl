@@ -125,6 +125,8 @@ import com.junkfood.seal.ui.common.LocalPinSwitcher
 import com.junkfood.seal.ui.common.LocalQuickGear
 import com.junkfood.seal.ui.common.LocalQuickHistory
 import com.junkfood.seal.ui.component.AnimStyle
+import androidx.compose.material.icons.outlined.Animation
+import com.junkfood.seal.ui.common.LocalShowIntro
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -301,6 +303,13 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     icon = Icons.Outlined.AutoAwesome,
                     isChecked = LocalDownloadFx.current,
                     onClick = { PreferenceUtil.switchDownloadFx() },
+                )
+                PreferenceSwitch(
+                    title = stringResource(R.string.show_intro),
+                    description = stringResource(R.string.show_intro_desc),
+                    icon = Icons.Outlined.Animation,
+                    isChecked = LocalShowIntro.current,
+                    onClick = { PreferenceUtil.switchShowIntro() },
                 )
                 TrawlSettingRow(
                     title = stringResource(R.string.transition_style),

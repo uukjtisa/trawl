@@ -1281,3 +1281,71 @@ not mine to guess.
 **Further reading.**
 - Search: "Compose TextStyle brush gradient text", "Brush TileMode Clamp text", "GPL attribution
   requirements fork", "public API surface of a file before rewriting".
+
+---
+
+# D-21 · An intro that replaces the app must be unable to keep it
+
+**Date.** 2026-08-25 · **Step.** 13 of the v0.1.0 plan
+
+## The risk is structural, not cosmetic
+
+The inherited splash is a `when` branch that renders *instead of* the app until a callback fires.
+That shape means a sequence which never completes does not degrade — **the app is gone.** No
+error, no way back, uninstall-and-reinstall territory.
+
+So the sequence carries three independent guarantees, in increasing order of how much they are
+trusted:
+
+1. **It never starts** when the setting is off or the system reports reduced motion.
+2. **A tap anywhere ends it.** Someone who has seen it forty times should not have to sit through
+   a forty-first, and they should not have to find a button to say so.
+3. **A hard failsafe fires after 4 seconds regardless**, and `onFinished` is latched so it can
+   only ever run once.
+
+Guarantee 3 is the one that actually matters, precisely because **it does not depend on the
+timeline being right.** If someone later edits a delay to 30 seconds, or the frame loop stalls,
+the failsafe still gets the user into the app. A safety net that shares a failure mode with the
+thing it is protecting is not a safety net.
+
+## Reduced motion is an instruction, not a preference
+
+`showIntro` defaults on. The sequence still refuses to run when `ANIMATOR_DURATION_SCALE` is 0.
+
+Those are different kinds of signal and it matters which wins: a settings toggle is what someone
+*prefers*, a system accessibility setting is what someone *needs* — often because motion makes
+them ill. The preference cannot override it.
+
+The decision is also made **once, before anything is drawn**, rather than inside the composable.
+Deciding later would let the intro appear for a frame and then vanish, which is worse than either
+showing it or not.
+
+## Where the FLIP could not be a FLIP
+
+The mockup measures the wordmark's travel with a real FLIP: read the target's
+`getBoundingClientRect()`, animate from centre to there. That is not available here, because the
+intro **fully replaces** the app — the app bar it would travel toward does not exist yet to be
+measured.
+
+Rather than invent numbers, the implementation uses the mockup's **own declared fallbacks**
+(`var(--tx, -120px)`, `--ty, -330px`, `--ts, .39`). Those exist in the CSS for exactly this case:
+the path where measurement never happened. Using them is following the contract, not departing
+from it.
+
+If the intro is ever restructured to overlay the composed app rather than replace it, a genuine
+measured FLIP becomes possible and should replace this.
+
+## Small things worth keeping
+
+- **The fish swims up into the net** from below-left, rotated, at 0.4 scale — it arrives rather
+  than fading in, so it reads as *caught* rather than placed. Then two flaps, driven by a sine
+  over the flap window instead of a second animation.
+- **One clock again.** Fifteen elements, one elapsed-time value, every phase derived from it.
+  Same reasoning as D-16.
+- **The sheen resolves to plain text at both ends**, so the final frame is indistinguishable from
+  no effect — the same property that makes the About banner's sheen safe.
+- `SplashScreen.kt` (258 lines) is deleted rather than left orphaned.
+
+**Further reading.**
+- Search: "ANIMATOR_DURATION_SCALE detect reduced motion Android", "prefers-reduced-motion
+  accessibility", "splash screen that never dismisses", "FLIP animation technique".
