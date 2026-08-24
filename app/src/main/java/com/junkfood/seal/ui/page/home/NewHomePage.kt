@@ -197,6 +197,11 @@ import com.junkfood.seal.ui.common.LocalRememberedQuality
 import com.junkfood.seal.ui.common.LocalShowMascot
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.ui.res.painterResource
+import com.junkfood.seal.ui.common.LocalQuickGear
+import com.junkfood.seal.ui.common.LocalQuickHistory
 
 /**
  * The fast tray's one-tap options.
@@ -213,6 +218,7 @@ fun NewHomePage(
     onMenuOpen: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
     onNavigateToLinks: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onNavigateToBatchUrlImport: () -> Unit = {},
     onNavigateToVideoInfoDownload: () -> Unit = {},
     onNavigateToThumbnailDownload: () -> Unit = {},
@@ -700,18 +706,39 @@ fun NewHomePage(
                 navigationIcon = {
                     IconButton(onClick = onMenuOpen) {
                         Icon(
-                            imageVector = Icons.Outlined.Menu,
-                            contentDescription = "Menu",
-                            tint = MaterialTheme.colorScheme.primary
+                            painter = painterResource(R.drawable.ic_switcher),
+                            contentDescription = stringResource(R.string.switch_window),
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 },
                 actions = {
+                    if (LocalQuickHistory.current) {
+                        IconButton(onClick = onNavigateToLinks) {
+                            Icon(
+                                imageVector = Icons.Outlined.History,
+                                contentDescription = stringResource(R.string.links_history),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                    // Off by default: he asked for the gear gone from the bar, with an opt-in to
+                    // put it back. Restored, it opens the switcher and moves to Settings so the
+                    // shortcut still reads as the same navigation, just faster.
+                    if (LocalQuickGear.current) {
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                imageVector = Icons.Outlined.Settings,
+                                contentDescription = stringResource(R.string.settings),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
                     IconButton(onClick = onNavigateToDownloads) {
                         Icon(
                             imageVector = Icons.Outlined.FileDownload,
                             contentDescription = stringResource(R.string.downloads_history),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 },

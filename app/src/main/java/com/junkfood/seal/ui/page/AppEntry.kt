@@ -77,6 +77,7 @@ import com.junkfood.seal.ui.page.tools.CommentDownloadPage
 import com.junkfood.seal.ui.page.tools.ThumbnailDownloadPage
 import com.junkfood.seal.ui.page.tools.VideoInfoDetailPage
 import com.junkfood.seal.ui.page.tools.VideoInfoDownloadPage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -163,6 +164,23 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                             view.slightHapticFeedback()
                             navController.navigate(Route.LINKS_HISTORY) {
                                 launchSingleTop = true
+                            }
+                        },
+                        onNavigateToSettings = {
+                            view.slightHapticFeedback()
+                            // The restored gear REPLAYS the switcher move rather than jumping.
+                            // He asked for it to read as "opened the switcher, then switched
+                            // window" -- so the shortcut is visibly the same navigation, just
+                            // without the intermediate tap. Jumping straight there would make
+                            // the bar shortcut and the menu feel like two different systems.
+                            scope.launch {
+                                drawerState.open()
+                                delay(260)
+                                navController.navigate(Route.SETTINGS_PAGE) {
+                                    launchSingleTop = true
+                                }
+                                delay(140)
+                                drawerState.close()
                             }
                         },
                         onNavigateToBatchUrlImport = {

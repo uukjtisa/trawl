@@ -31,8 +31,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **8 — Ambient motion + download effects**
 - [x] **9 — Home screen**
 - [x] **10 — Links history**
-- [~] **11 — Motion system + window switcher**
-- [ ] **12 — About page**
+- [x] **11 — Motion system + window switcher**
+- [~] **12 — About page**
 - [ ] **13 — Intro sequence**
 - [ ] **14 — Quick download + floating bubble**
 - [ ] **15 — Ship v0.1.0** (build, install, verify against the spec)
@@ -105,19 +105,21 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 35 "All links ›" entry from Home
 
 ### Switcher — step 11
-- [ ] 36 Drawer behaves as a window switcher
-- [ ] 37 Transition style Simple / Fancy
-- [ ] 38 Fancy = flat scale + translate, no 3D rotation
-- [ ] 39 Menu items stagger from the left
-- [ ] 40 Tap the pushed-back card to return — no X
-- [ ] 41 Swap content while small, then zoom in
-- [ ] 42 Stacked-cards switcher glyph
-- [ ] 43 Gear removed from bar, opt-in to restore
-- [ ] 44 Restored gear replays the switcher move
-- [ ] 45 History button behaves identically, own toggle
-- [ ] 46 Shortcuts hide on the screen they point at
-- [ ] 47 Keep switcher open: pick → preview → tap to enter
-- [ ] 48 Menu highlights the active window
+- [x] 36 Drawer behaves as a window switcher
+- [x] 37 Transition style Simple / Fancy
+- [x] 38 Fancy = flat scale + translate, no 3D rotation
+- [x] 39 Menu items stagger from the left
+- [x] 40 Tap the pushed-back card to return — no X
+- [x] 41 Swap content while small, then zoom in
+- [x] 42 Stacked-cards switcher glyph
+- [x] 43 Gear removed from bar, opt-in to restore
+- [x] 44 Restored gear replays the switcher move
+- [x] 45 History button behaves identically, own toggle
+- [~] 46 Shortcuts hide on the screen they point at
+      — trivially satisfied today: both shortcuts live only on Home's bar and neither
+      points at Home. Re-check when the bar is shared by more screens.
+- [x] 47 Keep switcher open: pick → preview → tap to enter
+- [x] 48 Menu highlights the active window
 
 ### About — step 12
 - [ ] 49 Signature banner: niccc2007, sheen, watermark, rule, mascot
@@ -192,3 +194,7 @@ Download effects attached. 238 lines of orphaned composables deleted. |
 | 10 | done — LinksHistoryPage: search, filters, day grouping, status pill, one-tap
 re-download, two distinct empty states. Status is computed once on Dispatchers.IO, not
 per row. Failed filter omitted with reason (D-18). |
+| 11 | done — TrawlSwitcher: Simple keeps ModalNavigationDrawer, Fancy is a custom
+container (flat scale+translate, full-bleed menu, staggered rows, tap-card-to-return).
+animStyle / pinSwitcher / quickGear / quickHistory prefs + rows. Switcher glyph replaces
+the hamburger; drawer rows now highlight the active route; the gear replays the move. |

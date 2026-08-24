@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.junkfood.seal.ui.theme.DEFAULT_SEED_COLOR
 import com.junkfood.seal.ui.theme.FixedColorRoles
+import com.junkfood.seal.ui.component.AnimStyle
 import com.junkfood.seal.ui.theme.LocalDownloadFx
 import com.junkfood.seal.ui.theme.LocalGlassLevel
 import com.junkfood.seal.ui.theme.LocalMotionLevel
@@ -44,6 +45,12 @@ val LocalHeaderWordmark = compositionLocalOf { true }
 val LocalShowMascot = compositionLocalOf { true }
 val LocalFastDownload = compositionLocalOf { true }
 val LocalRememberedQuality = compositionLocalOf { "1080p" }
+
+/** Navigation preferences. */
+val LocalAnimStyle = compositionLocalOf { AnimStyle.Default }
+val LocalPinSwitcher = compositionLocalOf { false }
+val LocalQuickGear = compositionLocalOf { false }
+val LocalQuickHistory = compositionLocalOf { true }
 
 val LocalFixedColorRoles = staticCompositionLocalOf {
     FixedColorRoles.fromColorSchemes(
@@ -82,6 +89,10 @@ fun SettingsProvider(windowWidthSizeClass: WindowWidthSizeClass, content: @Compo
             LocalShowMascot provides showMascot,
             LocalFastDownload provides fastDownload,
             LocalRememberedQuality provides rememberedQuality,
+            LocalAnimStyle provides animStyle,
+            LocalPinSwitcher provides pinSwitcher,
+            LocalQuickGear provides quickGear,
+            LocalQuickHistory provides quickHistory,
             content = content,
         )
     }

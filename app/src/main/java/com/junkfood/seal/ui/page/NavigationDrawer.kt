@@ -76,6 +76,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.junkfood.seal.App
 import com.junkfood.seal.R
+import com.junkfood.seal.ui.common.LocalAnimStyle
+import com.junkfood.seal.ui.common.LocalPinSwitcher
+import com.junkfood.seal.ui.component.AnimStyle
+import com.junkfood.seal.ui.component.TrawlSwitcher
+import com.junkfood.seal.ui.component.menuItemEntrance
 import com.junkfood.seal.ui.common.LocalDarkTheme
 import com.junkfood.seal.ui.common.LocalWindowWidthState
 import com.junkfood.seal.ui.common.Route
@@ -107,11 +112,16 @@ fun NavigationDrawer(
     when (windowWidth) {
         WindowWidthSizeClass.Compact,
         WindowWidthSizeClass.Medium -> {
-            ModalNavigationDrawer(
-                gesturesEnabled = gesturesEnabled,
-                drawerState = drawerState,
-                drawerContent = {
-                    ModalDrawerSheet(drawerState = drawerState, modifier = modifier.width(360.dp)) {
+            // Phone-sized. Fancy needs the content itself transformed, which
+            // ModalNavigationDrawer cannot do -- it only draws a sheet on top -- so that style
+            // gets its own container. Simple keeps the platform-conventional drawer.
+            if (LocalAnimStyle.current == AnimStyle.FANCY) {
+                TrawlSwitcher(
+                    open = drawerState.isOpen,
+                    style = AnimStyle.FANCY,
+                    gesturesEnabled = gesturesEnabled,
+                    onDismiss = { scope.launch { onDismissRequest() } },
+                    menu = {
                         NavigationDrawerSheetContent(
                             modifier = Modifier,
                             currentRoute = currentRoute,
@@ -123,10 +133,34 @@ fun NavigationDrawer(
                                 showHiddenContentAuthScreen = true
                             },
                         )
-                    }
-                },
-                content = content,
-            )
+                    },
+                    content = content,
+                )
+            } else {
+                ModalNavigationDrawer(
+                    gesturesEnabled = gesturesEnabled,
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet(
+                            drawerState = drawerState,
+                            modifier = modifier.width(360.dp),
+                        ) {
+                            NavigationDrawerSheetContent(
+                                modifier = Modifier,
+                                currentRoute = currentRoute,
+                                showQuickSettings = showQuickSettings,
+                                onNavigateToRoute = onNavigateToRoute,
+                                onDismissRequest = onDismissRequest,
+                                onShowHiddenContentAuth = {
+                                    hiddenContentAuthDone = false
+                                    showHiddenContentAuthScreen = true
+                                },
+                            )
+                        }
+                    },
+                    content = content,
+                )
+            }
         }
         WindowWidthSizeClass.Expanded -> {
             ModalNavigationDrawer(
@@ -324,6 +358,20 @@ fun NavigationDrawerSheetContent(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // "Keep the switcher open" turns a menu tap from GO INTO into PREVIEW: the screen behind the
+    // card changes, the switcher stays up, and a second tap on the card enters. Two taps instead
+    // of one, which is why it is not the default -- but it is the honest expression of a task
+    // switcher, and it makes the previewed card meaningful rather than decorative.
+    val pinned = LocalPinSwitcher.current
+    val navigateOrPreview: (String) -> Unit = { route ->
+        if (pinned) {
+            onNavigateToRoute(route)
+        } else {
+            scope.launch { onDismissRequest() }.invokeOnCompletion { onNavigateToRoute(route) }
+        }
+    }
+
     Column(
         modifier =
             modifier
@@ -342,24 +390,16 @@ fun NavigationDrawerSheetContent(
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.home)) },
                     icon = { Icon(Icons.Filled.Download, null, tint = ThemedIconColors.primary) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.HOME) }
-                    },
-                    selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    onClick = { navigateOrPreview(Route.HOME) },
+                    selected = currentRoute == Route.HOME,
+                    modifier = Modifier.menuItemEntrance(0).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.downloads_history)) },
                     icon = { Icon(Icons.Outlined.Subscriptions, null, tint = ThemedIconColors.secondary) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.DOWNLOADS) }
-                    },
-                    selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    onClick = { navigateOrPreview(Route.DOWNLOADS) },
+                    selected = currentRoute == Route.DOWNLOADS,
+                    modifier = Modifier.menuItemEntrance(1).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.hidden_content)) },
@@ -372,29 +412,21 @@ fun NavigationDrawerSheetContent(
                         }
                     },
                     selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(2).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.custom_command)) },
                     icon = { Icon(Icons.Outlined.Terminal, null, tint = ThemedIconColors.tertiary) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.TASK_LIST) }
-                    },
-                    selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    onClick = { navigateOrPreview(Route.TASK_LIST) },
+                    selected = currentRoute == Route.TASK_LIST,
+                    modifier = Modifier.menuItemEntrance(3).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.more_tools)) },
                     icon = { Icon(Icons.Outlined.Build, null, tint = ThemedIconColors.primary) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.MORE_TOOLS) }
-                    },
-                    selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    onClick = { navigateOrPreview(Route.MORE_TOOLS) },
+                    selected = currentRoute == Route.MORE_TOOLS,
+                    modifier = Modifier.menuItemEntrance(4).padding(vertical = 2.dp)
                 )
             }
         }
@@ -411,35 +443,23 @@ fun NavigationDrawerSheetContent(
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.settings)) },
                     icon = { Icon(Icons.Outlined.Settings, null, tint = ThemedIconColors.primary) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.SETTINGS) }
-                    },
-                    selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    onClick = { navigateOrPreview(Route.SETTINGS) },
+                    selected = currentRoute == Route.SETTINGS,
+                    modifier = Modifier.menuItemEntrance(5).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.trouble_shooting)) },
                     icon = { Icon(Icons.Rounded.BugReport, null, tint = ThemedIconColors.secondary) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.TROUBLESHOOTING) }
-                    },
-                    selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    onClick = { navigateOrPreview(Route.TROUBLESHOOTING) },
+                    selected = currentRoute == Route.TROUBLESHOOTING,
+                    modifier = Modifier.menuItemEntrance(6).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.about)) },
                     icon = { Icon(Icons.Rounded.Info, null, tint = ThemedIconColors.primary) },
-                    onClick = {
-                        scope
-                            .launch { onDismissRequest() }
-                            .invokeOnCompletion { onNavigateToRoute(Route.ABOUT) }
-                    },
-                    selected = false,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    onClick = { navigateOrPreview(Route.ABOUT) },
+                    selected = currentRoute == Route.ABOUT,
+                    modifier = Modifier.menuItemEntrance(7).padding(vertical = 2.dp)
                 )
             }
         }

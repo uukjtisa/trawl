@@ -784,5 +784,16 @@
     <string name="filter_missing">Missing</string>
     <string name="links_empty">No links yet. Everything you download shows up here.</string>
     <string name="links_no_matches">Nothing matches that filter.</string>
+    <string name="switch_window">Switch window</string>
+    <string name="transition_style">Transitions</string>
+    <string name="transition_style_desc">Fancy shrinks the current screen into a card and pushes it aside. Simple slides a plain menu over it.</string>
+    <string name="transition_simple">Simple</string>
+    <string name="transition_fancy">Fancy</string>
+    <string name="keep_switcher_open">Keep the switcher open</string>
+    <string name="keep_switcher_open_desc">Pick a window to preview it in the card, then tap the card to enter. Two taps instead of one, but the metaphor is complete.</string>
+    <string name="quick_history">Links button in the bar</string>
+    <string name="quick_history_desc">A shortcut straight to your links, without opening the switcher.</string>
+    <string name="quick_gear">Settings button in the bar</string>
+    <string name="quick_gear_desc">Off by default. Restored, it opens the switcher and moves to Settings, so the shortcut reads as the same navigation.</string>
 </resources>
 

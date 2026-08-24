@@ -117,6 +117,14 @@ import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material.icons.outlined.Title
 import com.junkfood.seal.ui.common.LocalHeaderWordmark
 import com.junkfood.seal.ui.common.LocalShowMascot
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Settings
+import com.junkfood.seal.ui.common.LocalAnimStyle
+import com.junkfood.seal.ui.common.LocalPinSwitcher
+import com.junkfood.seal.ui.common.LocalQuickGear
+import com.junkfood.seal.ui.common.LocalQuickHistory
+import com.junkfood.seal.ui.component.AnimStyle
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -293,6 +301,41 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     icon = Icons.Outlined.AutoAwesome,
                     isChecked = LocalDownloadFx.current,
                     onClick = { PreferenceUtil.switchDownloadFx() },
+                )
+                TrawlSettingRow(
+                    title = stringResource(R.string.transition_style),
+                    description = stringResource(R.string.transition_style_desc),
+                ) {
+                    TrawlSegmented(
+                        options =
+                            listOf(
+                                AnimStyle.SIMPLE to stringResource(R.string.transition_simple),
+                                AnimStyle.FANCY to stringResource(R.string.transition_fancy),
+                            ),
+                        selected = LocalAnimStyle.current,
+                        onSelect = { PreferenceUtil.modifyAnimStyle(it) },
+                    )
+                }
+                PreferenceSwitch(
+                    title = stringResource(R.string.keep_switcher_open),
+                    description = stringResource(R.string.keep_switcher_open_desc),
+                    icon = Icons.Outlined.PushPin,
+                    isChecked = LocalPinSwitcher.current,
+                    onClick = { PreferenceUtil.switchPinSwitcher() },
+                )
+                PreferenceSwitch(
+                    title = stringResource(R.string.quick_history),
+                    description = stringResource(R.string.quick_history_desc),
+                    icon = Icons.Outlined.History,
+                    isChecked = LocalQuickHistory.current,
+                    onClick = { PreferenceUtil.switchQuickHistory() },
+                )
+                PreferenceSwitch(
+                    title = stringResource(R.string.quick_gear),
+                    description = stringResource(R.string.quick_gear_desc),
+                    icon = Icons.Outlined.Settings,
+                    isChecked = LocalQuickGear.current,
+                    onClick = { PreferenceUtil.switchQuickGear() },
                 )
                 PreferenceSwitch(
                     title = stringResource(R.string.header_wordmark),

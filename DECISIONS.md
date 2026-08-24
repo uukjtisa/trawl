@@ -1143,3 +1143,76 @@ the kind of thing that makes an app feel like it is paying attention.
 **Further reading.**
 - Search: "Room Flow first() one-shot read", "Compose produceState IO", "LazyColumn recomposition
   during scroll", "empty state vs no-results state".
+
+---
+
+# D-19 · Fancy cannot be a drawer, and a menu tap has two meanings
+
+**Date.** 2026-08-25 · **Step.** 11 of the v0.1.0 plan
+
+## Two styles, two different components
+
+`ModalNavigationDrawer` draws a sheet **on top of** its content and offers no way to transform
+what is behind it. Fancy's entire premise is the opposite: the current screen shrinks to a card
+and is pushed aside, and the menu is revealed *underneath* as a full-bleed background.
+
+So the two styles are two components, not one component with a flag:
+
+- **Simple** keeps `ModalNavigationDrawer`. It is the platform convention and the right answer
+  for anyone who does not want a show — and it keeps the tablet rail layout, which is preserved
+  unchanged at `WindowWidthSizeClass.Expanded` regardless of style.
+- **Fancy** is a custom container. The menu is the background; the content sits above it in a
+  `graphicsLayer` animating `translationX = width * 0.5 * p`, `scale 1 → .78`, corner radius
+  `0 → 26dp`, over 500ms on `cubic-bezier(.5,.05,.15,1)`.
+
+`translateX(50%)` in CSS is 50% of **the element's own width**, not the viewport's — an easy
+thing to mistranslate into a value that looks right on one screen size and wrong on every other.
+
+**Flat scale and translate. No 3D rotation.** An earlier round used a `rotationY` and he rejected
+it against his reference screenshot. A perspective tilt reads as a card trick; a flat push reads
+as the screen genuinely moving out of the way, which is what a task switcher is claiming.
+
+## A menu tap means two different things
+
+With **keep the switcher open** off, tapping a menu row *goes into* that window: dismiss, then
+navigate. With it on, tapping *previews* it — the screen behind the card changes and the switcher
+stays up, and a second tap on the card enters.
+
+Those are genuinely different actions, and the codebase had the first hard-coded seven times as
+`scope.launch { dismiss() }.invokeOnCompletion { navigate() }`. Collapsing them into one
+`navigateOrPreview` helper is what made the second behaviour a one-place change rather than a
+seven-place edit — and seven copies of a decision is seven chances for the sixth to be wrong.
+
+Two taps is strictly slower than one, so preview cannot be the default for an app whose job is
+"paste, download". It ships as an option, which keeps the fast path fast and lets the metaphor be
+complete for whoever wants it.
+
+## Things that were quietly broken
+
+- **Every drawer row hardcoded `selected = false`.** The menu never showed which window you were
+  in. Material's own guidance is that the current destination should be *indicated* rather than
+  offered, and in a switcher that is the entire reason to look at the list. Now bound to the
+  current route — except "Hidden content", which correctly stays unselected because it triggers
+  an auth flow rather than being a destination.
+- **The nav glyph was a hamburger.** Three stacked lines promise a list of links. This control
+  promises a switch between windows, so it is two offset cards.
+
+## The gear replays the move rather than jumping
+
+He asked for the restored gear to "act like it toggled the side bar and then automatically
+switched window". So it does: open, 260ms, navigate, 140ms, close.
+
+That looks like decoration and is not. If the bar shortcut teleported while the menu route
+animated, the two would read as **two different navigation systems in one app**, and the shortcut
+would stop feeling like a faster version of the same thing.
+
+## Self-triggering entrance
+
+`menuItemEntrance(index)` animates on first composition rather than taking a `visible` flag,
+because the Fancy container only composes the menu while it can be seen — entering composition
+*is* the cue. One argument per call site, and no flag to forget to pass.
+
+**Further reading.**
+- Search: "ModalNavigationDrawer transform content behind", "Compose graphicsLayer scale translate
+  drawer", "CSS translateX percentage refers to element width", "Material 3 navigation current
+  destination indication", "staggered list entrance Compose".

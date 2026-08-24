@@ -17,6 +17,7 @@ import com.junkfood.seal.App.Companion.isFDroidBuild
 import com.junkfood.seal.R
 import com.junkfood.seal.database.objects.CommandTemplate
 import com.junkfood.seal.ui.theme.GlassLevel
+import com.junkfood.seal.ui.component.AnimStyle
 import com.junkfood.seal.ui.theme.MotionLevel
 import com.junkfood.seal.ui.theme.TrawlTheme
 import com.junkfood.seal.download.Task
@@ -117,6 +118,14 @@ const val FAST_DOWNLOAD = "fast_download"
 // The quality a one-tap download uses. Remembered rather than asked for every time --
 // that is the entire point of the fast path.
 const val REMEMBERED_QUALITY = "remembered_quality"
+
+// Navigation. QUICK_GEAR defaults OFF -- he asked for the gear removed from the bar,
+// with an opt-in to bring it back. QUICK_HISTORY defaults ON: it is the one shortcut
+// that saves a real round trip.
+const val ANIM_STYLE = "anim_style"
+const val PIN_SWITCHER = "pin_switcher"
+const val QUICK_GEAR = "quick_gear"
+const val QUICK_HISTORY = "quick_history"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -277,6 +286,7 @@ private val StringPreferenceDefaults =
         GLASS_LEVEL to GlassLevel.Default.id,
         MOTION_LEVEL to MotionLevel.Default.id,
         REMEMBERED_QUALITY to "1080p",
+        ANIM_STYLE to AnimStyle.Default.id,
     )
 
 private val BooleanPreferenceDefaults =
@@ -511,6 +521,10 @@ object PreferenceUtil {
         val showMascot: Boolean = true,
         val fastDownload: Boolean = true,
         val rememberedQuality: String = "1080p",
+        val animStyle: AnimStyle = AnimStyle.Default,
+        val pinSwitcher: Boolean = false,
+        val quickGear: Boolean = false,
+        val quickHistory: Boolean = true,
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -541,6 +555,10 @@ object PreferenceUtil {
                 showMascot = kv.decodeBool(SHOW_MASCOT, true),
                 fastDownload = kv.decodeBool(FAST_DOWNLOAD, true),
                 rememberedQuality = kv.decodeString(REMEMBERED_QUALITY) ?: "1080p",
+                animStyle = AnimStyle.fromId(kv.decodeString(ANIM_STYLE)),
+                pinSwitcher = kv.decodeBool(PIN_SWITCHER, false),
+                quickGear = kv.decodeBool(QUICK_GEAR, false),
+                quickHistory = kv.decodeBool(QUICK_HISTORY, true),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -581,6 +599,38 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun modifyAnimStyle(style: AnimStyle) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(animStyle = style) }
+            kv.encode(ANIM_STYLE, style.id)
+        }
+    }
+
+    fun switchPinSwitcher(
+        enabled: Boolean = !mutableAppSettingsStateFlow.value.pinSwitcher
+    ) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(pinSwitcher = enabled) }
+            kv.encode(PIN_SWITCHER, enabled)
+        }
+    }
+
+    fun switchQuickGear(enabled: Boolean = !mutableAppSettingsStateFlow.value.quickGear) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(quickGear = enabled) }
+            kv.encode(QUICK_GEAR, enabled)
+        }
+    }
+
+    fun switchQuickHistory(
+        enabled: Boolean = !mutableAppSettingsStateFlow.value.quickHistory
+    ) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(quickHistory = enabled) }
+            kv.encode(QUICK_HISTORY, enabled)
         }
     }
 
