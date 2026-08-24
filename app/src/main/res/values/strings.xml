@@ -810,5 +810,10 @@
     <string name="intro_tagline">hauls it up</string>
     <string name="show_intro">Opening sequence</string>
     <string name="show_intro_desc">The short animation when Trawl starts. Skipped automatically when your system animations are off.</string>
+    <string name="bubble_channel_name">Floating bubble</string>
+    <string name="bubble_running">Trawl is showing the floating bubble</string>
+    <string name="floating_bubble">Floating bubble</string>
+    <string name="floating_bubble_desc">A draggable circle showing download progress over other apps. Needs the \"Display over other apps\" permission; without it the notification still shows progress.</string>
+    <string name="grant_overlay_permission">Grant permission</string>
 </resources>
 

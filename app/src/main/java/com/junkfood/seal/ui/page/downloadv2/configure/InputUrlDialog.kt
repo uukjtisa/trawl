@@ -76,6 +76,12 @@ import com.junkfood.seal.ui.component.SealDialog
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.theme.ErrorTonalPalettes
 import com.junkfood.seal.util.findURLsFromString
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun InputUrlPage(
@@ -140,10 +146,7 @@ private fun InputUrlPageImpl(
     var showSavedUrlDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
-        Header(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            title = stringResource(R.string.new_task),
-        )
+        TrawlDialogHeader(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp))
         OutlinedTextField(
             value = url,
             onValueChange = { url = it },
@@ -544,4 +547,49 @@ private fun SavedUrlDialogImpl(
             }
         },
     )
+}
+
+
+/**
+ * The mockup's `.qh` -- Trawl's mark, the task title, and a source badge.
+ *
+ * The badge is not decoration: this same sheet opens both from inside the app and from another
+ * app's share menu, and someone who arrived via a share sheet has a moment of "which app am I
+ * in?" that the mark and the badge answer immediately.
+ */
+@Composable
+private fun TrawlDialogHeader(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.padding(top = 2.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.dp),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.trawl_mark),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = stringResource(R.string.new_task),
+            fontSize = 13.5.sp,
+            fontWeight = FontWeight(650),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = stringResource(R.string.app_name).uppercase(),
+            fontSize = 9.5.sp,
+            fontWeight = FontWeight.W700,
+            letterSpacing = 0.05.em,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier =
+                Modifier.border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        RoundedCornerShape(50),
+                    )
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+        )
+    }
 }

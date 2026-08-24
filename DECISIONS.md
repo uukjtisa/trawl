@@ -1349,3 +1349,71 @@ measured FLIP becomes possible and should replace this.
 **Further reading.**
 - Search: "ANIMATOR_DURATION_SCALE detect reduced motion Android", "prefers-reduced-motion
   accessibility", "splash screen that never dismisses", "FLIP animation technique".
+
+---
+
+# D-22 · A ComposeView in a Service, and an overlay that must be safe to lose
+
+**Date.** 2026-08-25 · **Step.** 14 of the v0.1.0 plan
+
+## The trap that makes this non-obvious
+
+A `ComposeView` only works inside a window that supplies three owners through the view tree: a
+`LifecycleOwner`, a `ViewModelStoreOwner` and a `SavedStateRegistryOwner`. An Activity provides
+all three; **a Service provides none.** Added straight to an overlay window, a ComposeView
+crashes on its *first composition* with a `ViewTreeLifecycleOwner` error — not at build time, not
+when the service starts, but the moment anything tries to draw.
+
+So `BubbleService` implements all three itself and attaches them with `setViewTreeOwners` before
+the view is added. This is the single reason the bubble was scheduled last: it is the only part
+of the app whose failure mode is a crash in a window the user cannot dismiss.
+
+The overlay also declares `FLAG_NOT_FOCUSABLE`. Without it the bubble steals focus from whatever
+app is underneath, and every other app on the phone starts feeling broken while Trawl downloads.
+
+## Designed to be lost
+
+`SYSTEM_ALERT_WINDOW` is a **special** permission — granted by hand in Settings, revocable
+silently at any moment — and the target is a Huawei ROM that kills background services
+aggressively. The bubble will disappear on people, and that has to be fine.
+
+It is, because **the download notification is untouched and remains the guaranteed progress
+surface** (D-08). The bubble is an enhancement, never the only way to see what is happening.
+Concretely:
+
+- The permission is re-checked in `onCreate`, not trusted from the caller, because it can be
+  revoked while the app runs and the first sign would otherwise be a crash.
+- `addView` is wrapped: a revoked permission surfaces there as a `BadTokenException`, and the
+  right response is to stop the service, not to throw.
+- The foreground notification uses `IMPORTANCE_LOW`. It exists because a foreground service is
+  *required* to have one, not because it has anything to say — it should never make a sound.
+
+## The switch reflects reality, not intent
+
+The bubble toggle shows on only when the preference is on **and** the permission is granted, and
+tapping it without the permission opens the grant screen rather than storing an intention that
+cannot take effect.
+
+A switch that reads "on" while nothing appears is the interface lying, and the user's next move
+is to toggle it twice and conclude the feature is broken.
+
+## Where I stopped short, and why
+
+The mockup's quick-download dialog is a **centred card**. The app's is a **bottom sheet**, and it
+is the same shared `DownloadDialog` used by the in-app flow — carrying format selection, playlist
+handling and preferences.
+
+Replacing it wholesale would have been a large change to the core download path immediately
+before shipping, for a visual difference. So the restyle is scoped to what is genuinely
+distinctive about the quick path: the mark, the title and the source badge. That badge is not
+decoration — the same sheet opens from inside Trawl and from another app's share menu, and
+someone arriving via a share sheet has a real "which app am I in?" moment that a mark and a badge
+answer instantly.
+
+**The full centred-card treatment is not done and is recorded as such.** It is a contained piece
+of work once the flow has been exercised on a real device.
+
+**Further reading.**
+- Search: "ComposeView in Service setViewTreeLifecycleOwner", "TYPE_APPLICATION_OVERLAY
+  BadTokenException", "SYSTEM_ALERT_WINDOW revoked at runtime", "FLAG_NOT_FOCUSABLE overlay",
+  "foreground service specialUse type".

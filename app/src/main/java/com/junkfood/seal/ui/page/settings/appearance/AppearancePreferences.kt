@@ -127,6 +127,13 @@ import com.junkfood.seal.ui.common.LocalQuickHistory
 import com.junkfood.seal.ui.component.AnimStyle
 import androidx.compose.material.icons.outlined.Animation
 import com.junkfood.seal.ui.common.LocalShowIntro
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.compose.material.icons.outlined.BubbleChart
+import androidx.compose.ui.platform.LocalContext
+import com.junkfood.seal.ui.bubble.BubbleService
+import com.junkfood.seal.ui.common.LocalFloatingBubble
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -303,6 +310,38 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     icon = Icons.Outlined.AutoAwesome,
                     isChecked = LocalDownloadFx.current,
                     onClick = { PreferenceUtil.switchDownloadFx() },
+                )
+                // The switch reflects BOTH the preference and the permission, because a
+                // toggle that reads "on" while nothing appears is the interface lying. Tapping
+                // it without the permission sends the user to grant it rather than silently
+                // storing an intention that cannot take effect.
+                val bubbleCtx = LocalContext.current
+                val bubbleAllowed = BubbleService.canDrawOverlays(bubbleCtx)
+                // Read outside the click lambda: that lambda is not a composable scope.
+                val bubbleOn = LocalFloatingBubble.current
+                PreferenceSwitch(
+                    title = stringResource(R.string.floating_bubble),
+                    description =
+                        if (bubbleAllowed) stringResource(R.string.floating_bubble_desc)
+                        else stringResource(R.string.grant_overlay_permission),
+                    icon = Icons.Outlined.BubbleChart,
+                    isChecked = bubbleOn && bubbleAllowed,
+                    onClick = {
+                        if (!bubbleAllowed) {
+                            bubbleCtx.startActivity(
+                                Intent(
+                                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                        Uri.parse("package:" + bubbleCtx.packageName),
+                                    )
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        } else {
+                            val next = !bubbleOn
+                            PreferenceUtil.switchFloatingBubble(next)
+                            if (next) BubbleService.start(bubbleCtx)
+                            else BubbleService.stop(bubbleCtx)
+                        }
+                    },
                 )
                 PreferenceSwitch(
                     title = stringResource(R.string.show_intro),

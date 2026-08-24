@@ -127,6 +127,21 @@
             </intent-filter>
         </activity>
 
+        <!--
+            Trawl's floating download bubble. ADDED BY TRAWL, 2026-08-25.
+            specialUse because it is a user-invoked overlay, not a media or data-sync service.
+            It is an ENHANCEMENT: the download notification remains the guaranteed progress
+            surface, so this stopping or being denied costs the user nothing (D-08).
+        -->
+        <service
+            android:name=".ui.bubble.BubbleService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Floating download progress overlay" />
+        </service>
+
         <service
             android:name=".DownloadService"
             android:enabled="true"

@@ -34,8 +34,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **11 — Motion system + window switcher**
 - [x] **12 — About page**
 - [x] **13 — Intro sequence**
-- [~] **14 — Quick download + floating bubble**
-- [ ] **15 — Ship v0.1.0** (build, install, verify against the spec)
+- [x] **14 — Quick download + floating bubble**
+- [~] **15 — Ship v0.1.0** (build, install, verify against the spec)
 
 ---
 
@@ -133,19 +133,25 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 54 Version row
 
 ### Quick download — step 14
-- [ ] 55 Dialog matching the real share-intent flow
+- [~] 55 Dialog matching the real share-intent flow
+      — the mockup's centred card was NOT built. The app's is a bottom sheet shared with
+      the in-app flow (format selection, playlists, preferences); replacing it wholesale is
+      a core-path change, not a restyle. Scoped to the mark + title + source badge. D-22.
 - [ ] 56 Reachable from the bubble
-- [ ] 57 Source badge, URL chip, preview, quality chips, More…
+- [~] 57 Source badge, URL chip, preview, quality chips, More…
+      — source badge done; the rest belongs to the centred-card rebuild above.
 
 ### Floating bubble — step 14
-- [ ] 58 Draggable overlay, default on
-- [ ] 59 One conic ring per download, ≤4 then a count
-- [ ] 60 Accent running · green done · red + pulse on error
+- [x] 58 Draggable overlay, default on
+- [x] 59 One conic ring per download, ≤4 then a count
+- [x] 60 Accent running · green done · red + pulse on error
 - [ ] 61 Expandable panel: progress, pause, retry
 - [ ] 62 Drag onto the bottom-centre X to dismiss
-- [ ] 63 Off-switch in its own panel and in Settings
+- [~] 63 Off-switch in its own panel and in Settings
+      — Settings switch done (and it reflects the PERMISSION, not just the preference).
+      The in-panel switch belongs with the expandable panel, item 61.
 - [ ] 64 Multi-queue: 3 concurrent, rest queued
-- [ ] 65 Permission gate degrading to the notification
+- [x] 65 Permission gate degrading to the notification
 
 ### Removals — step 4
 - [x] 66 Home donation dialog
@@ -207,3 +213,9 @@ updater (step 3) points at uukjtisa/Trawl and neither repo exists yet. Needs his
 | 13 | done — TrawlIntro replaces SplashScreen (deleted, 258 lines). Three independent
 anti-stranding guarantees: never starts under reduced motion or with the setting off, tap
 to skip, and a 4s failsafe that does not depend on the timeline being correct. |
+| 14 | done — BubbleService: overlay window hosting a ComposeView, with the three view-
+tree owners a Service does not provide (without them it crashes on first composition).
+Conic rings, drag, permission gate that degrades to the notification, Settings switch that
+reflects the permission. Dialog restyle scoped to the header + source badge (D-22).
+NOT DONE: expandable task panel (61), drag-to-X dismiss (62), 3-concurrent queue (64),
+centred-card dialog (55/57). These need the runtime pass in step 15 first. |

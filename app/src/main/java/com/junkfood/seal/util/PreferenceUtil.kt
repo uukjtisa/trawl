@@ -127,6 +127,9 @@ const val PIN_SWITCHER = "pin_switcher"
 const val QUICK_GEAR = "quick_gear"
 const val QUICK_HISTORY = "quick_history"
 const val SHOW_INTRO = "show_intro"
+// Default ON per the design, but the bubble only actually appears once the user
+// has granted "Display over other apps" -- a special permission, not a runtime one.
+const val FLOATING_BUBBLE = "floating_bubble"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -527,6 +530,7 @@ object PreferenceUtil {
         val quickGear: Boolean = false,
         val quickHistory: Boolean = true,
         val showIntro: Boolean = true,
+        val floatingBubble: Boolean = true,
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -562,6 +566,7 @@ object PreferenceUtil {
                 quickGear = kv.decodeBool(QUICK_GEAR, false),
                 quickHistory = kv.decodeBool(QUICK_HISTORY, true),
                 showIntro = kv.decodeBool(SHOW_INTRO, true),
+                floatingBubble = kv.decodeBool(FLOATING_BUBBLE, true),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -602,6 +607,15 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun switchFloatingBubble(
+        enabled: Boolean = !mutableAppSettingsStateFlow.value.floatingBubble
+    ) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(floatingBubble = enabled) }
+            kv.encode(FLOATING_BUBBLE, enabled)
         }
     }
 
