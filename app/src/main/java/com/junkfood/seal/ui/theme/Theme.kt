@@ -152,8 +152,10 @@ fun SealTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
-            shapes = Shapes,
+            // Trawl's own scale and radii. The inherited Typography/Shapes were Material
+            // defaults, which is to say Roboto and a generic corner ramp.
+            typography = TrawlTypography,
+            shapes = TrawlShapes,
             content = content,
         )
     }

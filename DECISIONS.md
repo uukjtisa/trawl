@@ -766,3 +766,97 @@ until the Kotlin follows. That is the intent.
 - Search: "Material 3 ColorScheme roles", "design tokens vs generated palettes",
   "CompositionLocal for design tokens Compose", "dynamic color vs custom theme precedence",
   "why disabled controls should explain themselves".
+
+---
+
+# D-14 · The fonts have to be in the APK, and they have to keep their weight axis
+
+**Date.** 2026-08-25 · **Step.** 6 of the v0.1.0 plan
+
+## Downloadable fonts were never an option here
+
+Android's normal answer for Google Fonts is the *downloadable font provider* — you declare the
+font, the system fetches it. That provider **is part of Google Play Services**, and the target
+device (HUAWEI NCO-LX1) **has no GMS**.
+
+The failure mode is what makes this worth writing down: a downloadable font that cannot resolve
+does not error. It **silently falls back to the system face**. Every string in the app would have
+rendered in Roboto, the entire type half of the design would be gone, and nothing anywhere would
+have said so. It would have looked like the fonts "didn't take" and cost an afternoon.
+
+So the faces are bundled in `res/font`. That is the only mechanism that works on a device without
+Play Services.
+
+## Variable, not static — because the design uses half-steps
+
+The mockup asks for **seven body weights: 450, 500, 550, 600, 650, 700, 800.** The obvious
+approach — ship four static instances (Regular/Medium/SemiBold/Bold) — would snap each of those to
+the nearest hundred and quietly flatten every one of the design's half-steps. Nobody would notice
+it as a bug; the app would just look slightly less considered than the mockup, for no stated
+reason.
+
+Keeping the `wght` axis preserves them exactly. Compose needs both halves of this to work:
+
+```kotlin
+Font(resId, weight = w, variationSettings = FontVariation.Settings(FontVariation.weight(w.weight)))
+```
+
+**Without `variationSettings` every entry renders at the file's default instance** and the family
+looks like a single weight — a trap, because it compiles and runs and simply looks wrong. And
+Compose only names the hundreds, so 450/550/650 need the numeric `FontWeight(450)` constructor;
+declaring them explicitly is what lets a style asking for 550 match exactly rather than resolve to
+the nearest declared neighbour.
+
+## Pin the axes nobody varies
+
+Shipped as-downloaded, the two files are 1,208 KB. Fraunces carries `SOFT`, `WONK` and `opsz`;
+Inter carries `opsz`. **The design varies none of them.** Pinning those and keeping only `wght`:
+
+| | before | after |
+|---|---|---|
+| Inter | 856 KB | **620 KB** |
+| Fraunces | 352 KB | **127 KB** |
+
+Carrying axes nothing sets is dead weight in every copy of the APK forever.
+
+`opsz` needed an actual decision rather than a default. Fraunces' optical size axis is what keeps
+a serif from looking spindly, and browsers pick it automatically from the font size via
+`font-optical-sizing` — **Android does not.** Pinned at 32, matching the ~20–30sp range Fraunces
+is used at. Left at its default of 9 it would have been drawn for caption-sized text and looked
+thin everywhere it actually appears.
+
+## API 24 gets the default instance, and that is the right failure
+
+Variable axes need API 26; `minSdk` is 24. On 24–25 both faces render at their default instance —
+a slightly-wrong weight, not a missing font, not a crash. Accepted knowingly: the design targets
+modern devices, and there is no version of this where "correct on two dead API levels" outranks
+"correct on everything since 2017".
+
+## The licence has to travel
+
+Both faces are SIL OFL 1.1. The OFL requires the licence text ship with the font, so `licenses/`
+holds both verbatim and `ATTRIBUTION.md` records them. Two things worth being precise about,
+because they are commonly got wrong:
+
+- **OFL does not infect the application.** A bundled font is an aggregate work, not a derivative
+  of the app. Trawl stays GPL-3.0; the fonts stay OFL. No conflict.
+- **OFL §3 forbids distributing a *modified* copy under the Reserved Font Name.** Pinning axes is
+  a modification. As app resources this is fine, but if these files are ever re-derived and shipped
+  as standalone fonts they must be renamed. Recorded so nobody discovers it later.
+
+## Reading the mockup's pixels
+
+The frame is 393px with a 9px drawn bezel, so the screen is 375px. The bezel is an artifact of
+drawing a phone inside a browser, not canvas. **1 mockup px = 1 dp**, against a ~393dp reference
+handset. The test device is 423dp (1080px at an overridden 408dpi) — rescaling to it would bake
+one specific phone into the type scale, which is the opposite of what a scale is for.
+
+Radii got the same treatment, mapped by which component uses them rather than by inventing a
+geometric ramp. Material has five shape slots and the design uses nine radii, so the leftovers
+(11, 14, 20, 26, 32) are named constants in `TrawlShape`. A component needing 26dp should reference
+`TrawlShape.UrlBar`, not write `RoundedCornerShape(26.dp)` and become a number nobody can trace.
+
+**Further reading.**
+- Search: "Android downloadable fonts requires Play Services", "Compose FontVariation.Settings
+  variable font weight", "fontTools varLib instancer pin axis", "Fraunces optical size axis",
+  "SIL OFL reserved font name modified copy", "OFL GPL compatibility aggregate work".

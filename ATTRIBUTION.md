@@ -92,9 +92,31 @@ For the record, an earlier working title ("NxSeal") did contain it and was chang
 exactly this reason, before any code or release existed. Seal Plus still contains the name;
 that makes it common practice among forks, not permitted.
 
+## Bundled typefaces
+
+Trawl ships two fonts as APK resources rather than requesting them at runtime, because the
+target device has no Google Play Services and Android's downloadable-font provider cannot
+resolve without it.
+
+| Font | Author | Licence | Where |
+|---|---|---|---|
+| **Inter** | Rasmus Andersson | SIL Open Font License 1.1 | `app/src/main/res/font/inter.ttf` |
+| **Fraunces** | Undercase Type (Phaedra Charles, Flavia Zimbardi) | SIL Open Font License 1.1 | `app/src/main/res/font/fraunces.ttf` |
+
+Both licence texts are reproduced verbatim in `licenses/` and must ship with any build. The OFL
+requires the licence to travel with the font; it does **not** require the whole application to be
+OFL, and it does not conflict with Trawl being GPL-3.0 — a bundled font is an aggregate work, not
+a derivative of the app.
+
+The files are the upstream variable fonts with unused axes pinned (Inter: `opsz`; Fraunces:
+`SOFT`, `WONK`, `opsz`), which is a permitted modification. Under OFL §3 a modified copy may not
+be distributed under the Reserved Font Name, so if these are ever re-derived and shipped as
+standalone font files rather than as app resources, they must be renamed.
+
 ## What Trawl must never do
 
 - Present itself as Seal, Seal Plus, or an official build of either
 - Use either project's icon, branding or store listing imagery
 - Remove or obscure upstream attribution
 - Ship without source availability
+- Ship the bundled fonts without their OFL licence texts

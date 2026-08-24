@@ -26,8 +26,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **3 — De-brand sweep** (no user-visible "Seal"/"Seal Plus")
 - [x] **4 — Strip donation surfaces**
 - [x] **5 — Theme foundation** (7 palettes + extended tokens)
-- [~] **6 — Typography, shape, bundled fonts**
-- [ ] **7 — Glass system** (Off/Subtle/Full, default Off)
+- [x] **6 — Typography, shape, bundled fonts**
+- [~] **7 — Glass system** (Off/Subtle/Full, default Off)
 - [ ] **8 — Ambient motion + download effects**
 - [ ] **9 — Home screen**
 - [ ] **10 — Links history**
@@ -164,3 +164,6 @@ donations) verified intact. APK 94.5 MB → 87.6 MB. |
 slot for; themeId/showSealTheme prefs; swatch picker in Look and feel; gradient default
 flipped off and folded in as one theme. `design/verify_tokens.py` proves all 112 tokens
 match the mockup exactly. |
+| 6 | done — Inter + Fraunces bundled as variable fonts with unused axes pinned
+(1,208 KB → 747 KB), TrawlTypography + TrawlShapes wired into MaterialTheme, superseded
+Type.kt/Shape.kt deleted, OFL licences added to licenses/ and ATTRIBUTION.md. |
