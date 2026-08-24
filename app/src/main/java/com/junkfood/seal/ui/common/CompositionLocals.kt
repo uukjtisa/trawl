@@ -39,6 +39,12 @@ val LocalGradientDarkMode = compositionLocalOf { false }
 /** Whether the inherited palette is offered in the picker. See PreferenceUtil. */
 val LocalShowSealTheme = compositionLocalOf { true }
 
+/** Home screen preferences, published so components need no parameter threading. */
+val LocalHeaderWordmark = compositionLocalOf { true }
+val LocalShowMascot = compositionLocalOf { true }
+val LocalFastDownload = compositionLocalOf { true }
+val LocalRememberedQuality = compositionLocalOf { "1080p" }
+
 val LocalFixedColorRoles = staticCompositionLocalOf {
     FixedColorRoles.fromColorSchemes(
         lightColors = lightColorScheme(),
@@ -72,6 +78,10 @@ fun SettingsProvider(windowWidthSizeClass: WindowWidthSizeClass, content: @Compo
             LocalGlassLevel provides glassLevel,
             LocalMotionLevel provides motionLevel,
             LocalDownloadFx provides downloadFx,
+            LocalHeaderWordmark provides headerWordmark,
+            LocalShowMascot provides showMascot,
+            LocalFastDownload provides fastDownload,
+            LocalRememberedQuality provides rememberedQuality,
             content = content,
         )
     }

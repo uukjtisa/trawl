@@ -113,6 +113,10 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import com.junkfood.seal.ui.theme.LocalDownloadFx
 import com.junkfood.seal.ui.theme.LocalMotionLevel
 import com.junkfood.seal.ui.theme.MotionLevel
+import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.outlined.Title
+import com.junkfood.seal.ui.common.LocalHeaderWordmark
+import com.junkfood.seal.ui.common.LocalShowMascot
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -289,6 +293,20 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     icon = Icons.Outlined.AutoAwesome,
                     isChecked = LocalDownloadFx.current,
                     onClick = { PreferenceUtil.switchDownloadFx() },
+                )
+                PreferenceSwitch(
+                    title = stringResource(R.string.header_wordmark),
+                    description = stringResource(R.string.header_wordmark_desc),
+                    icon = Icons.Outlined.Title,
+                    isChecked = LocalHeaderWordmark.current,
+                    onClick = { PreferenceUtil.switchHeaderWordmark() },
+                )
+                PreferenceSwitch(
+                    title = stringResource(R.string.show_mascot),
+                    description = stringResource(R.string.show_mascot_desc),
+                    icon = Icons.Outlined.Pets,
+                    isChecked = LocalShowMascot.current,
+                    onClick = { PreferenceUtil.switchShowMascot() },
                 )
                 PreferenceSwitch(
                     title = stringResource(R.string.show_seal_theme),

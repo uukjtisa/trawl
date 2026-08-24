@@ -762,5 +762,20 @@
     <string name="ambient_motion_desc">Drifting light, grain and floating motes behind the content. Nothing moves faster than 34 seconds.</string>
     <string name="download_effects">Download effects</string>
     <string name="download_effects_desc">A light sweep across the progress bar, a slow glow on the active card, and a wash that rises as a download completes.</string>
+    <string name="fast">FAST</string>
+    <string name="one_tap_remembered">One tap · remembered</string>
+    <string name="more_ellipsis">More…</string>
+    <string name="whole_catch">that\'s the whole catch</string>
+    <string name="all_links">All links ›</string>
+    <string name="recent">Recent</string>
+    <string name="tool_batch">Batch</string>
+    <string name="tool_thumbnail">Thumbnail</string>
+    <string name="tool_info">Info</string>
+    <string name="tool_comments">Comments</string>
+    <string name="header_wordmark">Header wordmark</string>
+    <string name="header_wordmark_desc">Shows the Trawl mark and name at the top of the home screen. Off hands the whole first screen to the URL field.</string>
+    <string name="show_mascot">Show the fish</string>
+    <string name="show_mascot_desc">A small mascot in the header, at the end of lists and on empty states.</string>
+    <string name="paste_a_link_to_start">Paste a link to start</string>
 </resources>
 

@@ -108,6 +108,15 @@ const val GLASS_LEVEL = "glass_level"
 // felt rather than noticed, and nothing in it moves faster than 34 seconds.
 const val MOTION_LEVEL = "motion_level"
 const val DOWNLOAD_FX = "download_fx"
+
+// Home screen. HEADER_WORDMARK defaults on -- he asked for the brand lockup Seal Plus
+// had; off hands the whole first screen to the URL field.
+const val HEADER_WORDMARK = "header_wordmark"
+const val SHOW_MASCOT = "show_mascot"
+const val FAST_DOWNLOAD = "fast_download"
+// The quality a one-tap download uses. Remembered rather than asked for every time --
+// that is the entire point of the fast path.
+const val REMEMBERED_QUALITY = "remembered_quality"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -267,6 +276,7 @@ private val StringPreferenceDefaults =
         THEME_ID to TrawlTheme.Default.id,
         GLASS_LEVEL to GlassLevel.Default.id,
         MOTION_LEVEL to MotionLevel.Default.id,
+        REMEMBERED_QUALITY to "1080p",
     )
 
 private val BooleanPreferenceDefaults =
@@ -497,6 +507,10 @@ object PreferenceUtil {
         val glassLevel: GlassLevel = GlassLevel.Default,
         val motionLevel: MotionLevel = MotionLevel.Default,
         val downloadFx: Boolean = true,
+        val headerWordmark: Boolean = true,
+        val showMascot: Boolean = true,
+        val fastDownload: Boolean = true,
+        val rememberedQuality: String = "1080p",
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -523,6 +537,10 @@ object PreferenceUtil {
                 glassLevel = GlassLevel.fromId(kv.decodeString(GLASS_LEVEL)),
                 motionLevel = MotionLevel.fromId(kv.decodeString(MOTION_LEVEL)),
                 downloadFx = kv.decodeBool(DOWNLOAD_FX, true),
+                headerWordmark = kv.decodeBool(HEADER_WORDMARK, true),
+                showMascot = kv.decodeBool(SHOW_MASCOT, true),
+                fastDownload = kv.decodeBool(FAST_DOWNLOAD, true),
+                rememberedQuality = kv.decodeString(REMEMBERED_QUALITY) ?: "1080p",
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -563,6 +581,38 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(isDynamicColorEnabled = enabled) }
             kv.encode(DYNAMIC_COLOR, enabled)
+        }
+    }
+
+    fun switchHeaderWordmark(
+        enabled: Boolean = !mutableAppSettingsStateFlow.value.headerWordmark
+    ) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(headerWordmark = enabled) }
+            kv.encode(HEADER_WORDMARK, enabled)
+        }
+    }
+
+    fun switchShowMascot(enabled: Boolean = !mutableAppSettingsStateFlow.value.showMascot) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(showMascot = enabled) }
+            kv.encode(SHOW_MASCOT, enabled)
+        }
+    }
+
+    fun switchFastDownload(
+        enabled: Boolean = !mutableAppSettingsStateFlow.value.fastDownload
+    ) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(fastDownload = enabled) }
+            kv.encode(FAST_DOWNLOAD, enabled)
+        }
+    }
+
+    fun modifyRememberedQuality(quality: String) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(rememberedQuality = quality) }
+            kv.encode(REMEMBERED_QUALITY, quality)
         }
     }
 

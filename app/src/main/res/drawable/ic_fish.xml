@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Trawl mascot. NEW FILE (Trawl project, 2026-08-25).
+
+    Transcribed from the mockup's #i-fish sprite (design/v0.1.0-baseline-mockup-ui.html).
+
+    It is a FISH, deliberately and permanently — never a seal or any other marine mammal. See
+    DECISIONS.md D-07: the app is named for the fishing method, and a pinniped mascot would walk
+    straight back into the upstream identity the fork exists to leave behind.
+
+    Line work only, tinted by the caller, so one asset serves the brand header at 25dp, the
+    end-of-list marker at 38dp and the empty states.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64"
+    android:tint="?attr/colorControlNormal">
+    <!-- body -->
+    <path
+        android:pathData="M40,32c0,9 -7.4,15.5 -16,15.5S8,41 8,32s7.4,-15.5 16,-15.5S40,23 40,32z"
+        android:strokeColor="#FFFFFF" android:strokeWidth="3"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- tail -->
+    <path
+        android:pathData="M40,32c4,-4.5 9.5,-8 15.5,-9.5 -2.6,6 -2.6,13 0,19C49.5,40 44,36.5 40,32z"
+        android:strokeColor="#FFFFFF" android:strokeWidth="3"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- eye -->
+    <path
+        android:pathData="M18.5,26.1a2.4,2.4 0 1,0 0,4.8a2.4,2.4 0 1,0 0,-4.8z"
+        android:fillColor="#FFFFFF" />
+    <!-- smile -->
+    <path
+        android:pathData="M14,37c2.6,2.2 6.4,2.2 9,0"
+        android:strokeColor="#FFFFFF" android:strokeWidth="2.4"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- bubbles -->
+    <path
+        android:pathData="M10,17.1a1.9,1.9 0 1,0 0,3.8a1.9,1.9 0 1,0 0,-3.8z"
+        android:fillColor="#FFFFFF" android:fillAlpha="0.55" />
+    <path
+        android:pathData="M5.5,12.2a1.3,1.3 0 1,0 0,2.6a1.3,1.3 0 1,0 0,-2.6z"
+        android:fillColor="#FFFFFF" android:fillAlpha="0.4" />
+</vector>

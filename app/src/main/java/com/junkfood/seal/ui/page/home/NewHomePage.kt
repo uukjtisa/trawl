@@ -187,6 +187,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.junkfood.seal.ui.common.LocalFastDownload
+import com.junkfood.seal.ui.theme.breathe
+import com.junkfood.seal.ui.theme.progressSweep
+import com.junkfood.seal.util.PreferenceUtil
+import com.junkfood.seal.ui.common.LocalHeaderWordmark
+import com.junkfood.seal.ui.common.LocalRememberedQuality
+import com.junkfood.seal.ui.common.LocalShowMascot
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.outlined.Add
+
+/**
+ * The fast tray's one-tap options.
+ *
+ * Three, not five: the point of a fast path is that it is scanned, not read. Anything else
+ * is one tap further away behind More, which opens the full configure sheet.
+ */
+private val TrawlFastQualities = listOf("1080p", "720p", "Audio")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -700,8 +718,47 @@ fun NewHomePage(
                     containerColor = Color.Transparent
                 )
             )
-        }
+        },
+        // .fab -- 60dp at radius 19, primary. In the mockup it seeds a demo task; the real
+        // equivalent is "start a download", so it opens the configure sheet with whatever is on
+        // the clipboard, falling back to the URL field's contents.
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    val target =
+                        urlText.ifBlank {
+                            clipboardManager.getText()?.text?.let {
+                                context.matchUrlFromClipboard(it)
+                            }.orEmpty()
+                        }
+                    if (target.isBlank()) {
+                        context.makeToast(R.string.url_empty)
+                    } else {
+                        view.slightHapticFeedback()
+                        dialogViewModel.postAction(Action.ShowSheet(listOf(target)))
+                        urlText = ""
+                    }
+                },
+                shape = RoundedCornerShape(19.dp),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(60.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = stringResource(R.string.download),
+                    modifier = Modifier.size(26.dp),
+                )
+            }
+        },
     ) { paddingValues ->
+        // Read before entering LazyListScope: `item {}` bodies are composable but the builder
+        // lambda around them is not, so a CompositionLocal cannot be read at that level.
+        val showWordmark = LocalHeaderWordmark.current
+        val showMascot = LocalShowMascot.current
+        val fastEnabled = LocalFastDownload.current
+        val rememberedQuality = LocalRememberedQuality.current
+
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
@@ -709,51 +766,31 @@ fun NewHomePage(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Trawl wordmark
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Trawl",
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+            // Brand lockup. Default on, switchable off -- off hands the whole first screen to
+            // the URL field, which is what someone who opens this app to paste a link wants.
+            if (showWordmark) {
+                item { TrawlBrandHead(showMascot = showMascot) }
             }
 
-            // Quick-access row for the 4 More Tools — icon-only, no labels/section header per
-            // design intent, so it reads as a native strip of shortcuts rather than a separate
-            // "section" bolted onto the home screen.
-            item {
-                QuickToolsRow(
-                    onThumbnailDownload = onNavigateToThumbnailDownload,
-                    onVideoInfoDownload = onNavigateToVideoInfoDownload,
-                    onCommentDownload = onNavigateToCommentDownload,
-                    onBatchUrlImport = onNavigateToBatchUrlImport,
-                )
-            }
             
             // URL Input Field with Download Button
             item {
-                URLInputField(
+                val go: () -> Unit = {
+                    if (urlText.isNotBlank()) {
+                        view.slightHapticFeedback()
+                        dialogViewModel.postAction(Action.ShowSheet(listOf(urlText)))
+                        urlText = ""
+                        keyboardController?.hide()
+                    } else {
+                        context.makeToast(R.string.url_empty)
+                    }
+                }
+                TrawlUrlSection(
                     value = urlText,
                     onValueChange = { urlText = it },
-                    onDownloadClick = {
-                        if (urlText.isNotBlank()) {
-                            view.slightHapticFeedback()
-                            dialogViewModel.postAction(Action.ShowSheet(listOf(urlText)))
-                            urlText = ""
-                            keyboardController?.hide()
-                        } else {
-                            context.makeToast(R.string.url_empty)
-                        }
-                    },
-                    onPasteClick = {
+                    fastEnabled = fastEnabled,
+                    onToggleFast = { PreferenceUtil.switchFastDownload() },
+                    onPaste = {
                         val clipText = clipboardManager.getText()?.text
                         if (clipText != null) {
                             context.matchUrlFromClipboard(clipText)?.let { url ->
@@ -761,7 +798,59 @@ fun NewHomePage(
                                 context.makeToast(R.string.paste_msg)
                             } ?: context.makeToast(R.string.paste_fail_msg)
                         }
-                    }
+                    },
+                    onGo = go,
+                    qualities = TrawlFastQualities,
+                    rememberedQuality = rememberedQuality,
+                    onQuickDownload = { quality ->
+                        // A one-tap download still needs a link. Reading the clipboard here is
+                        // the whole fast path: paste and quality in a single gesture.
+                        PreferenceUtil.modifyRememberedQuality(quality)
+                        val target =
+                            urlText.ifBlank {
+                                clipboardManager.getText()?.text?.let {
+                                    context.matchUrlFromClipboard(it)
+                                }.orEmpty()
+                            }
+                        if (target.isBlank()) {
+                            context.makeToast(R.string.url_empty)
+                        } else {
+                            view.slightHapticFeedback()
+                            dialogViewModel.postAction(Action.ShowSheet(listOf(target)))
+                            urlText = ""
+                        }
+                    },
+                    onMore = go,
+                )
+            }
+
+            // The four tools as one labelled surface. The inherited row was icon-only, which
+            // turned four distinct capabilities into four glyphs nobody could tell apart.
+            item {
+                TrawlToolStrip(
+                    cells =
+                        listOf(
+                            Triple(
+                                rememberVectorPainter(Icons.Outlined.PlaylistAdd),
+                                stringResource(R.string.tool_batch),
+                                onNavigateToBatchUrlImport,
+                            ),
+                            Triple(
+                                rememberVectorPainter(Icons.Outlined.Image),
+                                stringResource(R.string.tool_thumbnail),
+                                onNavigateToThumbnailDownload,
+                            ),
+                            Triple(
+                                rememberVectorPainter(Icons.Outlined.Description),
+                                stringResource(R.string.tool_info),
+                                onNavigateToVideoInfoDownload,
+                            ),
+                            Triple(
+                                rememberVectorPainter(Icons.Outlined.Chat),
+                                stringResource(R.string.tool_comments),
+                                onNavigateToCommentDownload,
+                            ),
+                        )
                 )
             }
             
@@ -770,10 +859,10 @@ fun NewHomePage(
             // tasks are Completed and already present in the DB-backed section.
             if (activeDownloads.isNotEmpty() || recentFiveDownloadsFiltered.isNotEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.recent_downloads),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
+                    TrawlSectionHead(
+                        title = stringResource(R.string.recent),
+                        actionLabel = stringResource(R.string.all_links),
+                        onAction = onNavigateToDownloads,
                     )
                 }
             }
@@ -971,6 +1060,10 @@ fun NewHomePage(
             }
             
             // Bottom spacing
+            if (showMascot) {
+                item { TrawlEndFish() }
+            }
+
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -1044,120 +1137,6 @@ fun NewHomePage(
     }
 }
 
-@Composable
-fun URLInputField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onDownloadClick: () -> Unit,
-    onPasteClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
-    val isGradientDark = LocalGradientDarkMode.current
-    val fullPlaceholder = stringResource(R.string.enter_url_to_download)
-
-    // Typewriter animation: reveal characters one by one
-    var displayedLength by remember { mutableStateOf(0) }
-    
-    LaunchedEffect(Unit) {
-        displayedLength = 0
-        for (i in 1..fullPlaceholder.length) {
-            delay(50L)
-            displayedLength = i
-        }
-    }
-
-    // Gradient animation for the placeholder text
-    val infiniteTransition = rememberInfiniteTransition(label = "placeholderGradient")
-    val gradientShift by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "placeholderShift"
-    )
-
-    val gradientColors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.primary,
-    )
-
-    val gradientBrush = Brush.linearGradient(
-        colors = gradientColors,
-        start = Offset(gradientShift, 0f),
-        end = Offset(gradientShift + 400f, 0f),
-        tileMode = TileMode.Mirror
-    )
-    
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(64.dp),
-        placeholder = {
-            Text(
-                text = fullPlaceholder.take(displayedLength),
-                style = MaterialTheme.typography.bodyLarge.merge(
-                    TextStyle(brush = gradientBrush)
-                )
-            )
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(32.dp),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { onDownloadClick() }),
-        trailingIcon = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (value.isEmpty()) {
-                    IconButton(onClick = onPasteClick) {
-                        Icon(
-                            imageVector = Icons.Outlined.ContentPaste,
-                            contentDescription = "Paste",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                
-                FilledIconButton(
-                    onClick = onDownloadClick,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .padding(end = 4.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (isGradientDark && isDarkTheme) {
-                            GradientDarkColors.GradientPrimaryStart
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.FileDownload,
-                        contentDescription = stringResource(R.string.download),
-                        tint = Color.White
-                    )
-                }
-            }
-        },
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isGradientDark && isDarkTheme) {
-                GradientDarkColors.GradientPrimaryStart
-            } else {
-                MaterialTheme.colorScheme.primary
-            },
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-        )
-    )
-}
 
 @Composable
 fun RecentDownloadCard(
@@ -1497,7 +1476,15 @@ fun ActiveDownloadCard(
     } else null
     
     Card(
-        modifier = modifier.fillMaxWidth(),
+        // Slow glow while the task is actually running. Suppressed the moment it is not, so a
+        // paused or failed card sits still and the motion means "this is working".
+        modifier =
+            modifier
+                .breathe(
+                    live = downloadState is Task.DownloadState.Running,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isGradientDark && isDarkTheme) {
@@ -1793,7 +1780,14 @@ fun ActiveDownloadCard(
                 if (progress >= 0) {
                     LinearProgressIndicator(
                         progress = { progress },
-                        modifier = Modifier.fillMaxWidth(),
+                        // The sweep goes on the determinate bar only: an indeterminate bar is
+                        // already in constant motion, and a second moving highlight on top of it
+                        // reads as two unrelated things happening.
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .progressSweep(
+                                    error = downloadState is Task.DownloadState.Error
+                                ),
                         color = barColor,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
@@ -2566,68 +2560,6 @@ private fun downloadStateSortPriority(state: Task.DownloadState): Int = when (st
     is Task.DownloadState.Completed     -> 7  // done, transitioning to DB section
 }
 
-/**
- * Animated glowing "+" text with continuously cycling gradient colors
- * and a pulsing glow effect that matches the app theme.
- */
-@Composable
-fun AnimatedGlowingPlus() {
-    val infiniteTransition = rememberInfiniteTransition(label = "plusGlow")
-
-    // Animate the gradient offset to make colors flow continuously
-    val gradientShift by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1500f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "gradientShift"
-    )
-
-    // Animate glow intensity (pulsing alpha for the shadow)
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowAlpha"
-    )
-
-    val gradientColors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary,
-        MaterialTheme.colorScheme.primary,
-    )
-
-    val glowColor = MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha * 0.6f)
-
-    val gradientBrush = Brush.linearGradient(
-        colors = gradientColors,
-        start = Offset(gradientShift, 0f),
-        end = Offset(gradientShift + 500f, 500f),
-        tileMode = TileMode.Mirror
-    )
-
-    Text(
-        text = "+",
-        style = MaterialTheme.typography.displayMedium.merge(
-            TextStyle(
-                brush = gradientBrush,
-                shadow = Shadow(
-                    color = glowColor,
-                    offset = Offset.Zero,
-                    blurRadius = 16f * glowAlpha
-                )
-            )
-        ),
-        fontWeight = FontWeight.Bold
-    )
-}
 
 /**
  * Quick-access row for the 4 More Tools (Batch URL Import, Thumbnail Download, Video Info
@@ -2646,68 +2578,6 @@ private data class QuickTool(
     val onClick: () -> Unit,
 )
 
-@Composable
-private fun QuickToolsRow(
-    onThumbnailDownload: () -> Unit,
-    onVideoInfoDownload: () -> Unit,
-    onCommentDownload: () -> Unit,
-    onBatchUrlImport: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val tools = remember(
-        onBatchUrlImport,
-        onThumbnailDownload,
-        onVideoInfoDownload,
-        onCommentDownload,
-    ) {
-        listOf(
-            QuickTool(
-                icon = Icons.Outlined.PlaylistAdd,
-                labelRes = R.string.batch_url_import,
-                tint = { ThemedIconColors.primary },
-                onClick = onBatchUrlImport,
-            ),
-            QuickTool(
-                icon = Icons.Outlined.Image,
-                labelRes = R.string.thumbnail_download,
-                tint = { ThemedIconColors.secondary },
-                onClick = onThumbnailDownload,
-            ),
-            QuickTool(
-                icon = Icons.Outlined.Description,
-                labelRes = R.string.video_info_download,
-                tint = { ThemedIconColors.tertiary },
-                onClick = onVideoInfoDownload,
-            ),
-            QuickTool(
-                icon = Icons.Outlined.Chat,
-                labelRes = R.string.comment_download,
-                tint = { ThemedIconColors.primary },
-                onClick = onCommentDownload,
-            ),
-        )
-    }
-
-    // Gentle entrance animation (fade + rise), matching the staggered-card language used
-    // elsewhere in the app (e.g. MoreToolsPage's ToolCard) instead of appearing abruptly.
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(bottom = 4.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        tools.forEachIndexed { index, tool ->
-            QuickToolIcon(
-                tool = tool,
-                visible = visible,
-                animationDelayMs = index * 60,
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

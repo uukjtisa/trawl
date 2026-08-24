@@ -1006,3 +1006,84 @@ than the call. It is `SweepEasing.transform(x)`.
 - Search: "Compose withFrameNanos animation loop", "state read in draw phase skips
   recomposition", "Modifier.blur API 31 minSdk", "feTurbulence equivalent Android",
   "Compose fun interface Easing transform".
+
+---
+
+# D-17 · Reskin the home screen; do not rewrite what it knows
+
+**Date.** 2026-08-25 · **Step.** 9 of the v0.1.0 plan
+
+## The 2,800 lines are not all UI
+
+`NewHomePage.kt` is inherited and large, and the tempting move was to replace it. Reading it
+first was the right call, because a third of it is **state derivation carrying scar tissue**:
+
+- de-duplicating a URL that has both a live task and a database row, during the Running →
+  Completed transition where it briefly has both;
+- pruning Completed tasks out of the process-scoped `DownloaderV2` map once the DB row is
+  confirmed, because otherwise a later delete resurrects the task as a ghost card;
+- an optimistic hidden-set so a card disappears on tap instead of waiting for the DB flow.
+
+Each of those has a comment describing a bug someone already fixed. **A rewrite would have
+thrown away the fixes and kept the bugs**, and they would have come back one at a time as "weird
+duplicate card" reports with no obvious cause.
+
+So: every line of state logic stays, and only the rendering is replaced. That is what "rework"
+means here.
+
+## What actually changed on screen
+
+Order follows the contract: brand lockup → URL bar + fast tray → tool strip → downloading →
+recent → end marker. The inherited order had the tool row *above* the URL field, which put four
+secondary features in front of the one thing the app is for.
+
+- **The tool strip gets labels.** It was icon-only, which turned four distinct capabilities
+  (batch, thumbnail, info, comments) into four glyphs indistinguishable without tapping them.
+- **Typed URLs render monospace.** Not decoration: a URL is a string people proofread, and a
+  proportional face makes `l`/`1`/`I` and `0`/`O` ambiguous exactly where a typo costs a failed
+  download.
+- **The fast tray hides once you type.** Someone who has typed a link has already chosen the
+  deliberate route; offering one-tap qualities underneath would be offering to discard it.
+- **Three qualities, not five.** A fast path is scanned, not read. Everything else is one tap
+  further behind *More*, which opens the full sheet.
+- **An end-of-list marker.** So a short list *ends* rather than just stopping — the difference
+  between "that is everything" and "did the rest fail to load?".
+
+The download effects landed here too, with a refusal on each: **breathe only while Running** (a
+paused or failed card sits still, so motion means "this is working"), and **sweep only on the
+determinate bar** (an indeterminate bar is already in constant motion; a second moving highlight
+on top reads as two unrelated things).
+
+238 lines of now-unreachable composables were deleted rather than left to rot.
+
+## Two Compose traps, both of which compiled fine until they did not
+
+1. **`LazyListScope` is not a composable scope.** `item { }` bodies are composable, the builder
+   lambda around them is not — so `LocalX.current` cannot be read at that level. The fix is to
+   read every local *before* the `LazyColumn` and close over the values.
+2. **An inserted top-level declaration silently stole an annotation.** Anchoring an insertion on
+   `"@Composable
+fun NewHomePage("` put a new `val` between `@OptIn(ExperimentalMaterial3Api)`
+   and the function it applied to. The annotation then applied to the `val`, and the errors
+   surfaced *hundreds of lines away* as "this material API is experimental". **When inserting
+   before a declaration, anchor above its annotations, not between them.**
+
+## The tooling lesson, third time now
+
+An unescaped `'` in `that's the whole catch` broke resource compilation — and aapt2 reports it as
+**"Invalid unicode escape sequence"**, which sends you hunting for a bad `\u` that does not
+exist. That cost several minutes of looking in the wrong place.
+
+Worse, **two attempts to fix it silently did nothing**: a `sed` with `\\\\'` and an inline
+`python -c` both passed through shell quoting layers that ate the backslash, reported success,
+and changed the file not at all. It only landed when written to a script file using `chr(92)`
+explicitly and **reading the file back from disk to prove it**.
+
+The rule this reinforces, already in this project's history: **for anything involving backslashes
+or quotes, write a script file — never an inline heredoc — and verify by re-reading the artifact,
+not by trusting the exit code.**
+
+**Further reading.**
+- Search: "Compose CompositionLocal LazyListScope not composable", "Kotlin annotation applies to
+  wrong declaration", "aapt2 unescaped apostrophe string resource", "Android string resource
+  escaping rules".

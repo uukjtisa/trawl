@@ -29,8 +29,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **6 — Typography, shape, bundled fonts**
 - [x] **7 — Glass system** (Off/Subtle/Full, default Off)
 - [x] **8 — Ambient motion + download effects**
-- [~] **9 — Home screen**
-- [ ] **10 — Links history**
+- [x] **9 — Home screen**
+- [~] **10 — Links history**
 - [ ] **11 — Motion system + window switcher**
 - [ ] **12 — About page**
 - [ ] **13 — Intro sequence**
@@ -47,7 +47,7 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 1 App name → Trawl
 - [x] 2 `applicationId` → `dev.niccc2007.trawl`
 - [x] 3 Launcher icon = trawl-net mark (square / round / monochrome)
-- [ ] 4 Mascot = the fish
+- [x] 4 Mascot = the fish
 - [ ] 5 Version line `v0.1.0 · niccc2007`
 - [~] 6 No user-visible "Seal"/"Seal Plus" outside attribution contexts
       — zero Seal text ships in any of the 62 locales (verified in the APK, not the
@@ -71,7 +71,7 @@ Ticked only when the behaviour is real in the app, not merely coded.
 ### Ambient + FX — step 8
 - [x] 13 Ambient motion Off / Subtle / Full (blobs, grain, motes)
 - [x] 14 Nothing faster than 34 s, nothing above 8% opacity
-- [~] 15 Download effects: progress sweep, breathing card, haul wash
+- [x] 15 Download effects: progress sweep, breathing card, haul wash
       — all three built and settable; they attach to the download card in step 9.
 
 ### Intro — step 13
@@ -83,14 +83,14 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [ ] 21 Intro on/off setting
 
 ### Home — step 9
-- [ ] 22 Brand header, default on, switchable off
-- [ ] 23 URL bar with FAST pill
-- [ ] 24 Fast tray: one-tap qualities + More…
-- [ ] 25 Quick-tools strip, one surface, four labelled cells
-- [ ] 26 Downloading section, multi-task with queue
-- [ ] 27 Recent list
-- [ ] 28 End-of-list mascot
-- [ ] 29 FAB
+- [x] 22 Brand header, default on, switchable off
+- [x] 23 URL bar with FAST pill
+- [x] 24 Fast tray: one-tap qualities + More…
+- [x] 25 Quick-tools strip, one surface, four labelled cells
+- [x] 26 Downloading section, multi-task with queue
+- [x] 27 Recent list
+- [x] 28 End-of-list mascot
+- [x] 29 FAB
 
 ### Links history — step 10
 - [ ] 30 Screen: thumbnail, title, URL, status pill
@@ -181,3 +181,7 @@ HaulWash, Modifier.progressSweep and Modifier.breathe, all on ONE monotonic cloc
 draw lambdas so ambient motion costs zero recompositions. motionLevel + downloadFx prefs
 and their settings rows. Blobs are radial gradients, not blur: Modifier.blur is a no-op
 below API 31 and minSdk is 24. |
+| 9 | done — home reskinned to the contract's order and components (brand lockup, URL
+bar + FAST pill + fast tray, labelled tool strip, section head, end-of-list fish, FAB).
+ALL inherited state logic kept — the dedup/pruning comments each document a real bug.
+Download effects attached. 238 lines of orphaned composables deleted. |
