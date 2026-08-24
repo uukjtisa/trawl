@@ -32,8 +32,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] **9 — Home screen**
 - [x] **10 — Links history**
 - [x] **11 — Motion system + window switcher**
-- [~] **12 — About page**
-- [ ] **13 — Intro sequence**
+- [x] **12 — About page**
+- [~] **13 — Intro sequence**
 - [ ] **14 — Quick download + floating bubble**
 - [ ] **15 — Ship v0.1.0** (build, install, verify against the spec)
 
@@ -48,7 +48,7 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 2 `applicationId` → `dev.niccc2007.trawl`
 - [x] 3 Launcher icon = trawl-net mark (square / round / monochrome)
 - [x] 4 Mascot = the fish
-- [ ] 5 Version line `v0.1.0 · niccc2007`
+- [x] 5 Version line `v0.1.0 · niccc2007`
 - [~] 6 No user-visible "Seal"/"Seal Plus" outside attribution contexts
       — zero Seal text ships in any of the 62 locales (verified in the APK, not the
       source). Outstanding only inside About, which step 12 rebuilds: upstream release /
@@ -122,12 +122,12 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 48 Menu highlights the active window
 
 ### About — step 12
-- [ ] 49 Signature banner: niccc2007, sheen, watermark, rule, mascot
-- [ ] 50 Portfolio link
-- [ ] 51 GitHub link
-- [ ] 52 Upstream credit card (required, may not shrink)
-- [ ] 53 Licence row
-- [ ] 54 Version row
+- [x] 49 Signature banner: niccc2007, sheen, watermark, rule, mascot
+- [x] 50 Portfolio link
+- [x] 51 GitHub link
+- [x] 52 Upstream credit card (required, may not shrink)
+- [x] 53 Licence row
+- [x] 54 Version row
 
 ### Quick download — step 14
 - [ ] 55 Dialog matching the real share-intent flow
@@ -149,12 +149,10 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 67 Crypto donation page
 - [x] 68 Sponsor / Support Developer pages
 - [x] 69 Gradient theme as default
-- [ ] 70 "Built on" out of the drawer (→ About)
-      — PAIRED WITH STEP 12, do not do it earlier. The real app's equivalent is
-      "Powered by Mahesh Technicals" on the splash screen, which is currently the most
-      explicit upstream credit anywhere in the UI. It may move to About; it may not be
-      absent in between. Step 12 must add the credit card and remove the splash line in
-      the same commit.
+- [x] 70 "Built on" out of the drawer (→ About)
+      — done as a PAIR in step 12: the credit card was added to About and the splash's
+      "Powered by Mahesh Technicals" removed in the SAME commit, so in-app attribution was
+      never weaker than what the fork inherited. Verified present in the built APK.
 
 ---
 
@@ -198,3 +196,8 @@ per row. Failed filter omitted with reason (D-18). |
 container (flat scale+translate, full-bleed menu, staggered rows, tap-card-to-return).
 animStyle / pinSwitcher / quickGear / quickHistory prefs + rows. Switcher glyph replaces
 the hamburger; drawer rows now highlight the active route; the gear replays the move. |
+| 12 | done — About rebuilt: signature banner (Fraunces 37sp, brush sheen, drawn rule,
+rotated watermark, fish), portfolio + GitHub rows, the upstream credit card with links,
+licence, credits and version rows. Splash attribution removed IN THE SAME COMMIT.
+OPEN: the mockup says github.com/niccc2007, the identity table says uukjtisa — the
+updater (step 3) points at uukjtisa/Trawl and neither repo exists yet. Needs his call. |

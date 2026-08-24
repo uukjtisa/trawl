@@ -795,5 +795,17 @@
     <string name="quick_history_desc">A shortcut straight to your links, without opening the switcher.</string>
     <string name="quick_gear">Settings button in the bar</string>
     <string name="quick_gear_desc">Off by default. Restored, it opens the switcher and moves to Settings, so the shortcut reads as the same navigation.</string>
+    <string name="portfolio">Portfolio</string>
+    <string name="github">GitHub</string>
+    <string name="built_by">Built by</string>
+    <string name="built_on">Built on</string>
+    <string name="signature_subtitle">Nicanor III W. Cariasa · Philippines</string>
+    <string name="licence">Licence</string>
+    <string name="licence_gpl3">GNU General Public License v3.0</string>
+    <string name="and_contributors">&amp; contributors</string>
+    <string name="credit_seal">The original app — architecture, Compose UI and the yt-dlp integration.</string>
+    <string name="credit_seal_plus">Carried it forward when the original went quiet: current SDK, Kotlin and yt-dlp.</string>
+    <string name="credit_ytdlp">The extractors that do the genuinely hard part.</string>
+    <string name="fork_notice">Trawl is a fork, not an official build of either. Licensed GPL-3.0 like its upstreams — source available, modifications marked.</string>
 </resources>
 

@@ -1216,3 +1216,68 @@ because the Fancy container only composes the menu while it can be seen — ente
 - Search: "ModalNavigationDrawer transform content behind", "Compose graphicsLayer scale translate
   drawer", "CSS translateX percentage refers to element width", "Material 3 navigation current
   destination indication", "staggered list entrance Compose".
+
+---
+
+# D-20 · Attribution moves in one commit, never in two
+
+**Date.** 2026-08-25 · **Step.** 12 of the v0.1.0 plan
+
+## The rule that shaped the commit
+
+The upstream credit is a **project requirement**, not merely licence compliance (ATTRIBUTION.md).
+It may move; it may not shrink, and it may not be absent.
+
+Before this step the most explicit in-app credit was the splash screen's "Powered by Mahesh
+Technicals". Checklist item 70 says to move that to About. The obvious sequencing — remove it in
+step 4 with the other splash-era cruft, add the card in step 12 — would have left **eight commits
+where the app credited nobody**. Anyone who built from any of those commits would have shipped a
+fork with weaker attribution than it inherited.
+
+So the removal was deliberately deferred and both halves land here, in one commit. The tracker
+carried the pairing as an explicit note for eight steps so it could not be forgotten.
+
+Each credit links to its source, because **a credit the reader cannot follow is decoration.**
+
+## What "1:1 with the mockup" cost, and what it did not
+
+The signature banner is transcribed: 37sp Fraunces, a one-pass sheen at 1600ms on
+`cubic-bezier(.36,0,.22,1)` after a 180ms beat, a rule that draws left-to-right, the mark as a
+7%-opacity watermark rotated -12 degrees and bleeding off the corner, and the fish.
+
+Two translation notes:
+
+- **The sheen is a `Brush` on `TextStyle`**, which Compose supports directly — no
+  `background-clip: text` equivalent needed. Both ends of the gradient resolve to the plain text
+  colour, so the frozen final frame is indistinguishable from ordinary text. That is what makes it
+  safe: the effect exists only while it is moving, and it can never leave a name permanently
+  recoloured. `TileMode.Clamp` is required, or the highlight repeats several times across one word
+  instead of travelling across it once.
+- **The rule is a drawn box, not a border.** A border width cannot be animated; a box's width can.
+
+## A rewrite dropped two symbols other files depended on
+
+Replacing the file removed `YtdlpRepository` and nearly removed `AutoUpdateUnavailableDialog` —
+a top-level constant and a composable that `TemplateListPage` and `UpdatePage` import. The
+constant surfaced as an "unresolved reference" in **a file this step never touched**, which is
+exactly how that failure always presents.
+
+**Before replacing an inherited file wholesale, list what it exports and who imports it.** Its
+public surface is not the same as the thing you came to change, and the compiler will tell you
+about it from somewhere else entirely.
+
+## An inconsistency I am flagging rather than resolving
+
+**The mockup says `github.com/niccc2007`. The project's own identity table says
+`github.com/uukjtisa`, and every verified asset — the portfolio, the PyPI package, the profile
+README — is under `uukjtisa`.**
+
+The mockup wins for what About displays, so it shows `niccc2007`. But in step 3 I pointed the
+auto-updater and the issue-tracker link at `uukjtisa/Trawl`, and the About page's own
+"switch to GitHub builds" link now says `niccc2007/Trawl`. **Neither repository exists yet**, so
+nothing is broken today — but the two must agree before a release, and that is his call to make,
+not mine to guess.
+
+**Further reading.**
+- Search: "Compose TextStyle brush gradient text", "Brush TileMode Clamp text", "GPL attribution
+  requirements fork", "public API surface of a file before rewriting".

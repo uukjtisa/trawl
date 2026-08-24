@@ -2,6 +2,10 @@ package com.junkfood.seal.ui.page.splash
 
 // Modified by the Trawl project on 2026-08-25 (GPL-3.0 section 5(a)).
 // Changes: Seal Plus wordmark, logo and copyright line replaced with Trawl's.
+// 2026-08-25: removed the "Powered by Mahesh Technicals" line. PAIRED with step 12, which
+// added the upstream credit card to About in the SAME commit -- the credit moved, it was
+// never absent. Removing this alone would have left the app with weaker in-app attribution
+// than it shipped with, which the project's own rules forbid.
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -217,17 +221,6 @@ fun SplashScreen(
                 .padding(bottom = 48.dp)
                 .alpha(taglineAlpha)
         ) {
-            Text(
-                text = "Powered by Mahesh Technicals",
-                style = MaterialTheme.typography.bodySmall,
-                color = if (isGradientDark) {
-                    GradientDarkColors.OnSurface.copy(alpha = 0.6f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                }
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
             
             Text(
                 text = "© 2026 Trawl",
