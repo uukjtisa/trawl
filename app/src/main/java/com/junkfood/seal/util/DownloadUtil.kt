@@ -52,6 +52,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.Locale
 
+/**
+ * Stored in a history row's `extractor` when one of Trawl's own resolvers produced the download,
+ * so the UI can tell a direct fetch from a yt-dlp one.
+ *
+ * Filesystem-safe on purpose: with "subdirectory per extractor" enabled this same string becomes
+ * a folder name, and a colon is illegal on the sdcard's filesystem.
+ */
+const val TRAWL_DIRECT = "TrawlDirect"
+
 object DownloadUtil {
 
     private val jsonFormat = Json { ignoreUnknownKeys = true }
@@ -398,7 +407,7 @@ object DownloadUtil {
                         title = tok.title,
                         uploader = tok.uploader,
                         thumbnail = tok.thumbnail ?: it.thumbnail,
-                        extractorKey = "TikTok",
+                        extractorKey = TRAWL_DIRECT,
                         // Not yt-dlp's guess from a signed URL: that id was the query string,
                         // which then became the temp directory's name and killed the download.
                         id = tok.id,
@@ -422,7 +431,7 @@ object DownloadUtil {
                         title = tweet.title,
                         uploader = tweet.uploader,
                         thumbnail = tweet.thumbnail ?: it.thumbnail,
-                        extractorKey = "Twitter",
+                        extractorKey = TRAWL_DIRECT,
                         // Same reasoning as TikTok's: the tweet is the identity, not whatever
                         // yt-dlp makes of a CDN filename.
                         id = TwitterCdn.statusId(url) ?: it.id,

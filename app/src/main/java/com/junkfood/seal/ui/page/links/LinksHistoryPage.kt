@@ -71,6 +71,9 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.em
 import com.junkfood.seal.ui.common.AsyncImageImpl
+import com.junkfood.seal.ui.component.wasDirect
+import com.junkfood.seal.ui.component.ToolBadge
+import com.junkfood.seal.ui.component.PlatformBadge
 
 /** What became of the file this link produced. */
 enum class LinkStatus {
@@ -348,7 +351,8 @@ private fun LinkRow(entry: LinkEntry, onRedownload: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.padding(top = 5.dp),
             ) {
-                SourceBadge(entry.info.videoUrl)
+                PlatformBadge(url = entry.info.videoUrl)
+                ToolBadge(direct = wasDirect(entry.info.extractor))
                 StatusPill(entry.status, tokens.ok, tokens.warn)
             }
         }
@@ -371,35 +375,6 @@ private fun LinkRow(entry: LinkEntry, onRedownload: () -> Unit) {
     }
 }
 
-/**
- * Where the link came from, as a word.
- *
- * "tiktok" is instantly readable; `https://www.tiktok.com/@toscaa.fgl/v...` is not, and it is
- * what the row used to lead with.
- */
-@Composable
-private fun SourceBadge(url: String) {
-    val host =
-        remember(url) {
-            runCatching { java.net.URI(url).host.orEmpty() }
-                .getOrDefault("")
-                .removePrefix("www.")
-                .removePrefix("m.")
-                .substringBefore('.')
-                .ifBlank { "link" }
-        }
-    Text(
-        text = host.uppercase(),
-        fontSize = 9.sp,
-        fontWeight = FontWeight.W700,
-        letterSpacing = 0.06.em,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier =
-            Modifier.clip(RoundedCornerShape(50))
-                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(50))
-                .padding(horizontal = 7.dp, vertical = 3.dp),
-    )
-}
 
 @Composable
 private fun StatusPill(status: LinkStatus, ok: Color, warn: Color) {

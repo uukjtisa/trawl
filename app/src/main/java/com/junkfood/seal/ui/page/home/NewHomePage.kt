@@ -213,6 +213,9 @@ import com.junkfood.seal.ui.bubble.BubbleTaskState
 import androidx.lifecycle.compose.LifecycleEventEffect
 import android.net.Uri
 import com.junkfood.seal.ui.page.home.TrawlToolCell
+import com.junkfood.seal.ui.component.wasDirect
+import com.junkfood.seal.ui.component.ToolBadge
+import com.junkfood.seal.ui.component.PlatformBadge
 
 /**
  * The fast tray's one-tap options.
@@ -1353,6 +1356,16 @@ fun RecentDownloadCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 
+                // Where it came from, and how it was fetched. The second is the point of this
+                // fork, so it should be visible on the card rather than only in the docs.
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    PlatformBadge(url = downloadInfo.videoUrl)
+                    ToolBadge(direct = wasDirect(downloadInfo.extractor))
+                }
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
