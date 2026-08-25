@@ -83,7 +83,15 @@ The information exists in the log already, so this is a display job.
 ## Known rough edges
 
 - **Huawei and other aggressive ROMs** kill the foreground service, which takes the floating
-  window with it. There is no battery-optimisation prompt yet to warn you.
+  window with it. Trawl asks for a battery-optimisation exemption on first launch, but that only
+  covers the standard Android setting. On Huawei the deep link into the ROM's own startup manager
+  is refused with a `SecurityException`, so the auto-launch and secondary-launch toggles there have
+  to be set by hand. The dialog says so; it cannot do it for you.
+- **Installing the debug and release builds side by side breaks downloads for whichever one did not
+  create the folder.** They are separate packages sharing `Download/Trawl`, and MediaStore records
+  the owner per path, so the second app gets `Postprocessing: Error opening input files: Permission
+  denied` on any file the first one already downloaded. It looks like a broken release build and is
+  not one. Install one or the other, or give them different download directories.
 - **Clipboard auto-paste only fires when the app or the floating panel has focus.** Since Android
   10 only the focused app may read the clipboard, so a true background watcher cannot exist. The
   panel reads it when you open it, which is the closest honest version.

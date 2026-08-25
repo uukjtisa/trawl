@@ -1,6 +1,6 @@
 # What Trawl is for
 
-Trawl is a personal fork of [Seal Plus](https://github.com/MaheshTechnicals/Seal-Plus), which is
+Trawl is a personal fork of [Seal Plus](https://github.com/MaheshTechnicals/Sealplus), which is
 itself a fork of [Seal](https://github.com/JunkFood02/Seal). Both are excellent, and Trawl exists
 because of them rather than in spite of them — see [ATTRIBUTION.md](../ATTRIBUTION.md).
 

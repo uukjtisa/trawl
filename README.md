@@ -4,14 +4,14 @@
 
 # Trawl
 
-**An Android media downloader that does not give up when one extractor breaks.**
+**A general-purpose media downloader for Android, built to cover a wide range of platforms.**
 
 [![Licence](https://img.shields.io/badge/Licence-GPL--3.0-D98E4A?style=for-the-badge)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-7.0%2B-D98E4A?style=for-the-badge&logo=android&logoColor=white)](#building-it-yourself)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Compose-D98E4A?style=for-the-badge&logo=kotlin&logoColor=white)](#building-it-yourself)
 [![Status](https://img.shields.io/badge/v0.1.0-early%20development-C25E3A?style=for-the-badge)](docs/STATUS.md)
 
-A personal fork of **[Seal Plus](https://github.com/MaheshTechnicals/Seal-Plus)**, itself a fork of
+A personal fork of **[Seal Plus](https://github.com/MaheshTechnicals/Sealplus)**, itself a fork of
 **[Seal](https://github.com/JunkFood02/Seal)**.
 Built by **[uukjtisa](https://github.com/uukjtisa)**.
 
@@ -19,9 +19,9 @@ Built by **[uukjtisa](https://github.com/uukjtisa)**.
 
 > [!WARNING]
 > **v0.1.0. Early development.** I wrote this for my own phone and I am still finding bugs in it.
-> There is no release build, no store listing, and nobody but me has run it. What is written below
-> is what the code does today, not what I hope it will do. See **[docs/STATUS.md](docs/STATUS.md)**
-> for the honest list of what is finished, half-built and missing.
+> There is no store listing, and until now nobody but me had run it. What is written below is what
+> the code does today, not what I hope it will do. See **[docs/STATUS.md](docs/STATUS.md)** for the
+> honest list of what is finished, half-built and missing.
 
 ---
 
@@ -35,6 +35,7 @@ Built by **[uukjtisa](https://github.com/uukjtisa)**.
   - [Checking any of this yourself](#checking-any-of-this-yourself)
 - [The rest of the app](#the-rest-of-the-app)
 - [What it is for, and what it will not do](#what-it-is-for-and-what-it-will-not-do)
+- [Installing it](#installing-it)
 - [Building it yourself](#building-it-yourself)
 - [Project status](#project-status)
 - [Credits](#credits)
@@ -55,8 +56,8 @@ When yt-dlp's extractor for a site stops working, an ordinary front-end has noth
 shows you an extractor error and that is the end of the download. Trawl resolves two sites itself,
 without yt-dlp's extractor, and only falls back to yt-dlp when its own attempt comes up empty.
 
-Every download card shows which route actually ran, `DIRECT` or `YT-DLP`, so the claim is visible
-in the app rather than only in this file.
+Every download card shows which route actually ran, `DIRECT` or `YT-DLP`, so you can check that
+claim in the app instead of taking this file's word for it.
 
 ---
 
@@ -168,6 +169,23 @@ failing vaguely.
 
 ---
 
+## Installing it
+
+Grab an APK from **[Releases](https://github.com/uukjtisa/trawl/releases)**. Android 7.0 or newer,
+and you will need to allow installing from unknown sources.
+
+| File | For |
+|---|---|
+| `Trawl-*-universal.apk` | Anything. Pick this if you are not sure. |
+| `Trawl-*-arm64-v8a.apk` | Almost every phone sold since roughly 2017, at a third of the size. |
+| `Trawl-*-armeabi-v7a.apk` | Older 32-bit phones. |
+| `Trawl-*-x86_64.apk`, `Trawl-*-x86.apk` | Emulators, and the few x86 Android devices. |
+
+The APKs are signed with my own key rather than a store key, so Android will call the installer
+untrusted. That is what a sideloaded build looks like.
+
+---
+
 ## Building it yourself
 
 ```bash
@@ -185,7 +203,9 @@ Android Studio opens the project as is. Gradle resolves the JDK 21 toolchain on 
 | Language | Kotlin, Jetpack Compose |
 | Application id | `dev.niccc2007.trawl` |
 
-There is no signed release APK yet. Debug builds only.
+`assembleGenericRelease` produces the five APKs above, but only if a `keystore.properties` pointing
+at your own signing key sits in the project root. Without one the release build is unsigned and
+will not install.
 
 ---
 
@@ -213,7 +233,7 @@ full.
 | **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** | The download engine, and the hard part |
 | **[youtubedl-android](https://github.com/yausername/youtubedl-android)** | Android bindings and the bundled Python runtime |
 | **[Seal](https://github.com/JunkFood02/Seal)** by JunkFood02 | The original app: its architecture, Compose UI and yt-dlp integration are what this is built on |
-| **[Seal Plus](https://github.com/MaheshTechnicals/Seal-Plus)** by MaheshTechnicals | Carried the project forward when the original went quiet |
+| **[Seal Plus](https://github.com/MaheshTechnicals/Sealplus)** by MaheshTechnicals | Carried the project forward when the original went quiet |
 | **[FFmpeg](https://ffmpeg.org/)** | Media post-processing |
 | **[FixTweet](https://github.com/FixTweet/FixTweet)** | The public resolver Trawl falls back to for restricted X posts |
 
