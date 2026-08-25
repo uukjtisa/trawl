@@ -71,7 +71,7 @@ import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.theme.LocalTrawlTokens
 import com.junkfood.seal.ui.theme.SealTheme
-import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.graphics.graphicsLayer
@@ -86,6 +86,14 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.heightIn
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
+import com.junkfood.seal.util.PreferenceUtil
+import com.junkfood.seal.util.CLIPBOARD_AUTOPASTE
 
 /** What the bubble is currently saying, in priority order. */
 enum class BubbleState {
@@ -255,18 +263,18 @@ private fun Modifier.bubbleGestures(
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
             var moved = false
-            var dx = 0f
-            var dy = 0f
+            // DISTANCE travelled, not net displacement. The bubble's window follows the finger,
+            // so the pointer's position within the view keeps snapping back toward where it
+            // started -- a signed sum hovers around zero and the gesture never registers as a
+            // drag, which is why dragging kept opening the panel instead of moving it.
+            var travelled = 0f
             while (true) {
                 val event = awaitPointerEvent()
                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
                 if (change.changedToUp()) break
                 val delta = change.positionChange()
-                dx += delta.x
-                dy += delta.y
-                if (!moved && (abs(dx) > viewConfiguration.touchSlop ||
-                        abs(dy) > viewConfiguration.touchSlop)
-                ) {
+                travelled += hypot(delta.x, delta.y)
+                if (!moved && travelled > viewConfiguration.touchSlop) {
                     moved = true
                     onDragStart()
                 }
@@ -350,6 +358,19 @@ fun BubblePanel(
     onTurnOff: () -> Unit,
 ) {
     var url by remember { mutableStateOf("") }
+    var autoPaste by remember { mutableStateOf(CLIPBOARD_AUTOPASTE.getBoolean()) }
+
+    // Opening the panel is the only moment the clipboard is legally readable -- since Android 10
+    // an unfocused app gets null, and this window has just taken focus. The link is pasted, not
+    // acted on: it lands where it was going anyway and the decision stays with the download
+    // button. The small delay lets focus actually arrive.
+    LaunchedEffect(autoPaste) {
+        if (!autoPaste) return@LaunchedEffect
+        delay(400)
+        if (url.isEmpty()) {
+            onReadClipboard().takeIf { it.isNotBlank() }?.let { url = it }
+        }
+    }
     val tasks by BubbleTasks.tasks.collectAsState()
     SealTheme {
         val tokens = LocalTrawlTokens.current
@@ -446,6 +467,23 @@ fun BubblePanel(
                             },
                     )
                 }
+                // Only present when there is something to clear: a permanently visible X on an
+                // empty field is a control that does nothing most of the time.
+                if (url.isNotEmpty()) {
+                    Box(
+                        Modifier.size(30.dp)
+                            .clip(RoundedCornerShape(9.dp))
+                            .clickable { url = "" },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = stringResource(R.string.clear),
+                            tint = scheme.onSurfaceVariant,
+                            modifier = Modifier.size(15.dp),
+                        )
+                    }
+                }
                 // Reading the clipboard is legal here only because this window takes focus --
                 // since Android 10 an unfocused app gets null, silently. That is exactly why
                 // the first cut had to bounce to the Activity instead.
@@ -502,7 +540,51 @@ fun BubblePanel(
                     )
                 }
             } else {
-                live.take(4).forEach { task -> BubbleTaskRow(task, onAction) }
+                // Scrolls rather than truncates. `take(4)` hid the rest of the queue, and letting
+                // the column grow instead would push the footer -- "Hide bubble" and "Turn off" --
+                // off the bottom of the screen, which is where the way out lives.
+                Column(
+                    modifier =
+                        Modifier.heightIn(max = 208.dp)
+                            .verticalScroll(rememberScrollState())
+                ) {
+                    live.forEach { task -> BubbleTaskRow(task, onAction) }
+                }
+            }
+
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .clickable {
+                            autoPaste = !autoPaste
+                            PreferenceUtil.updateValue(CLIPBOARD_AUTOPASTE, autoPaste)
+                        }
+                        .padding(horizontal = 6.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_paste_trawl),
+                    contentDescription = null,
+                    tint = if (autoPaste) scheme.primary else scheme.onSurfaceVariant,
+                    modifier = Modifier.size(14.dp),
+                )
+                Text(
+                    text = stringResource(R.string.clipboard_autopaste),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight(550),
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = stringResource(if (autoPaste) R.string.state_on else R.string.state_off),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.W700,
+                    letterSpacing = 0.06.em,
+                    color = if (autoPaste) tokens.ok else scheme.onSurfaceVariant,
+                )
             }
 
             // .bfoot -- "hide" is for this download, "turn off" is for good. Two different

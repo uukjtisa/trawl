@@ -50,6 +50,23 @@ import kotlin.random.Random
 import kotlinx.coroutines.isActive
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.graphics.drawscope.scale
+import kotlin.math.sin
+import kotlin.math.roundToInt
+import kotlin.math.floor
+import kotlin.math.cos
+import kotlin.math.PI
+import com.junkfood.seal.R
+import com.junkfood.seal.ui.common.LocalShowMascot
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
 
 /** Off / Subtle / Full, matching `[data-motion]` in the mockup. */
 enum class MotionLevel(val id: String) {
@@ -121,80 +138,74 @@ private fun pingPong(seconds: Float, period: Float): Float {
     return easeInOut(if (p <= 1f) p else 2f - p)
 }
 
-// ── blobs ────────────────────────────────────────────────────────────────────────────────────
-
-private class Blob(
-    val widthDp: Float,
-    val heightDp: Float,
-    /** Fractions of the container; negatives intentionally hang the blob off-screen. */
-    val leftDp: Float?,
-    val rightDp: Float?,
-    val topFraction: Float?,
-    val topDp: Float?,
-    val bottomDp: Float?,
-    val dxDp: Float,
-    val dyDp: Float,
-    val scaleTo: Float,
-    val subtlePeriod: Float?,
-    val fullPeriod: Float,
-)
-
-// .b1 / .b2 / .b3 with their drift1/2/3 keyframes and per-level durations.
-private val Blobs = listOf(
-    Blob(320f, 250f, leftDp = -60f, rightDp = null, topFraction = null, topDp = -40f,
-        bottomDp = null, dxDp = 46f, dyDp = 38f, scaleTo = 1.16f,
-        subtlePeriod = 54f, fullPeriod = 34f),
-    Blob(280f, 230f, leftDp = null, rightDp = -80f, topFraction = 0.44f, topDp = null,
-        bottomDp = null, dxDp = -52f, dyDp = -40f, scaleTo = 1.20f,
-        subtlePeriod = 66f, fullPeriod = 42f),
-    // b3 animates only at Full; at Subtle it sits still, exactly as the CSS has it.
-    Blob(400f, 260f, leftDp = -30f, rightDp = null, topFraction = null, topDp = null,
-        bottomDp = -90f, dxDp = 38f, dyDp = -26f, scaleTo = 1.10f,
-        subtlePeriod = null, fullPeriod = 50f),
-)
+// ── rising glows ─────────────────────────────────────────────────────
 
 /**
- * `filter: blur(46px)` on a solid ellipse is approximated with a radial gradient that holds its
- * colour to ~45% and then falls away.
+ * A soft glow that drifts up the screen and fades away, on its own long cycle.
  *
- * A real blur would mean `Modifier.blur()`, which is a no-op below API 31 -- and an UNBLURRED
- * 320dp ellipse of saturated colour is not a subtle degradation, it is three hard discs sitting
- * behind the UI. The gradient is visually equivalent at this radius, works on every API level,
- * and costs less than a full-screen blur pass every frame.
+ * Replaces three blobs that sat in fixed positions and merely breathed. Parked light reads as a
+ * smudge on the glass; light that travels reads as light. Same idea as the motes, an order of
+ * magnitude larger and slower.
  */
-private fun DrawScope.drawBlob(blob: Blob, color: Color, progress: Float, dp: (Float) -> Float) {
-    val w = dp(blob.widthDp)
-    val h = dp(blob.heightDp)
-    val scale = 1f + (blob.scaleTo - 1f) * progress
-    val sw = w * scale
-    val sh = h * scale
+private class Glow(
+    /** Where it sits horizontally, as a fraction of the width. */
+    val xFraction: Float,
+    val radiusDp: Float,
+    /** Seconds for one full bottom-to-top pass. */
+    val periodSeconds: Float,
+    /** Negative start offset so the field is populated on the first frame. */
+    val phaseOffset: Float,
+    /** Sideways drift across one pass, in dp. */
+    val driftDp: Float,
+)
 
-    val x = when {
-        blob.leftDp != null -> dp(blob.leftDp)
-        blob.rightDp != null -> size.width - w - dp(blob.rightDp)
-        else -> 0f
-    } + dp(blob.dxDp) * progress - (sw - w) / 2f
+private val Glows =
+    listOf(
+        Glow(xFraction = 0.22f, radiusDp = 190f, periodSeconds = 30f, phaseOffset = 0.00f, driftDp = 34f),
+        Glow(xFraction = 0.78f, radiusDp = 165f, periodSeconds = 38f, phaseOffset = 0.42f, driftDp = -28f),
+        Glow(xFraction = 0.50f, radiusDp = 210f, periodSeconds = 46f, phaseOffset = 0.74f, driftDp = 20f),
+    )
 
-    val y = when {
-        blob.topDp != null -> dp(blob.topDp)
-        blob.topFraction != null -> size.height * blob.topFraction
-        blob.bottomDp != null -> size.height - h - dp(blob.bottomDp)
-        else -> 0f
-    } + dp(blob.dyDp) * progress - (sh - h) / 2f
-
-    val center = Offset(x + sw / 2f, y + sh / 2f)
-    val radius = maxOf(sw, sh) / 2f
-    drawOval(
-        brush = Brush.radialGradient(
-            0.00f to color.copy(alpha = 0.55f),
-            0.45f to color.copy(alpha = 0.55f),
-            1.00f to Color.Transparent,
-            center = center,
-            radius = radius,
-        ),
-        topLeft = Offset(x, y),
-        size = Size(sw, sh),
-        style = Fill,
+/**
+ * `filter: blur(46px)` on a solid ellipse, approximated with a radial gradient that holds its
+ * colour to ~40% and then falls away.
+ *
+ * A real blur would mean `Modifier.blur()`, a no-op below API 31 -- and an UNBLURRED 380dp disc of
+ * saturated colour is not a subtle degradation, it is a hard circle sitting behind the UI. The
+ * gradient is visually equivalent at this radius and costs less than a full-screen blur pass.
+ */
+private fun DrawScope.drawGlow(
+    glow: Glow,
+    color: Color,
+    clock: Float,
+    speed: Float,
+    dp: (Float) -> Float,
+) {
+    val p = ((clock * speed / glow.periodSeconds) + glow.phaseOffset) % 1f
+    val r = dp(glow.radiusDp)
+    // Starts a full radius below the bottom edge and ends a full radius above the top, so it
+    // never pops into or out of existence at the screen edge.
+    val cy = size.height + r - (size.height + r * 2f) * p
+    val cx = size.width * glow.xFraction + dp(glow.driftDp) * p
+    // Fades in over the first fifth and out over the last, so the loop has no seam.
+    val fade =
+        when {
+            p < 0.20f -> p / 0.20f
+            p > 0.80f -> (1f - p) / 0.20f
+            else -> 1f
+        }
+    if (fade <= 0.01f) return
+    drawCircle(
+        brush =
+            Brush.radialGradient(
+                0.00f to color.copy(alpha = 0.55f * fade),
+                0.40f to color.copy(alpha = 0.42f * fade),
+                1.00f to Color.Transparent,
+                center = Offset(cx, cy),
+                radius = r,
+            ),
+        radius = r,
+        center = Offset(cx, cy),
     )
 }
 
@@ -283,16 +294,12 @@ fun BoxScope.AmbientBackground(
     Canvas(modifier.matchParentSize()) {
         val dp: (Float) -> Float = { with(density) { it.dp.toPx() } }
 
-        // Blobs are drawn at every level, including OFF -- they are the theme's ambient wash, and
-        // "motion off" means they stop moving, not that the background goes flat black.
-        Blobs.forEachIndexed { i, blob ->
-            val period = when (level) {
-                MotionLevel.OFF -> null
-                MotionLevel.SUBTLE -> blob.subtlePeriod
-                MotionLevel.FULL -> blob.fullPeriod
-            }
-            val progress = if (period == null) 0f else pingPong(clock, period)
-            drawBlob(blob, blobColors[i], progress, dp)
+        // Nothing is drawn at OFF. The old code kept the blobs visible and merely stopped them,
+        // calling that "the theme's ambient wash" -- but parked light is exactly what read as
+        // smudges on the glass, so off now means off.
+        if (level.isOn) {
+            val speed = if (level == MotionLevel.SUBTLE) 0.65f else 1f
+            Glows.forEachIndexed { i, glow -> drawGlow(glow, blobColors[i], clock, speed, dp) }
         }
 
         if (level.grainAlpha > 0f) {
@@ -316,6 +323,71 @@ fun BoxScope.AmbientBackground(
                 )
             }
         }
+    }
+
+    // The mascot, drawn OUTSIDE the Canvas: it is a VectorDrawable and DrawScope cannot paint
+    // one. A composable also gets the flip and the tilt from a graphicsLayer for nothing.
+    if (level.isOn && LocalShowMascot.current) {
+        AmbientSwimmer(clock = clock, tint = tokens.accent)
+    }
+}
+
+/**
+ * The fish, swimming.
+ *
+ * It crosses the screen, bobs on a sine, tilts INTO the bob (a fish points where it is going),
+ * turns around at the end of each lap and takes a different lane on the way back. Slow and faint
+ * enough to be background -- one crossing takes the better part of a minute.
+ */
+@Composable
+private fun BoxScope.AmbientSwimmer(clock: Float, tint: Color) {
+    var box by remember { mutableStateOf(IntSize.Zero) }
+    val density = LocalDensity.current
+
+    Box(Modifier.matchParentSize().onSizeChanged { box = it }) {
+        if (box.width == 0 || box.height == 0) return@Box
+
+        val period = 52f
+        val lap = floor(clock / period).toInt()
+        val p = (clock / period) % 1f
+        // Alternate direction each lap so it turns around rather than teleporting back.
+        val leftToRight = lap % 2 == 0
+
+        val sizePx = with(density) { 44.dp.toPx() }
+        val travel = box.width + sizePx * 2f
+        val x = (if (leftToRight) -sizePx + travel * p else box.width + sizePx - travel * p)
+
+        // A different lane each lap, from the lap number rather than a random -- so it is stable
+        // across recompositions and never jumps mid-swim.
+        val lane = ((lap * 37) % 100) / 100f
+        val baseY = box.height * (0.18f + lane * 0.6f)
+        val bob = sin(p * PI.toFloat() * 6f) * with(density) { 26.dp.toPx() }
+        val y = baseY + bob
+
+        // Tilt into the bob: the derivative of the sine, scaled down and flipped with heading.
+        val tilt = cos(p * PI.toFloat() * 6f) * 9f * (if (leftToRight) 1f else -1f)
+
+        val fade =
+            when {
+                p < 0.08f -> p / 0.08f
+                p > 0.92f -> (1f - p) / 0.08f
+                else -> 1f
+            }
+
+        Icon(
+            painter = painterResource(R.drawable.ic_fish),
+            contentDescription = null,
+            tint = tint,
+            modifier =
+                Modifier.size(44.dp)
+                    .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                    .graphicsLayer {
+                        // The asset faces right, so a right-to-left lap is mirrored.
+                        scaleX = if (leftToRight) 1f else -1f
+                        rotationZ = tilt
+                        alpha = 0.16f * fade
+                    },
+        )
     }
 }
 

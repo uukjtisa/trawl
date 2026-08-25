@@ -61,6 +61,9 @@ import com.junkfood.seal.util.matchUrlFromSharedText
 import com.junkfood.seal.QuickDownloadActivity
 import android.view.MotionEvent
 import android.view.KeyEvent
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 
 class BubbleService :
     Service(), LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner, KoinComponent {
@@ -120,6 +123,7 @@ class BubbleService :
             return
         }
 
+        isRunning = true
         startForeground(NOTIFICATION_ID, buildNotification())
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
@@ -276,9 +280,21 @@ class BubbleService :
 
     // ── the panel ────────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Tapping the bubble opens the panel, and taps it shut again.
+     *
+     * The debounce is not a nicety. The panel window watches for outside touches, and a tap on
+     * the BUBBLE is outside the panel -- so it has already closed by the time this runs, and
+     * without the guard the tap would immediately open a fresh one. Two correct behaviours
+     * cancelling out into "tapping it while expanded does nothing".
+     */
     private fun togglePanel() {
+        if (System.currentTimeMillis() - closedByOutsideTouchAt < REOPEN_GUARD_MS) return
         if (panelView != null) closePanel() else openPanel()
     }
+
+    /** When an outside touch last closed the panel. See [togglePanel]. */
+    private var closedByOutsideTouchAt = 0L
 
     private fun openPanel() {
         val wm = windowManager ?: return
@@ -353,6 +369,7 @@ class BubbleService :
         // to the app below; we only learn that it happened, which is all that is needed to close.
         view.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                closedByOutsideTouchAt = System.currentTimeMillis()
                 closePanel()
                 true
             } else false
@@ -385,7 +402,12 @@ class BubbleService :
         val clip = getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
         val text =
             clip?.primaryClip?.getItemAt(0)?.coerceToText(this)?.toString().orEmpty()
-        return matchUrlFromSharedText(text).orEmpty().ifBlank { text.trim() }
+        // Links only, deliberately. The raw-text fallback that used to be here meant copying a
+        // paragraph put a paragraph in the field -- and with the watcher on, it would have tried
+        // to download one.
+        return matchUrlFromSharedText(text).orEmpty().takeIf {
+            it.startsWith("http://") || it.startsWith("https://")
+        } ?: ""
     }
 
     /**
@@ -454,6 +476,7 @@ class BubbleService :
     }
 
     override fun onDestroy() {
+        isRunning = false
         settleAnim?.cancel()
         closePanel()
         hideDropTarget()
@@ -468,8 +491,18 @@ class BubbleService :
     }
 
     companion object {
+        /** Whether the overlay is up, so the home screen's control can say so. */
+        var isRunning by mutableStateOf(false)
+            private set
+
         private const val CHANNEL_ID = "trawl_bubble"
         private const val NOTIFICATION_ID = 4210
+
+        /**
+         * How long after an outside-touch close a bubble tap is treated as part of that same
+         * gesture rather than as a fresh "open".
+         */
+        private const val REOPEN_GUARD_MS = 350L
 
         /** `.dropx{bottom:26px}` and its 58px circle, inside the composable's 90dp box. */
         private const val DROP_BOTTOM_DP = 26

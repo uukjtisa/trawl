@@ -210,6 +210,9 @@ import com.junkfood.seal.ui.bubble.BubbleTasks
 import com.junkfood.seal.ui.common.LocalFloatingBubble
 import com.junkfood.seal.ui.theme.GlintIcon
 import com.junkfood.seal.ui.bubble.BubbleTaskState
+import androidx.lifecycle.compose.LifecycleEventEffect
+import android.net.Uri
+import com.junkfood.seal.ui.page.home.TrawlToolCell
 
 /**
  * The fast tray's one-tap options.
@@ -936,33 +939,70 @@ fun NewHomePage(
             // The four tools as one labelled surface. The inherited row was icon-only, which
             // turned four distinct capabilities into four glyphs nobody could tell apart.
             item {
+                // Re-checked on every resume: "Display over other apps" is granted in Settings,
+                // in another app, so a one-time check would leave this dead immediately after the
+                // user granted it.
+                var overlayAllowed by remember {
+                    mutableStateOf(BubbleService.canDrawOverlays(context))
+                }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                    overlayAllowed = BubbleService.canDrawOverlays(context)
+                }
                 TrawlToolStrip(
                     cells =
                         listOf(
-                            Triple(
-                                rememberVectorPainter(Icons.Outlined.PlaylistAdd),
-                                stringResource(R.string.tool_batch),
-                                onNavigateToBatchUrlImport,
+                            TrawlToolCell(
+                                painter = rememberVectorPainter(Icons.Outlined.PlaylistAdd),
+                                label = stringResource(R.string.tool_batch),
+                                onClick = onNavigateToBatchUrlImport,
                             ),
-                            Triple(
-                                rememberVectorPainter(Icons.Outlined.Image),
-                                stringResource(R.string.tool_thumbnail),
-                                onNavigateToThumbnailDownload,
+                            TrawlToolCell(
+                                painter = rememberVectorPainter(Icons.Outlined.Image),
+                                label = stringResource(R.string.tool_thumbnail),
+                                onClick = onNavigateToThumbnailDownload,
                             ),
-                            Triple(
-                                rememberVectorPainter(Icons.Outlined.Description),
-                                stringResource(R.string.tool_info),
-                                onNavigateToVideoInfoDownload,
+                            TrawlToolCell(
+                                painter = rememberVectorPainter(Icons.Outlined.Description),
+                                label = stringResource(R.string.tool_info),
+                                onClick = onNavigateToVideoInfoDownload,
                             ),
-                            Triple(
-                                rememberVectorPainter(Icons.Outlined.Chat),
-                                stringResource(R.string.tool_comments),
-                                onNavigateToCommentDownload,
+                            TrawlToolCell(
+                                painter = rememberVectorPainter(Icons.Outlined.Chat),
+                                label = stringResource(R.string.tool_comments),
+                                onClick = onNavigateToCommentDownload,
+                            ),
+                            TrawlToolCell(
+                                // The app's own mark, not a generic PiP glyph: this cell floats
+                                // TRAWL over other apps, and the mark says which app that is.
+                                painter = painterResource(R.drawable.trawl_mark),
+                                label = stringResource(R.string.tool_float),
+                                active = BubbleService.isRunning,
+                                onClick = {
+                                    view.slightHapticFeedback()
+                                    when {
+                                        !overlayAllowed ->
+                                            runCatching {
+                                                context.startActivity(
+                                                    Intent(
+                                                            Settings
+                                                                .ACTION_MANAGE_OVERLAY_PERMISSION,
+                                                            Uri.parse(
+                                                                "package:${context.packageName}"
+                                                            ),
+                                                        )
+                                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                )
+                                            }
+                                        BubbleService.isRunning -> BubbleService.stop(context)
+                                        else -> BubbleService.start(context)
+                                    }
+                                },
                             ),
                         )
                 )
             }
             
+
             // Recent Downloads Section - combines both active and completed.
             // Use activeDownloads (not taskStateMap) so the header hides correctly when all
             // tasks are Completed and already present in the DB-backed section.

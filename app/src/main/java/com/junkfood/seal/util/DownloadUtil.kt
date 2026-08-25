@@ -1325,8 +1325,19 @@ object DownloadUtil {
             // The id is ours, so it must not reach yt-dlp. Cleared rather than filtered because
             // every downstream option-builder reads it, and one missed call site downloads the
             // wrong thing silently.
+            // newTitle is the app's existing "I am choosing this file's title" mechanism, and it
+            // drives BOTH --replace-in-metadata and the post-download media scan. Setting it here
+            // is what keeps the name we download to and the name we then look for in agreement --
+            // without that they disagreed, the scan matched nothing, and the download completed
+            // into a file the gallery, the player and the history all failed to find.
+            val resolvedTitle = tweet?.title ?: tok?.title
             val effectivePreferences =
-                if (variant != null || tok != null) downloadPreferences.copy(formatIdString = "")
+                if (variant != null || tok != null)
+                    downloadPreferences.copy(
+                        formatIdString = "",
+                        newTitle =
+                            downloadPreferences.newTitle.ifEmpty { resolvedTitle.orEmpty() },
+                    )
                 else downloadPreferences
             if (TwitterCdn.isTweet(url)) {
                 TrawlLog.i(
@@ -1334,9 +1345,6 @@ object DownloadUtil {
                         "picked=${variant?.formatId} url=${variant?.url?.take(72)}"
                 )
             }
-            // Set when this download owns its own archive key (the CDN path); written after a
-            // success so a failed download never claims to have been fetched.
-            var pendingArchiveKey: String? = null
             val pathBuilder = StringBuilder()
             val outputBuilder = StringBuilder()
             // Index 0 = start time ms, index 1 = end time ms
@@ -1363,39 +1371,19 @@ object DownloadUtil {
                     if (debug) {
                         addOption("-v")
                     }
-                    if (useDownloadArchive) {
-                        val archiveFile = context.getArchiveFile()
-                        // A CDN-resolved download keys on the tweet and the rung. yt-dlp's own id
-                        // for a direct file is a signed CDN filename: it differs per quality, and
-                        // the app's pre-check only ever sees the PROBE's id (always the best
-                        // rung), so one successful download refused every later one at any
-                        // quality. See archive_fix notes.
-                        val archiveTarget =
-                            when {
-                                variant != null ->
-                                    "twitter ${TwitterCdn.statusId(url)}-${variant.bitrate}"
-                                tok != null -> "tiktok ${tok.id}"
-                                else -> "${videoInfo.extractor} ${videoInfo.id}"
-                            }
-                        val alreadyDownloaded = archiveFile.exists() &&
-                            archiveFile.bufferedReader().useLines { lines ->
-                                lines.any { it.trimEnd() == archiveTarget }
-                            }
-                        if (alreadyDownloaded) {
-                            TrawlLog.i("Archive: already have [$archiveTarget], refusing")
-                            return Result.failure(
-                                YoutubeDLException(
-                                    context.getString(R.string.download_archive_error)
-                                )
-                            )
-                        } else if (variant != null || tok != null) {
-                            // Deliberately NOT --download-archive here: yt-dlp would keep writing
-                            // per-rung CDN filenames that nothing can ever match again. The app
-                            // owns this key, so the app writes it, once the download succeeds.
-                            pendingArchiveKey = archiveTarget
-                        } else {
-                            useDownloadArchive()
-                        }
+                    // The download archive no longer REFUSES anything. It was a hidden file
+                    // the user could not see or reset, a hit produced a bare "Download error"
+                    // indistinguishable from a real failure, and it happily recorded downloads
+                    // that had silently produced no findable file -- so the app then refused to
+                    // re-fetch what it had effectively lost.
+                    //
+                    // Duplicate detection belongs to the Links history instead: it knows whether
+                    // a download completed AND whether the file is still on disk, it is visible,
+                    // and the user can delete from it. That path asks; it does not forbid.
+                    if (useDownloadArchive && variant == null && tok == null) {
+                        // Left in place for ordinary yt-dlp downloads, where it is yt-dlp's own
+                        // well-behaved feature keyed on a real extractor id.
+                        useDownloadArchive()
                     }
 
                     if (rateLimit && maxDownloadRate.isNumberInRange(1, 1000000)) {
@@ -1461,18 +1449,20 @@ object DownloadUtil {
                             "*%d-%d".format(locale = Locale.US, it.start, it.end),
                         )
                     }
-                    if (newTitle.isNotEmpty()) {
-                        addCommands(listOf("--replace-in-metadata", "title", ".+", newTitle))
-                    } else if (tweet != null || tok != null) {
-                        // Otherwise %(title)s resolves to the CDN basename -- something like
-                        // "ZxQ3n1Kd7", which is useless in a gallery six weeks later. Backslashes
-                        // are stripped because this lands in a regex replacement.
+                    // effectivePreferences, NOT the enclosing `with` receiver. A bare
+                    // `newTitle` here reads the ORIGINAL preferences, which is empty for a
+                    // resolved download -- so the rename silently never happened, and every
+                    // consequence of it (filename, media scan, history row) followed.
+                    val titleOverride = effectivePreferences.newTitle
+                    if (titleOverride.isNotEmpty()) {
+                        // Backslashes stripped: this lands in a regex REPLACEMENT, where they
+                        // are escape syntax rather than literal characters.
                         addCommands(
                             listOf(
                                 "--replace-in-metadata",
                                 "title",
                                 ".+",
-                                (tweet?.title ?: tok?.title.orEmpty()).replace("\\", ""),
+                                titleOverride.replace("\\", ""),
                             )
                         )
                     }
@@ -1518,13 +1508,6 @@ object DownloadUtil {
                         .also {
                             downloadTiming[0] = dlStartTime
                             downloadTiming[1] = System.currentTimeMillis()
-                            // Only after the bytes actually landed. Recording it before would
-                            // make a failed download permanently unrepeatable.
-                            pendingArchiveKey?.let { key ->
-                                runCatching {
-                                    context.getArchiveFile().appendText(key + "\n")
-                                }
-                            }
                         }
                 }
                 .onFailure { th ->
@@ -1538,7 +1521,7 @@ object DownloadUtil {
                     ) {
                         th.printStackTrace()
                         onFinishDownloading(
-                            preferences = this,
+                            preferences = effectivePreferences,
                             videoInfo = videoInfo,
                             downloadPath = pathBuilder.toString(),
                             sdcardUri = sdcardUri,
@@ -1548,7 +1531,7 @@ object DownloadUtil {
                     } else Result.failure(th)
                 }
             return onFinishDownloading(
-                preferences = this,
+                preferences = effectivePreferences,
                 videoInfo = videoInfo,
                 downloadPath = pathBuilder.toString(),
                 sdcardUri = sdcardUri,
@@ -1601,6 +1584,10 @@ object DownloadUtil {
                 FileUtil.scanFileToMediaLibraryPostDownload(
                         title = fileName,
                         downloadDir = downloadPath,
+                        // A second, independent key. The id is in the filename too, and it is
+                        // never sanitised the way a title can be -- so a title mismatch can no
+                        // longer make a finished download look like it produced no files.
+                        altKey = videoInfo.id.takeIf { it.isNotBlank() },
                     )
                     .run {
                         if (privateMode) Result.success(emptyList())

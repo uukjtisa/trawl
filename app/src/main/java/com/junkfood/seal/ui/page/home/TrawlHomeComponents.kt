@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.em
@@ -70,6 +71,17 @@ import com.junkfood.seal.ui.theme.GlintIcon
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableFloatStateOf
+import com.junkfood.seal.ui.theme.rememberGlarePhase
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 
 /**
  * `.brandhead` -- the 32dp mark, the wordmark at 31sp/700 in the display face, and the fish.
@@ -141,6 +153,7 @@ fun TrawlUrlBar(
     onValueChange: (String) -> Unit,
     fastEnabled: Boolean,
     onToggleFast: () -> Unit,
+    modeLabel: String,
     onPaste: () -> Unit,
     onGo: () -> Unit,
     modifier: Modifier = Modifier,
@@ -157,7 +170,15 @@ fun TrawlUrlBar(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         Box(Modifier.weight(1f)) { textField(Modifier.fillMaxWidth()) }
-        FastPill(enabled = fastEnabled, onClick = onToggleFast)
+        FastPill(
+            enabled = fastEnabled,
+            // The mode itself, not a fixed word. This is the only thing on screen that answers
+            // "what will the go button do?", which is the job the FAST label never did.
+            label =
+                if (fastEnabled) modeLabel.uppercase()
+                else stringResource(R.string.mode_ask).uppercase(),
+            onClick = onToggleFast,
+        )
         // .pasteb -- 34dp circle, muted; a secondary affordance next to the primary action.
         Box(
             Modifier.size(34.dp).clip(RoundedCornerShape(50)).clickable(onClick = onPaste),
@@ -188,9 +209,18 @@ fun TrawlUrlBar(
     }
 }
 
-/** `.fastpill` -- 26dp tall, outlined when off, filled with primary when on. */
+/**
+ * `.fastpill`, rebranded as a MODE READOUT.
+ *
+ * It used to say FAST and mean a boolean, which described the wrong thing: the tray underneath
+ * already offered one-tap qualities, so the pill was a second control for the same idea and read
+ * as "download faster" -- something it cannot do.
+ *
+ * It now answers the only question worth asking before pressing the big button: what is that
+ * button going to do? ASK opens the configure sheet; a quality or AUDIO goes straight there.
+ */
 @Composable
-private fun FastPill(enabled: Boolean, onClick: () -> Unit) {
+private fun FastPill(enabled: Boolean, label: String, onClick: () -> Unit) {
     val bg = if (enabled) MaterialTheme.colorScheme.primary else Color.Transparent
     val fg =
         if (enabled) MaterialTheme.colorScheme.onPrimary
@@ -216,7 +246,7 @@ private fun FastPill(enabled: Boolean, onClick: () -> Unit) {
             modifier = Modifier.size(12.dp),
         )
         Text(
-            text = stringResource(R.string.fast),
+            text = label,
             fontSize = 10.sp,
             fontWeight = FontWeight.W700,
             letterSpacing = 0.06.em,
@@ -328,8 +358,21 @@ fun QualityChip(
  * Labels are not optional here. The inherited version was icon-only, which turned four distinct
  * capabilities into four glyphs nobody could tell apart without tapping them.
  */
+/**
+ * One cell of the strip.
+ *
+ * Replaced a `Triple` once a cell needed to show STATE: the floating-window control has to say
+ * whether it is currently on, and a triple had nowhere to put that.
+ */
+data class TrawlToolCell(
+    val painter: Painter,
+    val label: String,
+    val active: Boolean = false,
+    val onClick: () -> Unit,
+)
+
 @Composable
-fun TrawlToolStrip(cells: List<Triple<Painter, String, () -> Unit>>, modifier: Modifier = Modifier) {
+fun TrawlToolStrip(cells: List<TrawlToolCell>, modifier: Modifier = Modifier) {
     Row(
         modifier =
             modifier
@@ -338,24 +381,48 @@ fun TrawlToolStrip(cells: List<Triple<Painter, String, () -> Unit>>, modifier: M
                 .padding(vertical = 11.dp, horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        cells.forEach { (painter, label, onClick) ->
+        val tokens = LocalTrawlTokens.current
+        cells.forEach { cell ->
+            // A live cell pulses gently. Only ever one cell does, and only while it is actually
+            // on, so the movement carries information instead of decorating the strip.
+            val pulse = rememberInfiniteTransition(label = "cellPulse")
+            val breath by
+                pulse.animateFloat(
+                    initialValue = 0.55f,
+                    targetValue = 1f,
+                    animationSpec =
+                        infiniteRepeatable(
+                            tween(1500, easing = LinearEasing),
+                            RepeatMode.Reverse,
+                        ),
+                    label = "cellBreath",
+                )
+            val tint =
+                if (cell.active) tokens.ok.copy(alpha = breath)
+                else MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
             Column(
-                modifier = Modifier.weight(1f).clickable(onClick = onClick),
+                modifier = Modifier.weight(1f).clickable(onClick = cell.onClick),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(7.dp),
             ) {
                 Icon(
-                    painter = painter,
+                    painter = cell.painter,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f),
+                    tint = tint,
                     modifier = Modifier.size(21.dp),
                 )
                 Text(
-                    text = label,
+                    text = cell.label,
                     fontSize = 10.5.sp,
-                    fontWeight = FontWeight.W500,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    fontWeight = if (cell.active) FontWeight.W700 else FontWeight.W500,
+                    color =
+                        if (cell.active) tokens.ok
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Two lines allowed: one-word labels are unaffected, and the floating-window
+                    // cell needs enough room to say what it is rather than being a vague verb.
+                    maxLines = 2,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 12.sp,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -402,6 +469,8 @@ fun TrawlSectionHead(
  * It exists so a short list ends deliberately instead of just stopping, which is the difference
  * between "that is everything" and "did it fail to load the rest?".
  */
+
+
 @Composable
 fun TrawlEndFish(modifier: Modifier = Modifier) {
     Column(
@@ -460,6 +529,7 @@ fun TrawlUrlSection(
             onValueChange = onValueChange,
             fastEnabled = fastEnabled,
             onToggleFast = onToggleFast,
+            modeLabel = rememberedQuality,
             onPaste = onPaste,
             onGo = onGo,
         ) { fieldModifier ->

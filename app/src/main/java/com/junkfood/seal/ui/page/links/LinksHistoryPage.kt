@@ -84,7 +84,19 @@ enum class LinkStatus {
 /** Bucket for rows with no usable timestamp. */
 private const val EARLIER = "Earlier"
 
-private data class LinkEntry(val info: DownloadedVideoInfo, val status: LinkStatus)
+/**
+ * A history row plus the two facts the database does not carry: whether the file is still there,
+ * and when it was actually downloaded.
+ *
+ * [dateMillis] is the file's mtime, because the entity has no download-date column --
+ * `downloadTimeMillis` is a DURATION, and using it as a date is what produced "1 January 1970".
+ * Zero when the file is gone and the date is therefore unknowable.
+ */
+private data class LinkEntry(
+    val info: DownloadedVideoInfo,
+    val status: LinkStatus,
+    val dateMillis: Long,
+)
 
 enum class LinkFilter(val labelRes: Int) {
     ALL(R.string.filter_all),
@@ -112,11 +124,17 @@ fun LinksHistoryPage(onNavigateBack: () -> Unit, onRedownload: (String) -> Unit)
             value =
                 withContext(Dispatchers.IO) {
                     history.map { info ->
-                        val exists =
-                            info.videoPath.isNotBlank() && runCatching {
-                                File(info.videoPath).exists()
-                            }.getOrDefault(false)
-                        LinkEntry(info, if (exists) LinkStatus.SAVED else LinkStatus.MISSING)
+                        val file = info.videoPath.takeIf { it.isNotBlank() }?.let { File(it) }
+                        val exists = runCatching { file?.exists() == true }.getOrDefault(false)
+                        LinkEntry(
+                            info = info,
+                            status = if (exists) LinkStatus.SAVED else LinkStatus.MISSING,
+                            // Already on an IO dispatcher and already stat-ing this file, so the
+                            // mtime is free here and a main-thread hit anywhere else.
+                            dateMillis =
+                                if (exists) runCatching { file!!.lastModified() }.getOrDefault(0L)
+                                else 0L,
+                        )
                     }
                 }
         }
@@ -145,8 +163,11 @@ fun LinksHistoryPage(onNavigateBack: () -> Unit, onRedownload: (String) -> Unit)
     val grouped =
         remember(visible) {
             visible
-                .sortedByDescending { it.info.downloadTimeMillis }
-                .groupBy { dayKey(it.info.downloadTimeMillis) ?: EARLIER }
+                // By row id: autoincrement, so it is insertion order, and it stays correct for
+                // rows whose file has since been deleted. Sorting by a date derived from a
+                // missing file cannot.
+                .sortedByDescending { it.info.id }
+                .groupBy { dayKey(it.dateMillis) ?: EARLIER }
         }
 
     Scaffold(
@@ -262,12 +283,15 @@ private fun DayHeader(day: String) {
 private fun LinkRow(entry: LinkEntry, onRedownload: () -> Unit) {
     val tokens = LocalTrawlTokens.current
     val scheme = MaterialTheme.colorScheme
+    // Stored thumbnail FIRST. It is a small image the format sheet has usually already cached,
+    // where the file path means decoding a frame out of a video that may be hundreds of
+    // megabytes. The original order preferred the file and so never reached this at all.
     val model =
         remember(entry) {
             when {
+                entry.info.thumbnailUrl.isNotBlank() -> entry.info.thumbnailUrl
                 entry.status == LinkStatus.SAVED && entry.info.videoPath.isNotBlank() ->
                     File(entry.info.videoPath)
-                entry.info.thumbnailUrl.isNotBlank() -> entry.info.thumbnailUrl
                 else -> null
             }
         }
@@ -430,10 +454,9 @@ private fun EmptyLinks(hasHistory: Boolean) {
 /**
  * Today / Yesterday / a date -- or nothing at all.
  *
- * `downloadTimeMillis` defaults to -1 on rows written before that column existed, and handing
- * that to `Date(...)` produces 1 Jan 1970. A header that is merely ugly is one thing; this one
- * was also FALSE, which is worse. Undated rows now group under "Earlier" and say nothing they
- * cannot back up.
+ * Fed the file's mtime, not `downloadTimeMillis` -- that column is a DURATION, and handing a
+ * duration to `Date(...)` puts every row in January 1970. Rows whose file is gone have no
+ * knowable date and group under "Earlier" rather than claiming one.
  */
 private fun dayKey(millis: Long): String? {
     if (millis <= 0L) return null

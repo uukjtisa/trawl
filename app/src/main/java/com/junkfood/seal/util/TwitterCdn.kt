@@ -226,7 +226,13 @@ object TwitterCdn {
         return media
     }
 
-    private fun fetch(id: String): TweetMedia? {
+    /**
+     * Tier 1 then tier 2. See the file header for why the order is not negotiable.
+     */
+    private fun fetch(id: String): TweetMedia? =
+        fetchViaSyndication(id) ?: fetchViaMirror(id)
+
+    private fun fetchViaSyndication(id: String): TweetMedia? {
         val body = request(id, token(id)) ?: request(id, "a") ?: return null
         val root =
             runCatching { json.parseToJsonElement(body).jsonObject }.getOrNull()
@@ -240,7 +246,9 @@ object TwitterCdn {
         // one in the log rather than looking like the extractor is broken.
         val typeName = root["__typename"]?.jsonPrimitive?.contentOrNull
         if (typeName != null && typeName != "Tweet") {
-            TrawlLog.i("$TAG: $id came back as $typeName (restricted or removed), leaving it to yt-dlp")
+            // Restricted or sensitive. X gates these server-side for signed-out clients, so
+            // there is nothing to parse -- but the mirror can usually still answer.
+            TrawlLog.i("$TAG: $id came back as $typeName (restricted), trying the mirror")
             return null
         }
 
@@ -250,7 +258,7 @@ object TwitterCdn {
             // extractor does handle images, and refusing outright would remove a capability the
             // app already had.
             val photos = (root["mediaDetails"] as? JsonArray)?.size ?: 0
-            TrawlLog.i("$TAG: $id carries no video (mediaDetails=$photos), leaving it to yt-dlp")
+            TrawlLog.i("$TAG: $id carries no video here (mediaDetails=$photos)")
             return null
         }
         TrawlLog.i("$TAG: $id resolved ${variants.size} variants")
@@ -272,6 +280,105 @@ object TwitterCdn {
                     ?.get("media_url_https")
                     ?.jsonPrimitive
                     ?.contentOrNull,
+        )
+    }
+
+
+    /**
+     * Tier 2: the public FixTweet resolver.
+     *
+     * Reached only when X itself refused -- a tombstoned (age-restricted or sensitive) post, or a
+     * response we could not parse. It answers for those, which is the entire reason it is here.
+     *
+     * Only the LOOKUP crosses a third party; the video bytes still come from video.twimg.com. That
+     * is a real privacy cost and it is why this is second rather than first.
+     */
+    private fun fetchViaMirror(id: String): TweetMedia? {
+        val req =
+            Request.Builder()
+                .url("https://api.fxtwitter.com/status/$id")
+                .header("User-Agent", BROWSER_UA)
+                .header("Accept", "application/json")
+                .build()
+        val body =
+            runCatching {
+                    client.newCall(req).execute().use { resp ->
+                        if (!resp.isSuccessful) {
+                            TrawlLog.i("$TAG: mirror returned HTTP ${resp.code} for $id")
+                            null
+                        } else resp.body?.string()
+                    }
+                }
+                .getOrElse {
+                    TrawlLog.i("$TAG: mirror request failed for $id - ${it.message}")
+                    null
+                } ?: return null
+
+        val tweet =
+            runCatching { json.parseToJsonElement(body).jsonObject["tweet"]?.jsonObject }
+                .getOrNull() ?: return null
+
+        val video =
+            (tweet["media"]?.jsonObject?.get("videos") as? JsonArray)?.firstOrNull()?.jsonObject
+                ?: run {
+                    TrawlLog.i("$TAG: mirror found no video on $id")
+                    return null
+                }
+
+        // The variant list carries the same video.twimg.com renditions the syndication endpoint
+        // would have, so the ladder survives. `url` is the single best one and backstops it.
+        val raw = mutableListOf<Pair<String, Int>>()
+        (video["variants"] as? JsonArray)?.forEach { v ->
+            val o = v.jsonObject
+            val type =
+                (o["content_type"] ?: o["type"])?.jsonPrimitive?.contentOrNull.orEmpty()
+            val link = o["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            // HLS playlists need a player, not a downloader.
+            if (link.isNotBlank() && (type.contains("mp4") || link.contains(".mp4"))) {
+                val bitrate =
+                    o["bitrate"]?.jsonPrimitive?.intOrNull
+                        ?: SIZE_IN_PATH.find(link)?.let {
+                            it.groupValues[1].toInt() * it.groupValues[2].toInt()
+                        }
+                        ?: 0
+                raw += link to bitrate
+            }
+        }
+        if (raw.isEmpty()) {
+            video["url"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }?.let {
+                val px =
+                    SIZE_IN_PATH.find(it)?.let { m ->
+                        m.groupValues[1].toInt() * m.groupValues[2].toInt()
+                    } ?: 0
+                raw += it to px
+            }
+        }
+        if (raw.isEmpty()) return null
+
+        val variants =
+            raw.distinctBy { it.first }
+                .map { (link, bitrate) ->
+                    val m = SIZE_IN_PATH.find(link)
+                    TweetVariant(
+                        url = link,
+                        bitrate = bitrate,
+                        width = m?.groupValues?.get(1)?.toIntOrNull() ?: 0,
+                        height = m?.groupValues?.get(2)?.toIntOrNull() ?: 0,
+                        sizeBytes = contentLength(link),
+                    )
+                }
+
+        val author = tweet["author"]?.jsonObject
+        val handle = author?.get("screen_name")?.jsonPrimitive?.contentOrNull.orEmpty()
+        val name = author?.get("name")?.jsonPrimitive?.contentOrNull.orEmpty()
+        val text = tweet["text"]?.jsonPrimitive?.contentOrNull.orEmpty()
+
+        TrawlLog.i("$TAG: mirror resolved $id, ${variants.size} variants")
+        return TweetMedia(
+            variants = variants,
+            title = buildTitle(handle, text, id),
+            uploader = name.ifBlank { handle },
+            thumbnail = video["thumbnail_url"]?.jsonPrimitive?.contentOrNull,
         )
     }
 
@@ -398,6 +505,10 @@ object TwitterCdn {
                 .orEmpty()
                 // Trailing t.co links are on nearly every tweet and say nothing.
                 .replace(Regex("""https?://\S+"""), "")
+        // Filename-safe at the source. yt-dlp sanitises these characters when it writes the
+        // file, and the post-download scan matches the file BY this title -- so a title
+        // containing one would no longer match the file it produced.
+        .replace(Regex("""[/\\:*?"<>|\r\n\t]"""), "_")
                 .trim()
                 .take(70)
                 .trim()

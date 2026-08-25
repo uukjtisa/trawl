@@ -283,6 +283,10 @@ object TikTokCdn {
                 .firstOrNull { it.isNotBlank() }
                 .orEmpty()
                 .replace(Regex("""https?://\S+"""), "")
+        // Filename-safe at the source. yt-dlp sanitises these characters when it writes the
+        // file, and the post-download scan matches the file BY this title -- so a title
+        // containing one would no longer match the file it produced.
+        .replace(Regex("""[/\\:*?"<>|\r\n\t]"""), "_")
                 .trim()
                 .take(70)
                 .trim()

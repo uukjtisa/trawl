@@ -17,6 +17,7 @@ import androidx.core.content.getSystemService
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.video.VideoFrameDecoder
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import com.google.android.material.color.DynamicColors
@@ -98,7 +99,13 @@ class App : Application(), SingletonImageLoader.Factory {
                 .build()
         }
         return ImageLoader.Builder(context)
-            .components { add(OkHttpNetworkFetcherFactory(callFactory = callFactory)) }
+            .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = callFactory))
+                // Lets a downloaded video stand in as its own thumbnail. Coil ships no video
+                // support by default, so without this a File(...mp4) model silently produces
+                // nothing -- which is exactly how the Links history ended up blank.
+                add(VideoFrameDecoder.Factory())
+            }
             .crossfade(true)
             .build()
     }

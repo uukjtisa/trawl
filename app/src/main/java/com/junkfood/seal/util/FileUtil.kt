@@ -125,10 +125,27 @@ object FileUtil {
         }
 
     @CheckResult
-    fun scanFileToMediaLibraryPostDownload(title: String, downloadDir: String): List<String> =
+    /**
+     * Registers what was just downloaded with MediaStore and returns the files it found.
+     *
+     * [altKey] is a second, independent way to recognise the file -- normally the video id, which
+     * appears in the filename and, unlike a title, is never altered by filename sanitising. It
+     * exists because when this match came back empty the download still reported success while
+     * producing no gallery entry, no playable path and no history row: a silent failure that
+     * looked like four unrelated bugs.
+     */
+    fun scanFileToMediaLibraryPostDownload(
+        title: String,
+        downloadDir: String,
+        altKey: String? = null,
+    ): List<String> =
         File(downloadDir)
             .walkTopDown()
-            .filter { it.isFile && it.absolutePath.contains(title) }
+            .filter {
+                it.isFile &&
+                    (it.absolutePath.contains(title) ||
+                        (altKey != null && it.absolutePath.contains(altKey)))
+            }
             .map { it.absolutePath }
             .toMutableList()
             .apply {

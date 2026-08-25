@@ -167,6 +167,9 @@ dependencies {
 
     implementation(libs.coil.kt.compose)
     implementation(libs.coil.kt.network.okhttp)
+    // VideoFrameDecoder lives here. Without it Coil cannot turn a downloaded .mp4 into a
+    // thumbnail at all -- it simply has no component that reads video bytes.
+    implementation(libs.coil.kt.video)
 
     implementation(libs.kotlinx.serialization.json)
 
