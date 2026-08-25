@@ -38,6 +38,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
+import com.junkfood.seal.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -127,7 +138,25 @@ fun TrawlSwitcher(
         ) {
             // Composed only while it can be seen or is on its way out; there is no point running
             // the menu's own staggered entrance behind an opaque full-screen card.
-            if (progress > 0.001f) menu()
+            if (progress > 0.001f) {
+                menu()
+                // The one thing that teaches the interaction. Nothing else on screen says that
+                // the shrunken card is tappable, and a switcher nobody knows how to exit is
+                // just a menu that took the page away.
+                Text(
+                    text = stringResource(R.string.tap_window_to_open).uppercase(),
+                    fontSize = 10.sp,
+                    letterSpacing = 0.14.em,
+                    fontWeight = FontWeight.W700,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier.align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .padding(bottom = 30.dp)
+                            .alpha(0.85f * progress),
+                )
+            }
         }
 
         Box(

@@ -816,5 +816,6 @@
     <string name="floating_bubble_desc">A draggable circle showing download progress over other apps. Needs the \"Display over other apps\" permission; without it the notification still shows progress.</string>
     <string name="grant_overlay_permission">Grant permission</string>
     <string name="battery_settings_unavailable">Could not open battery settings on this device. Find Trawl in Settings and allow it to run in the background.</string>
+    <string name="tap_window_to_open">Tap the window to open it</string>
 </resources>
 

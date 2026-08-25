@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -233,116 +234,36 @@ fun NavigationDrawer(
 }
 
 @Composable
-fun DrawerHeader(
-    modifier: Modifier = Modifier
-) {
-    val isDarkTheme = LocalDarkTheme.current.isDarkTheme()
-    
-    // Create gradient based on theme
-    val headerGradient = if (isDarkTheme) {
-        Brush.verticalGradient(
-            colors = listOf(
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
-                MaterialTheme.colorScheme.surface
-            )
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
-                MaterialTheme.colorScheme.surface
-            )
-        )
-    }
-    
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(headerGradient)
-            .padding(vertical = 22.dp),
-        contentAlignment = Alignment.Center
+fun DrawerHeader(modifier: Modifier = Modifier) {
+    // The contract's drawer header: mark, name, and the version line. Small on purpose -- in a
+    // window switcher the panel's job is to list windows, and a header big enough to be a
+    // splash screen pushes the actual navigation down the page.
+    Row(
+        modifier = modifier.fillMaxWidth().padding(start = 22.dp, end = 20.dp, top = 26.dp, bottom = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // App Logo - left side, vertically centered, reduced for balance
-            Image(
-                painter = painterResource(id = R.drawable.trawl_mark),
-                contentDescription = "Trawl logo",
-                modifier = Modifier.size(76.dp)
+        Icon(
+            painter = painterResource(id = R.drawable.trawl_mark),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(26.dp),
+        )
+        Column {
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
             )
-            
-            // Fixed spacing between logo and text
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            // Text content column - strictly left-aligned text stack
-            Column(
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Top
-            ) {
-                // App Name - refined typography with tighter line height
-                Text(
-                    text = "Trawl",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
-                        lineHeight = 22.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-                
-                // Reduced spacing between title and tagline
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Tagline - enhanced hierarchy with improved opacity
-                Text(
-                    text = "Download Manager",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                    maxLines = 1
-                )
-                
-                // Increased spacing before version badge for better hierarchy
-                Spacer(modifier = Modifier.height(10.dp))
-                
-                // Version badge with gradient background - premium pill appearance
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(
-                            if (isDarkTheme) {
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primaryContainer,
-                                        MaterialTheme.colorScheme.secondaryContainer
-                                    )
-                                )
-                            } else {
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
-                                    )
-                                )
-                            }
-                        )
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
-                ) {
-                    Text(
-                        text = "v${App.packageInfo.versionName}",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 10.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        maxLines = 1
-                    )
-                }
-            }
+            Text(
+                text = "v${App.packageInfo.versionName} \u00b7 niccc2007",
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 2.dp),
+            )
         }
     }
 }
@@ -395,11 +316,18 @@ fun NavigationDrawerSheetContent(
                     modifier = Modifier.menuItemEntrance(0).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.links_history)) },
+                    icon = { Icon(Icons.Rounded.Link, null, tint = ThemedIconColors.primary) },
+                    onClick = { navigateOrPreview(Route.LINKS_HISTORY) },
+                    selected = currentRoute == Route.LINKS_HISTORY,
+                    modifier = Modifier.menuItemEntrance(1).padding(vertical = 2.dp)
+                )
+                NavigationDrawerItem(
                     label = { Text(stringResource(R.string.downloads_history)) },
                     icon = { Icon(Icons.Outlined.Subscriptions, null, tint = ThemedIconColors.secondary) },
                     onClick = { navigateOrPreview(Route.DOWNLOADS) },
                     selected = currentRoute == Route.DOWNLOADS,
-                    modifier = Modifier.menuItemEntrance(1).padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(2).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.hidden_content)) },
@@ -412,21 +340,21 @@ fun NavigationDrawerSheetContent(
                         }
                     },
                     selected = false,
-                    modifier = Modifier.menuItemEntrance(2).padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(3).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.custom_command)) },
                     icon = { Icon(Icons.Outlined.Terminal, null, tint = ThemedIconColors.tertiary) },
                     onClick = { navigateOrPreview(Route.TASK_LIST) },
                     selected = currentRoute == Route.TASK_LIST,
-                    modifier = Modifier.menuItemEntrance(3).padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(4).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.more_tools)) },
                     icon = { Icon(Icons.Outlined.Build, null, tint = ThemedIconColors.primary) },
                     onClick = { navigateOrPreview(Route.MORE_TOOLS) },
                     selected = currentRoute == Route.MORE_TOOLS,
-                    modifier = Modifier.menuItemEntrance(4).padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(5).padding(vertical = 2.dp)
                 )
             }
         }
@@ -445,21 +373,21 @@ fun NavigationDrawerSheetContent(
                     icon = { Icon(Icons.Outlined.Settings, null, tint = ThemedIconColors.primary) },
                     onClick = { navigateOrPreview(Route.SETTINGS) },
                     selected = currentRoute == Route.SETTINGS,
-                    modifier = Modifier.menuItemEntrance(5).padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(6).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.trouble_shooting)) },
                     icon = { Icon(Icons.Rounded.BugReport, null, tint = ThemedIconColors.secondary) },
                     onClick = { navigateOrPreview(Route.TROUBLESHOOTING) },
                     selected = currentRoute == Route.TROUBLESHOOTING,
-                    modifier = Modifier.menuItemEntrance(6).padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(7).padding(vertical = 2.dp)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.about)) },
                     icon = { Icon(Icons.Rounded.Info, null, tint = ThemedIconColors.primary) },
                     onClick = { navigateOrPreview(Route.ABOUT) },
                     selected = currentRoute == Route.ABOUT,
-                    modifier = Modifier.menuItemEntrance(7).padding(vertical = 2.dp)
+                    modifier = Modifier.menuItemEntrance(8).padding(vertical = 2.dp)
                 )
             }
         }
