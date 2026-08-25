@@ -124,8 +124,14 @@ fun TrawlSwitcher(
     Box(Modifier.fillMaxSize()) {
         // The menu IS the background here -- there is no sheet and no scrim. The gradient is the
         // contract's 150deg ramp; approximated as a linear gradient across the diagonal.
+        //
+        // Its ALPHA follows the push. Painted unconditionally it is an opaque full-screen layer
+        // sitting over everything behind the switcher for the entire life of the app -- which is
+        // what was hiding the ambient background even after that was wired up. A backdrop that
+        // is only needed while the drawer is open should only be painted while it is open.
         Box(
             Modifier.fillMaxSize()
+                .graphicsLayer { alpha = progress }
                 .background(
                     Brush.linearGradient(
                         0.00f to tokens.surfaceHigh,
