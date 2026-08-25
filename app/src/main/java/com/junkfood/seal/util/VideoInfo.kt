@@ -117,13 +117,57 @@ data class Format(
     @SerialName("filesize") val fileSize: Double? = null,
     @SerialName("filesize_approx") val fileSizeApprox: Double? = null,
 ) {
-    fun isAudioOnly(): Boolean = vcodec == null || vcodec == "none"
+    // yt-dlp writes "none" when a stream is ABSENT and omits the field when it does not KNOW.
+    // Those are different facts and conflating them is what made whole MP4s download as m4a:
+    // the generic extractor (any direct file) and some TikTok responses report no codecs at all,
+    // every format was then classified audio-only, and the download ran with -x.
+    //
+    // Explicit "none" still decides -- so YouTube's real video-only and audio-only rungs behave
+    // exactly as before. Only the unknown case changed, and it now asks the container instead of
+    // assuming the worst.
 
-    fun isVideoOnly(): Boolean = acodec == null || acodec == "none"
+    fun isAudioOnly(): Boolean =
+        when (vcodec) {
+            "none" -> true
+            null -> !containerLikelyHasVideo()
+            else -> false
+        }
 
-    fun containsVideo(): Boolean = vcodec != null && vcodec != "none"
+    fun isVideoOnly(): Boolean =
+        when (acodec) {
+            "none" -> true
+            null -> !containerLikelyHasAudio()
+            else -> false
+        }
 
-    fun containsAudio(): Boolean = acodec != null && acodec != "none"
+    fun containsVideo(): Boolean = !isAudioOnly()
+
+    fun containsAudio(): Boolean = !isVideoOnly()
+
+    /**
+     * Does this look like a container that carries a video stream?
+     *
+     * Pixel dimensions are the strongest signal and are present even when codecs are not. Failing
+     * that the extension decides: an .mp4 with unspecified codecs is a video file, an .m4a is not.
+     */
+    private fun containerLikelyHasVideo(): Boolean {
+        if ((width ?: 0.0) > 0.0 && (height ?: 0.0) > 0.0) return true
+        if (resolution?.contains("audio", ignoreCase = true) == true) return false
+        return ext?.lowercase() in VIDEO_CONTAINERS
+    }
+
+    /** A muxed container from an unhelpful extractor is assumed to carry sound; a raw stream is not. */
+    private fun containerLikelyHasAudio(): Boolean {
+        val e = ext?.lowercase() ?: return false
+        return e in VIDEO_CONTAINERS || e in AUDIO_CONTAINERS
+    }
+
+    private companion object {
+        val VIDEO_CONTAINERS =
+            setOf("mp4", "m4v", "webm", "mkv", "mov", "avi", "flv", "3gp", "ts", "mpg", "mpeg")
+        val AUDIO_CONTAINERS =
+            setOf("m4a", "mp3", "opus", "ogg", "oga", "aac", "wav", "flac", "vorbis")
+    }
     
     /**
      * Check if format appears to be DRM-protected based on format string

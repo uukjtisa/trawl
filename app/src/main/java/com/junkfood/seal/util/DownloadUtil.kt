@@ -332,9 +332,16 @@ object DownloadUtil {
         taskKey: String? = null,
         preferences: DownloadPreferences = DownloadPreferences.createFromPreferences(),
     ): Result<VideoInfo> {
+        // Resolved here rather than inside applySiteWorkarounds because the URL is baked into
+        // YoutubeDLRequest at construction -- a workaround that adds OPTIONS cannot change which
+        // page yt-dlp is pointed at.
+        val tweet = resolveTweet(url)
+        // Probe the top rung: yt-dlp only has to confirm the file exists and is playable, and the
+        // ladder the user chooses from comes from X, not from this probe.
+        val requestUrl = tweet?.best?.url ?: url
         with(preferences) {
             val request =
-                YoutubeDLRequest(url).applySiteWorkarounds(url).apply {
+                YoutubeDLRequest(requestUrl).applySiteWorkarounds(requestUrl).apply {
                     addOption("-o", BASENAME)
                     if (restrictFilenames) {
                         addOption("--restrict-filenames")
@@ -377,7 +384,31 @@ object DownloadUtil {
                     addOption("-R", "3")
                     addOption("--socket-timeout", "15")
                 }
-            return getVideoInfo(request, taskKey)
+            val info = getVideoInfo(request, taskKey)
+            // Put the TWEET back into the result. yt-dlp saw a bare MP4 on video.twimg.com, so
+            // left alone it would report the CDN path as the title and store that URL in the
+            // history -- and a history row pointing at a CDN URL cannot be re-downloaded later.
+            return if (tweet == null) info
+            else
+                info.map {
+                    it.copy(
+                        originalUrl = url,
+                        webpageUrl = url,
+                        title = tweet.title,
+                        uploader = tweet.uploader,
+                        thumbnail = tweet.thumbnail ?: it.thumbnail,
+                        extractorKey = "Twitter",
+                        // X's own rungs, with real resolutions and real byte counts. Without
+                        // this the picker shows one nameless 0.00 MB entry, because a direct MP4
+                        // has no ladder for yt-dlp to report.
+                        formats = tweet.toFormats(),
+                        // Stated, not left null: DownloadUtil takes the audio branch on
+                        // `vcodec == "none"`, and an unknown here is one guess away from that.
+                        vcodec = "avc1",
+                        acodec = "mp4a.40.2",
+                        ext = "mp4",
+                    )
+                }
         }
     }
 
@@ -840,6 +871,22 @@ object DownloadUtil {
      * upstream fixes the web path. A pinned API hostname WILL rot -- it is a bridge, not a
      * feature, and a download that fails cleanly is better than one that fails confusingly.
      */
+
+    /**
+     * Resolves an X/Twitter link to its direct CDN video, or null to carry on with yt-dlp.
+     *
+     * Null covers every failure -- switched off, not a tweet, no video in it, endpoint down,
+     * endpoint changed. All of them mean the same thing to the caller: use the original URL, as
+     * before. A user must never see a download fail because an optimisation did.
+     */
+    private fun resolveTweet(url: String): TweetMedia? {
+        if (!X_CDN_FIRST.getBoolean()) return null
+        if (!TwitterCdn.isTweet(url)) return null
+        return TwitterCdn.resolve(url).also {
+            if (it == null) TrawlLog.i("X: CDN resolve failed, falling back to yt-dlp")
+        }
+    }
+
     private fun YoutubeDLRequest.applySiteWorkarounds(url: String): YoutubeDLRequest = apply {
         if (url.contains("tiktok.", ignoreCase = true)) {
             addOption("--extractor-args", "tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com")
@@ -1208,7 +1255,26 @@ object DownloadUtil {
                             Throwable(context.getString(R.string.fetch_info_error_msg))
                         )
                 }
-            val request = YoutubeDLRequest(url).applySiteWorkarounds(url)
+            // Cached from the info fetch a moment ago, so this is not a second round trip.
+            val tweet = resolveTweet(url)
+            // Each rung is its own complete file, so choosing a format means choosing a URL --
+            // not passing an id to -f, which yt-dlp would reject because it never published one.
+            val variant =
+                tweet?.let { m -> m.byFormatId(formatIdString) ?: m.best }
+            val request =
+                (variant?.url ?: url).let { YoutubeDLRequest(it).applySiteWorkarounds(it) }
+            // The id is ours, so it must not reach yt-dlp. Cleared rather than filtered because
+            // every downstream option-builder reads it, and one missed call site downloads the
+            // wrong thing silently.
+            val effectivePreferences =
+                if (variant != null) downloadPreferences.copy(formatIdString = "")
+                else downloadPreferences
+            if (TwitterCdn.isTweet(url)) {
+                TrawlLog.i(
+                    "X: resolved=${tweet != null} wanted=[$formatIdString] " +
+                        "picked=${variant?.formatId} url=${variant?.url?.take(72)}"
+                )
+            }
             val pathBuilder = StringBuilder()
             val outputBuilder = StringBuilder()
             // Index 0 = start time ms, index 1 = end time ms
@@ -1284,13 +1350,13 @@ object DownloadUtil {
                         else pathBuilder.append(audioDownloadDir)
                         addOptionsForAudioDownloads(
                             id = videoInfo.id,
-                            preferences = downloadPreferences,
+                            preferences = effectivePreferences,
                             playlistUrl = playlistUrl,
                         )
                     } else {
                         if (privateDirectory) pathBuilder.append(App.privateDownloadDir)
                         else pathBuilder.append(videoDownloadDir)
-                        addOptionsForVideoDownloads(downloadPreferences)
+                        addOptionsForVideoDownloads(effectivePreferences)
                     }
                     if (sponsorBlock) {
                         addOption("--sponsorblock-remove", sponsorBlockCategory)
@@ -1318,6 +1384,18 @@ object DownloadUtil {
                     }
                     if (newTitle.isNotEmpty()) {
                         addCommands(listOf("--replace-in-metadata", "title", ".+", newTitle))
+                    } else if (tweet != null) {
+                        // Otherwise %(title)s resolves to the CDN basename -- something like
+                        // "ZxQ3n1Kd7", which is useless in a gallery six weeks later. Backslashes
+                        // are stripped because this lands in a regex replacement.
+                        addCommands(
+                            listOf(
+                                "--replace-in-metadata",
+                                "title",
+                                ".+",
+                                tweet.title.replace("\\", ""),
+                            )
+                        )
                     }
                     if (Build.VERSION.SDK_INT > 23 && !sdcard) {
                         addOption("-P", "temp:" + getExternalTempDir(videoInfo.id))
@@ -1340,6 +1418,9 @@ object DownloadUtil {
                     addOption("-o", outputBuilder.append(output).toString())
 
                     for (s in request.buildCommand()) Log.d(TAG, s)
+                    if (tweet != null) {
+                        TrawlLog.i("X: yt-dlp argv = " + request.buildCommand().joinToString(" "))
+                    }
                 }
                 .runCatching {
                     val dlStartTime = System.currentTimeMillis()
@@ -1348,6 +1429,9 @@ object DownloadUtil {
                         .also { downloadTiming[0] = dlStartTime; downloadTiming[1] = System.currentTimeMillis() }
                 }
                 .onFailure { th ->
+                    // yt-dlp's stderr otherwise lives only on the task object, so a failure is
+                    // invisible from logcat and every diagnosis becomes guesswork.
+                    TrawlLog.e("Download failed: " + th.message.orEmpty().take(600), th)
                     return if (
                         sponsorBlock &&
                             th.message?.contains("Unable to communicate with SponsorBlock API") ==

@@ -106,6 +106,8 @@ import com.yausername.youtubedl_android.YoutubeDL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.junkfood.seal.util.X_CDN_FIRST
+import androidx.compose.material.icons.outlined.Bolt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -313,6 +315,20 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
                             PreferenceUtil.updateValue(DEBUG, displayErrorReport)
                         },
                         isChecked = displayErrorReport,
+                    )
+                }
+
+                item {
+                    var xCdn by remember { mutableStateOf(X_CDN_FIRST.getBoolean()) }
+                    PreferenceSwitch(
+                        title = stringResource(R.string.x_cdn_first),
+                        description = stringResource(R.string.x_cdn_first_desc),
+                        icon = Icons.Outlined.Bolt,
+                        isChecked = xCdn,
+                        onClick = {
+                            xCdn = !xCdn
+                            PreferenceUtil.updateValue(X_CDN_FIRST, xCdn)
+                        },
                     )
                 }
 

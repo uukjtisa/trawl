@@ -813,6 +813,8 @@
     <string name="bubble_channel_name">Floating bubble</string>
     <string name="bubble_running">Trawl is showing the floating bubble</string>
     <string name="floating_bubble">Floating bubble</string>
+    <string name="x_cdn_first">Direct X downloads</string>
+    <string name="x_cdn_first_desc">Resolve X (Twitter) videos through X\'s own media servers instead of yt-dlp\'s extractor, which needs a login and often fails without one. Turn this off to use yt-dlp for X. Trawl falls back to yt-dlp automatically if the direct route does not work.</string>
     <string name="bubble_paste">Paste a link</string>
     <string name="bubble_paste_hint">QUICK</string>
     <string name="bubble_downloading">%1$d downloading</string>
