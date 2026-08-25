@@ -142,6 +142,9 @@ const val TIKTOK_CDN_FIRST = "tiktok_cdn_first"
 // fills a text field and nothing more, so there is nothing to protect the user from. Only
 // readable while that window has focus -- since Android 10 an unfocused app reads null.
 const val CLIPBOARD_AUTOPASTE = "clipboard_autopaste"
+// Whether "Delete" also removes the downloaded file. Default ON: leaving the file behind while
+// removing its only listing is how storage fills with things the app can no longer show you.
+const val DELETE_FILE_WITH_ENTRY = "delete_file_with_entry"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -310,6 +313,7 @@ private val BooleanPreferenceDefaults =
         X_CDN_FIRST to true,
         TIKTOK_CDN_FIRST to true,
         CLIPBOARD_AUTOPASTE to true,
+        DELETE_FILE_WITH_ENTRY to true,
         SHOW_INTRO to true,
         FLOATING_BUBBLE to true,
         HEADER_WORDMARK to true,

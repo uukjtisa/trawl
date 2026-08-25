@@ -821,6 +821,7 @@
     <string name="state_on">ON</string>
     <string name="state_off">OFF</string>
     <string name="mode_ask">Ask</string>
+    <string name="delete_file_too">Also delete the downloaded file</string>
     <string name="tool_float">Float widget</string>
     <string name="bubble_paste">Paste a link</string>
     <string name="bubble_paste_hint">QUICK</string>

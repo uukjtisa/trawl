@@ -216,6 +216,9 @@ import com.junkfood.seal.ui.page.home.TrawlToolCell
 import com.junkfood.seal.ui.component.wasDirect
 import com.junkfood.seal.ui.component.ToolBadge
 import com.junkfood.seal.ui.component.PlatformBadge
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
+import com.junkfood.seal.util.DELETE_FILE_WITH_ENTRY
+import androidx.compose.material3.Checkbox
 
 /**
  * The fast tray's one-tap options.
@@ -1131,6 +1134,11 @@ fun NewHomePage(
                     key = { it.id }
                 ) { downloadInfo ->
                     var showRecentDeleteDialog by remember { mutableStateOf(false) }
+                    // Seeded from the preference so the last answer is the default, and kept in
+                    // state so ticking it inside the dialog takes effect immediately.
+                    var alsoDeleteFile by remember {
+                        mutableStateOf(DELETE_FILE_WITH_ENTRY.getBoolean())
+                    }
                     
                     RecentDownloadCard(
                         downloadInfo = downloadInfo,
@@ -1183,10 +1191,52 @@ fun NewHomePage(
                                 )
                             },
                             text = {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                                    text = stringResource(R.string.delete_info_msg).format(downloadInfo.videoTitle),
-                                )
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        modifier =
+                                            Modifier.fillMaxWidth()
+                                                .padding(horizontal = 24.dp),
+                                        text =
+                                            stringResource(R.string.delete_info_msg)
+                                                .format(downloadInfo.videoTitle),
+                                    )
+                                    // The whole row toggles, not just the box -- a 20dp target
+                                    // beside a full-width label is a hit test people lose.
+                                    Row(
+                                        modifier =
+                                            Modifier.fillMaxWidth()
+                                                .padding(top = 14.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .clickable {
+                                                    alsoDeleteFile = !alsoDeleteFile
+                                                    PreferenceUtil.updateValue(
+                                                        DELETE_FILE_WITH_ENTRY,
+                                                        alsoDeleteFile,
+                                                    )
+                                                }
+                                                .padding(
+                                                    horizontal = 18.dp,
+                                                    vertical = 4.dp,
+                                                ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Checkbox(
+                                            checked = alsoDeleteFile,
+                                            onCheckedChange = {
+                                                alsoDeleteFile = it
+                                                PreferenceUtil.updateValue(
+                                                    DELETE_FILE_WITH_ENTRY,
+                                                    it,
+                                                )
+                                            },
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.delete_file_too),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(start = 4.dp),
+                                        )
+                                    }
+                                }
                             },
                             confirmButton = {
                                 ConfirmButton {
@@ -1200,7 +1250,7 @@ fun NewHomePage(
                                         FileUtil.deleteTempFilesForTask(baseName, downloadInfo.videoId)
                                         DatabaseUtil.deleteInfoList(
                                             infoList = listOf(downloadInfo),
-                                            deleteFile = false
+                                            deleteFile = alsoDeleteFile,
                                         )
                                     }
                                 }
