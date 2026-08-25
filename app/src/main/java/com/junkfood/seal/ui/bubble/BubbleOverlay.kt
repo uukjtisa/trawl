@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,8 +62,10 @@ fun BubbleOverlay(
     onMove: (Float, Float) -> Unit,
     onDismiss: () -> Unit,
     onOpenApp: () -> Unit,
-    tasks: List<BubbleTask> = emptyList(),
 ) {
+    // Collected rather than passed: the overlay is composed by the Service, which has no access
+    // to the Activity's state.
+    val tasks by BubbleTasks.tasks.collectAsState()
     // The overlay is its own window, outside the activity's composition, so it must establish
     // the theme itself -- otherwise it renders with Material defaults against the user's chosen
     // palette and looks like a different app's widget.

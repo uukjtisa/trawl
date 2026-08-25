@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -103,6 +104,8 @@ fun TrawlIntro(onFinished: () -> Unit) {
     val density = LocalDensity.current
     val showMascot = LocalShowMascot.current
 
+    // Actual rendered width of the wordmark, so the sheen can be sized to it.
+    val wordWidth = remember { mutableFloatStateOf(0f) }
     val done = remember { mutableFloatStateOf(0f) }
     val finish = remember {
         {
@@ -227,7 +230,13 @@ fun TrawlIntro(onFinished: () -> Unit) {
                         lineHeight = 58.sp,
                         letterSpacing = (-0.01).em,
                         textAlign = TextAlign.Center,
-                        brush = introSheen(scheme.onSurface, scheme.primary, sheenP),
+                        brush =
+                            introSheen(
+                                scheme.onSurface,
+                                scheme.primary,
+                                sheenP,
+                                wordWidth.floatValue,
+                            ),
                     ),
                 modifier =
                     Modifier.graphicsLayer {
@@ -242,6 +251,7 @@ fun TrawlIntro(onFinished: () -> Unit) {
                         scaleX = s
                         scaleY = s
                     },
+                onTextLayout = { wordWidth.floatValue = it.size.width.toFloat() },
             )
 
             // .introline -- draws out from the centre under the wordmark.
@@ -271,20 +281,35 @@ fun TrawlIntro(onFinished: () -> Unit) {
     }
 }
 
-/** The wordmark's one-pass sheen; both ends of the ramp are the plain text colour. */
-private fun introSheen(base: androidx.compose.ui.graphics.Color,
-                       primary: androidx.compose.ui.graphics.Color,
-                       phase: Float): Brush {
-    val travel = 1200f
-    val start = -travel + phase * (travel * 2f)
+/**
+ * The wordmark's one-pass sheen.
+ *
+ * The band is sized to the WORD, not to an arbitrary constant. Sized larger than the text the
+ * highlight never fully lands on it -- which is what went wrong first time round: the animation
+ * ran correctly and could not be seen. A band roughly the width of the word, swept from just
+ * before it to just past it, is a highlight actually travelling through the letters.
+ *
+ * Both ends of the ramp are the plain text colour, so the resting frame is ordinary text.
+ */
+private fun introSheen(
+    base: androidx.compose.ui.graphics.Color,
+    primary: androidx.compose.ui.graphics.Color,
+    phase: Float,
+    width: Float,
+): Brush {
+    // Before the first layout pass there is no width to work with; plain text is the right
+    // answer for that frame rather than a gradient sized to nothing.
+    if (width <= 1f) return SolidColor(base)
+    val band = width * 0.9f
+    val start = -band + phase * (width + band * 2f)
     return Brush.linearGradient(
         0.00f to base,
-        0.34f to base,
+        0.28f to base,
         0.50f to primary,
-        0.66f to base,
+        0.72f to base,
         1.00f to base,
         start = Offset(start, 0f),
-        end = Offset(start + travel, 0f),
+        end = Offset(start + band, 0f),
         tileMode = TileMode.Clamp,
     )
 }

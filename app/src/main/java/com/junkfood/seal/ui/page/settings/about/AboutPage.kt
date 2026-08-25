@@ -56,6 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
@@ -95,8 +96,8 @@ const val weblate = "https://hosted.weblate.org/engage/seal/"
 
 private const val PORTFOLIO_URL = "https://nicanoriiicariasa-portfolio.vercel.app/"
 private const val PORTFOLIO_LABEL = "nicanoriiicariasa-portfolio.vercel.app"
-private const val GITHUB_URL = "https://github.com/niccc2007"
-private const val GITHUB_LABEL = "github.com/niccc2007"
+private const val GITHUB_URL = "https://github.com/uukjtisa"
+private const val GITHUB_LABEL = "github.com/uukjtisa"
 private const val LICENCE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 
 private const val SEAL_URL = "https://github.com/JunkFood02/Seal"
@@ -206,6 +207,8 @@ private fun SignatureBanner() {
     val tokens = LocalTrawlTokens.current
     val scheme = MaterialTheme.colorScheme
     val motionOn = LocalMotionLevel.current.isOn
+    // Measured width of the name, so the sheen band can be sized to it (see D-24).
+    val nameWidth = remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
 
     // One pass on entry: 1600ms on cubic-bezier(.36,0,.22,1) after a 180ms beat.
     val sheen by
@@ -273,9 +276,17 @@ private fun SignatureBanner() {
                         fontWeight = FontWeight.W700,
                         lineHeight = 37.sp,
                         letterSpacing = 0.005.em,
-                        brush = sheenBrush(scheme.onSurface, scheme.primary, tokens.accent, phase),
+                        brush =
+                            sheenBrush(
+                                scheme.onSurface,
+                                scheme.primary,
+                                tokens.accent,
+                                phase,
+                                nameWidth.floatValue,
+                            ),
                     ),
                 modifier = Modifier.padding(top = 9.dp),
+                onTextLayout = { nameWidth.floatValue = it.size.width.toFloat() },
             )
             // .sigrule -- draws left-to-right on entry. A border-width cannot be animated, which
             // is why this is a drawn box rather than an underline.
@@ -315,19 +326,27 @@ private fun SignatureBanner() {
  * `TileMode.Clamp` matters: without it the gradient repeats and the highlight appears several
  * times across one word instead of travelling across it once.
  */
-private fun sheenBrush(base: Color, primary: Color, accent: Color, phase: Float): Brush {
-    // The band starts left of the text and ends right of it, so at rest nothing is tinted.
-    val travel = 900f
-    val start = -travel + phase * (travel * 2f)
+private fun sheenBrush(
+    base: Color,
+    primary: Color,
+    accent: Color,
+    phase: Float,
+    width: Float,
+): Brush {
+    // Sized to the NAME, not to a constant. A band wider than the text means the highlight never
+    // properly lands on it and the effect runs invisibly -- the same bug the intro had.
+    if (width <= 1f) return SolidColor(base)
+    val band = width * 0.9f
+    val start = -band + phase * (width + band * 2f)
     return Brush.linearGradient(
         0.00f to base,
-        0.30f to base,
+        0.26f to base,
         0.46f to primary,
         0.54f to accent,
-        0.70f to base,
+        0.74f to base,
         1.00f to base,
         start = Offset(start, 0f),
-        end = Offset(start + travel, 0f),
+        end = Offset(start + band, 0f),
         tileMode = TileMode.Clamp,
     )
 }
@@ -513,7 +532,7 @@ fun AutoUpdateUnavailableDialog(onDismissRequest: () -> Unit = {}) {
         val startIndex = text.indexOf(hyperLinkText)
         val endIndex = startIndex + hyperLinkText.length
         addUrlAnnotation(
-            UrlAnnotation("https://github.com/niccc2007/Trawl/releases/latest"),
+            UrlAnnotation("https://github.com/uukjtisa/Trawl/releases/latest"),
             start = startIndex,
             end = endIndex,
         )

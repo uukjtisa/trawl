@@ -30,7 +30,7 @@ object BatteryUtil {
         // it. There is also no similarly reliable per-OEM "battery saver mode" API to check
         // instead — OEM battery-saver toggles (MIUI/HyperOS "Battery saver" per-app setting,
         // One UI "Sleeping apps", etc.) are proprietary and unqueryable, which is exactly why
-        // BatteryUtil.buildBatterySettingsIntent() below routes the user to each OEM's own
+        // BatteryUtil.launchBatterySettings() below routes the user to each OEM's own
         // settings screen to fix it manually instead of trying to detect it programmatically.
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         return pm.isIgnoringBatteryOptimizations(context.packageName)
@@ -51,51 +51,80 @@ object BatteryUtil {
         }
     }
 
-    fun buildBatterySettingsIntent(context: Context): Intent {
-        val pkg = context.packageName
-        val manufacturer = getManufacturer()
 
-        when (manufacturer) {
-            Manufacturer.OPPO, Manufacturer.REALME -> {
-                val oppoIntent = tryOppoBatteryIntent(context, pkg)
-                if (oppoIntent != null) return oppoIntent
-            }
-            Manufacturer.XIAOMI -> {
-                val xiaomiIntent = tryXiaomiBatteryIntent(context, pkg)
-                if (xiaomiIntent != null) return xiaomiIntent
-            }
-            Manufacturer.VIVO -> {
-                val vivoIntent = tryVivoBatteryIntent(context, pkg)
-                if (vivoIntent != null) return vivoIntent
-            }
-            Manufacturer.HUAWEI -> {
-                val huaweiIntent = tryHuaweiBatteryIntent(context, pkg)
-                if (huaweiIntent != null) return huaweiIntent
-            }
-            Manufacturer.SAMSUNG -> {
-                val samsungIntent = trySamsungBatteryIntent(context, pkg)
-                if (samsungIntent != null) return samsungIntent
-            }
-            else -> {}
-        }
-
-        return buildStandardBatteryIntent(context, pkg)
-    }
-
+    /**
+     * Every battery screen worth trying, most specific first.
+     *
+     * WHY A LIST AND NOT ONE INTENT. `resolveActivity` answers "does this component exist", NOT
+     * "may I start it". On Huawei those differ: `com.huawei.systemmanager`'s startup-manager
+     * activity resolves happily and then throws
+     *
+     *     SecurityException: Permission Denial ... requires
+     *     com.huawei.permission.external_app_settings.USE_COMPONENT
+     *
+     * on `startActivity`, because that permission is signature-level and no third-party app can
+     * hold it. The old code picked exactly that intent and the button died on every Huawei
+     * device. The same trap exists on Xiaomi, Oppo and Vivo, whose OEM screens are guarded the
+     * same way -- so the answer is not "special-case Huawei", it is to stop believing
+     * resolvability and try each candidate until one starts.
+     *
+     * The list always ends with Android's own screens, which are public API and cannot be
+     * permission-denied, so it can never come back empty-handed.
+     */
     @SuppressLint("BatteryLife")
-    private fun buildStandardBatteryIntent(context: Context, pkg: String): Intent {
-        val ignoreIntent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-            data = Uri.parse("package:$pkg")
-        }
-        if (isIntentResolvable(context, ignoreIntent)) return ignoreIntent
+    fun buildBatterySettingsIntents(context: Context): List<Intent> {
+        val pkg = context.packageName
+        val candidates = mutableListOf<Intent>()
+
+        when (getManufacturer()) {
+            Manufacturer.OPPO, Manufacturer.REALME -> tryOppoBatteryIntent(context, pkg)
+            Manufacturer.XIAOMI -> tryXiaomiBatteryIntent(context, pkg)
+            Manufacturer.VIVO -> tryVivoBatteryIntent(context, pkg)
+            Manufacturer.HUAWEI -> tryHuaweiBatteryIntent(context, pkg)
+            Manufacturer.SAMSUNG -> trySamsungBatteryIntent(context, pkg)
+            else -> null
+        }?.let { candidates += it }
+
+        val ignoreIntent =
+            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$pkg")
+            }
+        if (isIntentResolvable(context, ignoreIntent)) candidates += ignoreIntent
 
         val settingsIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-        if (isIntentResolvable(context, settingsIntent)) return settingsIntent
+        if (isIntentResolvable(context, settingsIntent)) candidates += settingsIntent
 
-        val appDetailIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:$pkg")
+        candidates +=
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$pkg")
+            }
+
+        return candidates
+    }
+
+    /**
+     * Opens the first battery screen that actually starts.
+     *
+     * [launch] is expected to throw when the target refuses -- SecurityException for a guarded
+     * OEM component, ActivityNotFoundException for one that has been removed -- which is exactly
+     * the signal to move to the next candidate. Returns false only if every one failed, so the
+     * caller can say something useful instead of appearing to do nothing.
+     */
+    fun launchBatterySettings(context: Context, launch: (Intent) -> Unit): Boolean {
+        for (intent in buildBatterySettingsIntents(context)) {
+            val ok =
+                runCatching { launch(intent) }
+                    .onFailure {
+                        TrawlLog.w(
+                            "battery: " + (intent.component?.className ?: intent.action) +
+                                " refused (" + it.javaClass.simpleName + ")"
+                        )
+                    }
+                    .isSuccess
+            if (ok) return true
         }
-        return appDetailIntent
+        TrawlLog.e("battery: every candidate screen refused to open")
+        return false
     }
 
     private fun tryOppoBatteryIntent(context: Context, pkg: String): Intent? {

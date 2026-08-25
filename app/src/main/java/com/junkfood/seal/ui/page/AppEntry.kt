@@ -80,6 +80,7 @@ import com.junkfood.seal.ui.page.tools.VideoInfoDownloadPage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import com.junkfood.seal.ui.theme.AmbientBackground
 
 private const val TAG = "HomeEntry"
 
@@ -125,6 +126,11 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
     }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // The drifting light, grain and motes. At the root so every destination gets them, the
+        // way `.ambient` belongs to the screen in the design rather than to one page. Draws
+        // nothing and starts no clock when Ambient motion is Off.
+        AmbientBackground()
+
         NavigationDrawer(
             windowWidth = windowWidth,
             drawerState = drawerState,

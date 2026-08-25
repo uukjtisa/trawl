@@ -189,6 +189,7 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.junkfood.seal.ui.common.LocalFastDownload
+import com.junkfood.seal.ui.theme.HaulWash
 import com.junkfood.seal.ui.theme.breathe
 import com.junkfood.seal.ui.theme.progressSweep
 import com.junkfood.seal.util.PreferenceUtil
@@ -202,6 +203,10 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.res.painterResource
 import com.junkfood.seal.ui.common.LocalQuickGear
 import com.junkfood.seal.ui.common.LocalQuickHistory
+import com.junkfood.seal.ui.bubble.BubbleService
+import com.junkfood.seal.ui.bubble.BubbleTask
+import com.junkfood.seal.ui.bubble.BubbleTasks
+import com.junkfood.seal.ui.common.LocalFloatingBubble
 
 /**
  * The fast tray's one-tap options.
@@ -640,8 +645,12 @@ fun NewHomePage(
                     onClick = {
                         showBatteryOptimizationDialog = false
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val intent = BatteryUtil.buildBatterySettingsIntent(context)
-                            batteryOptimizationLauncher.launch(intent)
+                            // Try each candidate; the OEM screen may resolve and still refuse.
+                            val opened =
+                                BatteryUtil.launchBatterySettings(context) {
+                                    batteryOptimizationLauncher.launch(it)
+                                }
+                            if (!opened) context.makeToast(R.string.battery_settings_unavailable)
                         }
                     }
                 ) {
@@ -694,6 +703,9 @@ fun NewHomePage(
     }
     
     Scaffold(
+        // Transparent so the root's ambient wash is visible through this page. Scaffold defaults
+        // to an opaque `background`, which is what was hiding it.
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = {
@@ -794,12 +806,42 @@ fun NewHomePage(
             }
         },
     ) { paddingValues ->
+        // The bubble follows the downloads. Nothing started the service before, so it never
+        // appeared during a download no matter what the setting said. Once started it is a
+        // foreground service and survives the app going to the background, which is the point.
+        val bubbleOn = LocalFloatingBubble.current
+        LaunchedEffect(activeDownloads, bubbleOn) {
+            val live =
+                activeDownloads.map { (task, state) ->
+                    val ds = state.downloadState
+                    BubbleTask(
+                        id = task.id.toString(),
+                        progress =
+                            when (ds) {
+                                is Task.DownloadState.Running -> ds.progress
+                                is Task.DownloadState.Completed -> 1f
+                                else -> 0f
+                            },
+                        error = ds is Task.DownloadState.Error,
+                    )
+                }
+            BubbleTasks.publish(live)
+            if (bubbleOn && live.isNotEmpty()) BubbleService.start(context)
+            else if (live.isEmpty()) BubbleService.stop(context)
+        }
+
         // Read before entering LazyListScope: `item {}` bodies are composable but the builder
         // lambda around them is not, so a CompositionLocal cannot be read at that level.
         val showWordmark = LocalHeaderWordmark.current
         val showMascot = LocalShowMascot.current
         val fastEnabled = LocalFastDownload.current
         val rememberedQuality = LocalRememberedQuality.current
+
+        Box(Modifier.fillMaxSize()) {
+            // Rises while a download is running; the wash is part of the download effects, not
+            // the ambient set, so it obeys its own toggle.
+            HaulWash(active = activeDownloads.isNotEmpty())
+        }
 
         LazyColumn(
             modifier = modifier

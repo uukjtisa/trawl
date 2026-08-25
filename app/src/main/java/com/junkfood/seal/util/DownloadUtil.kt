@@ -275,6 +275,7 @@ object DownloadUtil {
                 context.makeToast(R.string.fetching_playlist_info)
             }
             val request = YoutubeDLRequest(playlistURL)
+            request.applySiteWorkarounds(playlistURL)
             with(request) {
                 //            addOption("--compat-options", "no-youtube-unavailable-videos")
                 addOption("--flat-playlist")
@@ -333,7 +334,7 @@ object DownloadUtil {
     ): Result<VideoInfo> {
         with(preferences) {
             val request =
-                YoutubeDLRequest(url).apply {
+                YoutubeDLRequest(url).applySiteWorkarounds(url).apply {
                     addOption("-o", BASENAME)
                     if (restrictFilenames) {
                         addOption("--restrict-filenames")
@@ -393,7 +394,7 @@ object DownloadUtil {
         maxComments: Int = 500,
         sortByTop: Boolean = true,
     ): Result<VideoInfo> {
-        val request = YoutubeDLRequest(url).apply {
+        val request = YoutubeDLRequest(url).applySiteWorkarounds(url).apply {
             addOption("--skip-download")
             addOption("--write-comments")
             addOption("--dump-single-json")
@@ -827,6 +828,24 @@ object DownloadUtil {
      * Intentionally NOT applied to info-probe requests, which use their own tolerant
      * but faster policy (see getPlaylistOrVideoInfo / fetchVideoInfoFromUrl).
      */
+
+    /**
+     * TikTok's web extractor requires TLS impersonation (`curl_cffi`), which the Android build of
+     * yt-dlp does not ship -- so it fails with "Unable to extract universal data for rehydration".
+     *
+     * Routing through TikTok's mobile API avoids the web page entirely and needs no impersonation.
+     * This is yt-dlp's own documented workaround for that error.
+     *
+     * WHEN TO DELETE THIS: the moment the Android yt-dlp build gains impersonation support, or
+     * upstream fixes the web path. A pinned API hostname WILL rot -- it is a bridge, not a
+     * feature, and a download that fails cleanly is better than one that fails confusingly.
+     */
+    private fun YoutubeDLRequest.applySiteWorkarounds(url: String): YoutubeDLRequest = apply {
+        if (url.contains("tiktok.", ignoreCase = true)) {
+            addOption("--extractor-args", "tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com")
+        }
+    }
+
     private fun YoutubeDLRequest.enableRetryOptions(): YoutubeDLRequest =
         this.addOption("--retries", "10")
             .addOption("--fragment-retries", "10")
@@ -1189,7 +1208,7 @@ object DownloadUtil {
                             Throwable(context.getString(R.string.fetch_info_error_msg))
                         )
                 }
-            val request = YoutubeDLRequest(url)
+            val request = YoutubeDLRequest(url).applySiteWorkarounds(url)
             val pathBuilder = StringBuilder()
             val outputBuilder = StringBuilder()
             // Index 0 = start time ms, index 1 = end time ms
@@ -1434,7 +1453,9 @@ object DownloadUtil {
 
         val request =
             with(preferences) {
-                YoutubeDLRequest(urlList).apply {
+                YoutubeDLRequest(urlList)
+                    .apply { urlList.forEach { u -> applySiteWorkarounds(u) } }
+                    .apply {
                     commandDirectory.takeIf { it.isNotEmpty() }?.let { addOption("-P", it) }
                     addOption("--newline")
                     if (aria2c) {
@@ -1480,7 +1501,9 @@ object DownloadUtil {
                 context.makeToast(R.string.start_execute)
             }
             val request =
-                YoutubeDLRequest(urlList).apply {
+                YoutubeDLRequest(urlList)
+                    .apply { urlList.forEach { u -> applySiteWorkarounds(u) } }
+                    .apply {
                     commandDirectory.takeIf { it.isNotEmpty() }?.let { addOption("-P", it) }
                     addOption("--newline")
                     if (aria2c) {

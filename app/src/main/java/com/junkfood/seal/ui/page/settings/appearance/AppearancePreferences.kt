@@ -134,6 +134,11 @@ import androidx.compose.material.icons.outlined.BubbleChart
 import androidx.compose.ui.platform.LocalContext
 import com.junkfood.seal.ui.bubble.BubbleService
 import com.junkfood.seal.ui.common.LocalFloatingBubble
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 private val ColorList =
     ((4..10) + (1..3)).map { it * 35.0 }.map { Color(Hct.from(it, 40.0, 40.0).toInt()) }
@@ -316,7 +321,28 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                 // it without the permission sends the user to grant it rather than silently
                 // storing an intention that cannot take effect.
                 val bubbleCtx = LocalContext.current
-                val bubbleAllowed = BubbleService.canDrawOverlays(bubbleCtx)
+                // Re-checked on ON_RESUME. The permission is granted in ANOTHER app, so nothing
+                // here recomposes on the way back -- which is why the row used to stay "off"
+                // until some unrelated setting forced a recomposition.
+                var bubbleAllowed by remember {
+                    mutableStateOf(BubbleService.canDrawOverlays(bubbleCtx))
+                }
+                val bubbleOwner = LocalLifecycleOwner.current
+                DisposableEffect(bubbleOwner) {
+                    val obs = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            bubbleAllowed = BubbleService.canDrawOverlays(bubbleCtx)
+                            // Honour an intention that could not take effect at the time.
+                            if (bubbleAllowed && PreferenceUtil.AppSettingsStateFlow.value
+                                    .floatingBubble
+                            ) {
+                                BubbleService.start(bubbleCtx)
+                            }
+                        }
+                    }
+                    bubbleOwner.lifecycle.addObserver(obs)
+                    onDispose { bubbleOwner.lifecycle.removeObserver(obs) }
+                }
                 // Read outside the click lambda: that lambda is not a composable scope.
                 val bubbleOn = LocalFloatingBubble.current
                 PreferenceSwitch(

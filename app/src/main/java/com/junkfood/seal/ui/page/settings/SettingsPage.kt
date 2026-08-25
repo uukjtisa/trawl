@@ -57,6 +57,7 @@ import com.junkfood.seal.ui.component.PreferenceItem
 import com.junkfood.seal.ui.component.PreferencesHintCard
 import com.junkfood.seal.util.EXTRACT_AUDIO
 import com.junkfood.seal.util.BatteryUtil
+import com.junkfood.seal.util.makeToast
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateBoolean
 import com.junkfood.seal.util.PreferenceUtil.updateInt
@@ -79,11 +80,11 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
             }
         )
     }
-    val batteryIntent = remember { BatteryUtil.buildBatterySettingsIntent(context) }
+    // Android's own battery screens are public API and always present on M+, so there is always
+    // somewhere to send the user; the OEM shortcut is a bonus, not the requirement.
     val isActivityAvailable: Boolean = remember {
-        if (Build.VERSION.SDK_INT < 23) false
-        else context.packageManager
-            .resolveActivity(batteryIntent, 0) != null
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            BatteryUtil.buildBatterySettingsIntents(context).isNotEmpty()
     }
 
     val launcher =
@@ -136,7 +137,11 @@ fun SettingsPage(onNavigateBack: () -> Unit, onNavigateTo: (String) -> Unit) {
                             icon = Icons.Rounded.EnergySavingsLeaf,
                             description = stringResource(R.string.battery_configuration_desc),
                         ) {
-                            launcher.launch(batteryIntent)
+                            val opened =
+                                BatteryUtil.launchBatterySettings(context) { launcher.launch(it) }
+                            if (!opened) {
+                                context.makeToast(R.string.battery_settings_unavailable)
+                            }
                         }
                     }
                 }
