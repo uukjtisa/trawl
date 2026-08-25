@@ -1151,6 +1151,14 @@ object DownloadUtil {
                             CONVERT_M4A -> {
                                 addOption("--audio-format", "m4a")
                             }
+
+                            CONVERT_OPUS -> {
+                                addOption("--audio-format", "opus")
+                            }
+
+                            CONVERT_OGG -> {
+                                addOption("--audio-format", "vorbis")
+                            }
                         }
                     }
                     applyFormatSorter(preferences, toAudioFormatSorter())
@@ -1326,8 +1334,12 @@ object DownloadUtil {
             // not passing an id to -f, which yt-dlp would reject because it never published one.
             val variant =
                 tweet?.let { m -> m.byFormatId(formatIdString) ?: m.best }
+            // Same rule as the tweet ladder above: a TikTok render is a whole file, so choosing a
+            // format means choosing a URL. Without this the watermarked row was selectable in the
+            // sheet and downloaded the clean one anyway.
+            val tokVariant = tok?.let { m -> m.byFormatId(formatIdString) ?: m.preferred }
             val request =
-                (variant?.url ?: tok?.url ?: url).let {
+                (variant?.url ?: tokVariant?.url ?: url).let {
                     YoutubeDLRequest(it).applySiteWorkarounds(it)
                 }
             tok?.let { request.addResolverHeaders(it.headers) }
@@ -1348,6 +1360,12 @@ object DownloadUtil {
                             downloadPreferences.newTitle.ifEmpty { resolvedTitle.orEmpty() },
                     )
                 else downloadPreferences
+            if (tok != null) {
+                TrawlLog.i(
+                    "TikTok: wanted=[$formatIdString] picked=${tokVariant?.kind} " +
+                        "size=${tokVariant?.sizeBytes}"
+                )
+            }
             if (TwitterCdn.isTweet(url)) {
                 TrawlLog.i(
                     "X: resolved=${tweet != null} wanted=[$formatIdString] " +

@@ -323,6 +323,14 @@ fun NewHomePage(
     LaunchedEffect(lifecycleRefreshTrigger) {
         isBatteryOptimizationDisabled = BatteryUtil.isIgnoringBatteryOptimizations(context)
     }
+
+    // The dialog asks for one thing. The moment we have it, the dialog is answered -- no matter
+    // which of the several places opened it, and whether the grant arrived through our launcher,
+    // a system dialog, or the user going into Settings by themselves. Without this the visibility
+    // flag outlived the condition and kept asking for a permission already held.
+    LaunchedEffect(isBatteryOptimizationDisabled) {
+        if (isBatteryOptimizationDisabled) showBatteryOptimizationDialog = false
+    }
     
     // Notification permission launcher - tries system permission first
     // Notification settings launcher - opens app notification settings
@@ -857,11 +865,17 @@ fun NewHomePage(
                             (ds as? Task.DownloadState.Running)?.progressText?.let(
                                 ::bubbleDetail
                             ) ?: "",
+                        // Only a completed task has somewhere to go. Null for everything else,
+                        // which is what the row uses to decide whether it is tappable.
+                        filePath = (ds as? Task.DownloadState.Completed)?.filePath,
                     )
                 }
             BubbleTasks.publish(live)
             if (bubbleOn && live.isNotEmpty()) BubbleService.start(context)
-            else if (live.isEmpty()) BubbleService.stop(context)
+            // Only tear down a bubble that appeared by itself. One the user summoned from the
+            // tools strip is a tool, and a tool does not vanish because the queue drained --
+            // which is precisely what it used to do, one recomposition after being switched on.
+            else if (live.isEmpty() && !BubbleService.summoned) BubbleService.stop(context)
         }
 
         // Read before entering LazyListScope: `item {}` bodies are composable but the builder
@@ -1000,7 +1014,8 @@ fun NewHomePage(
                                                 )
                                             }
                                         BubbleService.isRunning -> BubbleService.stop(context)
-                                        else -> BubbleService.start(context)
+                                        // Summoned by hand, so it outlives the queue.
+                                        else -> BubbleService.start(context, summoned = true)
                                     }
                                 },
                             ),

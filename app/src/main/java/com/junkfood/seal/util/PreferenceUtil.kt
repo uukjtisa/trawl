@@ -255,6 +255,10 @@ const val FORMAT_QUALITY = 2
 
 const val CONVERT_MP3 = 0
 const val CONVERT_M4A = 1
+// Opus is the one worth having: at the bitrates short clips use it beats MP3 audibly, and every
+// Android build since 5.0 plays it. Ogg/Vorbis is here for players that predate that.
+const val CONVERT_OPUS = 2
+const val CONVERT_OGG = 3
 
 const val HIGH = 1
 const val MEDIUM = 2
@@ -854,7 +858,9 @@ object PreferenceStrings {
     @Composable
     fun getAudioConvertDesc(audioFormatCode: Int = PreferenceUtil.getAudioConvertFormat()): String {
         return when (audioFormatCode) {
-            0 -> stringResource(R.string.convert_to).format("mp3")
+            CONVERT_MP3 -> stringResource(R.string.convert_to).format("mp3")
+            CONVERT_OPUS -> stringResource(R.string.convert_to).format("opus")
+            CONVERT_OGG -> stringResource(R.string.convert_to).format("ogg")
             else -> stringResource(R.string.convert_to).format("m4a")
         }
     }
@@ -920,6 +926,8 @@ object PreferenceStrings {
                 convertAudio -> {
                     when (audioConvertFormat) {
                         CONVERT_MP3 -> stringResource(R.string.convert_to, "MP3")
+                        CONVERT_OPUS -> stringResource(R.string.convert_to, "Opus")
+                        CONVERT_OGG -> stringResource(R.string.convert_to, "Ogg")
                         else -> stringResource(R.string.convert_to, "M4A")
                     }
                 }

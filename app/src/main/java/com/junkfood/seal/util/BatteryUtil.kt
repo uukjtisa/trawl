@@ -76,6 +76,20 @@ object BatteryUtil {
         val pkg = context.packageName
         val candidates = mutableListOf<Intent>()
 
+        // FIRST, always: Android's own one-tap grant dialog. It is public API, so no ROM can
+        // permission-deny it, and it hands back exactly the whitelist entry this dialog is
+        // asking about without anyone visiting a settings screen.
+        //
+        // This used to be second, behind the OEM screen. On Huawei that meant every user watched
+        // the OEM intent fail with a SecurityException before landing on the thing that works in
+        // one tap. The OEM screens are still here, below, because on some ROMs the AOSP whitelist
+        // is genuinely not sufficient -- but they are the fallback, not the opening move.
+        val ignoreIntent =
+            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$pkg")
+            }
+        if (isIntentResolvable(context, ignoreIntent)) candidates += ignoreIntent
+
         when (getManufacturer()) {
             Manufacturer.OPPO, Manufacturer.REALME -> tryOppoBatteryIntent(context, pkg)
             Manufacturer.XIAOMI -> tryXiaomiBatteryIntent(context, pkg)
@@ -84,12 +98,6 @@ object BatteryUtil {
             Manufacturer.SAMSUNG -> trySamsungBatteryIntent(context, pkg)
             else -> null
         }?.let { candidates += it }
-
-        val ignoreIntent =
-            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = Uri.parse("package:$pkg")
-            }
-        if (isIntentResolvable(context, ignoreIntent)) candidates += ignoreIntent
 
         val settingsIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
         if (isIntentResolvable(context, settingsIntent)) candidates += settingsIntent

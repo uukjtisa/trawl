@@ -515,12 +515,24 @@ class BubbleService :
         fun canDrawOverlays(context: Context): Boolean =
             Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context)
 
+        /**
+         * True when the user turned the bubble on themselves rather than a download raising it.
+         *
+         * The distinction is the whole difference between an indicator and a tool: an indicator
+         * may disappear when there is nothing to indicate, a tool may not.
+         */
+        var summoned by mutableStateOf(false)
+            private set
+
         /** Starts the bubble if it is allowed to exist. Silently does nothing if it is not. */
-        fun start(context: Context) {
+        fun start(context: Context, summoned: Boolean = false) {
             if (!canDrawOverlays(context)) {
                 TrawlLog.i("Bubble: not started, no overlay permission")
                 return
             }
+            // Sticky: a bubble raised by a download and then kept open by the user stays a
+            // tool. It is only cleared by an explicit stop.
+            if (summoned) Companion.summoned = true
             val intent = Intent(context, BubbleService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -530,6 +542,7 @@ class BubbleService :
         }
 
         fun stop(context: Context) {
+            summoned = false
             context.stopService(Intent(context, BubbleService::class.java))
         }
     }

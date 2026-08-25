@@ -28,6 +28,14 @@ data class BubbleTask(
     val state: BubbleTaskState,
     /** Size / speed, already formatted by the publisher. Blank when there is nothing to say. */
     val detail: String = "",
+    /**
+     * Where the finished file landed, so a completed row can be tapped to play it.
+     *
+     * Null while the download is still running, and null for anything that failed. The row uses
+     * its presence as the test for "is this tappable", which is stricter than checking DONE: a
+     * task can complete without the app learning a usable path.
+     */
+    val filePath: String? = null,
 ) {
     val error: Boolean
         get() = state == BubbleTaskState.ERROR
@@ -58,10 +66,26 @@ object BubbleTasks {
     /** What the bubble should be drawing right now. */
     val tasks: StateFlow<List<BubbleTask>> = _tasks.asStateFlow()
 
+    /**
+     * Merge what is live into what this session has already seen.
+     *
+     * The publisher only knows about ACTIVE downloads, so a straight assignment dropped every row
+     * the moment it finished -- which is exactly the "the list empties itself" complaint. Retaining
+     * by id keeps finished rows visible until Clear, and still lets a live row overwrite its own
+     * earlier state as it progresses.
+     *
+     * Order is insertion order with the newest last, because the panel scrolls and the thing you
+     * just started is the thing you are looking for.
+     */
     fun publish(list: List<BubbleTask>) {
-        _tasks.value = list
+        if (list.isEmpty()) return
+        val merged = LinkedHashMap<String, BubbleTask>()
+        _tasks.value.forEach { merged[it.id] = it }
+        list.forEach { merged[it.id] = it }
+        _tasks.value = merged.values.toList()
     }
 
+    /** The Clear button, and the only thing that forgets. */
     fun clear() {
         _tasks.value = emptyList()
     }

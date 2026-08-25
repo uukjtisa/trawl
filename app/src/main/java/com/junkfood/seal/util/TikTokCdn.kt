@@ -52,10 +52,31 @@ private const val TAG = "TikTokCdn"
  * [headers] is not optional decoration -- without the session cookies the URL is a 403 for
  * everyone, including yt-dlp. They travel together or not at all.
  */
+/**
+ * Which of TikTok's two renders this is.
+ *
+ * Not a quality ladder -- they are the same pixels at different bitrates. The choice is whether
+ * you would rather have the branding or the bits.
+ */
+enum class TikTokVariantKind(val formatId: String) {
+    /** `playAddr`. Lower bitrate, nothing burned in. What a downloader should hand you by default. */
+    CLEAN("ttcdn-clean"),
+
+    /** `downloadAddr`. Higher bitrate, TikTok logo and the author's handle burned into the frame. */
+    WATERMARKED("ttcdn-wm"),
+}
+
+/** One render, with the real byte count rather than a guess. */
+data class TikTokVariant(
+    val kind: TikTokVariantKind,
+    val url: String,
+    val sizeBytes: Long,
+)
+
 data class TikTokMedia(
     /** The aweme id. A real identifier, unlike anything derivable from the signed CDN URL. */
     val id: String,
-    val url: String,
+    val variants: List<TikTokVariant>,
     val headers: Map<String, String>,
     val title: String,
     val uploader: String,
@@ -63,30 +84,59 @@ data class TikTokMedia(
     val width: Int,
     val height: Int,
     val durationSeconds: Int,
-    val sizeBytes: Long,
 ) {
-    /** The single rung, as the app's own Format type. */
+    /**
+     * What to download when nobody chose.
+     *
+     * Clean wins. A watermark is baked into the picture and cannot be taken out later, where the
+     * bitrate difference is one nobody notices on a 576px-wide phone video.
+     */
+    val preferred: TikTokVariant
+        get() = variants.firstOrNull { it.kind == TikTokVariantKind.CLEAN } ?: variants.first()
+
+    /** Kept so every existing call site still reads the media's URL and size unchanged. */
+    val url: String
+        get() = preferred.url
+
+    val sizeBytes: Long
+        get() = preferred.sizeBytes
+
+    /** The rung the user picked in the format sheet, if it is one of ours. */
+    fun byFormatId(id: String?): TikTokVariant? =
+        id?.takeIf { it.isNotBlank() }?.let { wanted ->
+            variants.firstOrNull { it.kind.formatId == wanted }
+        }
+
+    /** Both renders, as the app's own Format type, clean first. */
     fun toFormats(): List<Format> =
-        listOf(
+        variants.map { v ->
             Format(
-                formatId = FORMAT_ID,
-                formatNote = if (height > 0) "${height}p" else null,
+                formatId = v.kind.formatId,
+                formatNote =
+                    buildString {
+                            if (height > 0) append("${height}p")
+                            append(
+                                if (v.kind == TikTokVariantKind.CLEAN) " - no watermark"
+                                else " - watermarked"
+                            )
+                        }
+                        .trim(),
                 ext = "mp4",
                 // Stated rather than left null: an unknown vcodec is read as "audio only", which
                 // is how these downloads used to come back as m4a files.
                 vcodec = "h264",
                 acodec = "mp4a.40.2",
-                url = url,
+                url = v.url,
                 width = width.takeIf { it > 0 }?.toDouble(),
                 height = height.takeIf { it > 0 }?.toDouble(),
                 resolution = if (width > 0) "${width}x$height" else null,
-                fileSize = sizeBytes.takeIf { it > 0 }?.toDouble(),
-                fileSizeApprox = sizeBytes.takeIf { it > 0 }?.toDouble(),
+                fileSize = v.sizeBytes.takeIf { it > 0 }?.toDouble(),
+                fileSizeApprox = v.sizeBytes.takeIf { it > 0 }?.toDouble(),
             )
-        )
+        }
 
     companion object {
-        const val FORMAT_ID = "ttcdn-src"
+        const val FORMAT_ID = "ttcdn-clean"
     }
 }
 
@@ -217,15 +267,17 @@ object TikTokCdn {
                 }
 
         val video = item["video"]?.jsonObject ?: return null
-        // downloadAddr preferred where present: it is the source file rather than the streaming
-        // rendition. playAddr is the reliable fallback and is what the reflow page always carries.
-        val addr =
-            video["downloadAddr"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-                ?: video["playAddr"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-                ?: run {
-                    TrawlLog.i("$TAG: $id carried no playable address")
-                    return null
-                }
+        // Both renders, not one. playAddr is clean and downloadAddr is the branded export -- the
+        // opposite of what the field names suggest, and verified frame by frame rather than
+        // assumed. The old code took downloadAddr as "the source file" and shipped a watermark.
+        fun addr(key: String) = video[key]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+
+        val clean = addr("playAddr")
+        val watermarked = addr("downloadAddr")
+        if (clean == null && watermarked == null) {
+            TrawlLog.i("$TAG: $id carried no playable address")
+            return null
+        }
 
         val cookieHeader = jar.headerFor(pageUrl)
         val headers =
@@ -240,10 +292,29 @@ object TikTokCdn {
         val nick = author?.get("nickname")?.jsonPrimitive?.contentOrNull.orEmpty()
         val desc = item["desc"]?.jsonPrimitive?.contentOrNull.orEmpty()
 
+        // One ranged GET per render. Two round trips instead of one, on a short timeout, in
+        // exchange for the picker showing a real size on both rows rather than a blank on one.
+        val variants =
+            listOfNotNull(
+                    clean?.let {
+                        TikTokVariant(TikTokVariantKind.CLEAN, it, contentLength(it, headers))
+                    },
+                    watermarked
+                        ?.takeIf { it != clean }
+                        ?.let {
+                            TikTokVariant(
+                                TikTokVariantKind.WATERMARKED,
+                                it,
+                                contentLength(it, headers),
+                            )
+                        },
+                )
+                .sortedBy { it.kind.ordinal }
+
         val media =
             TikTokMedia(
                 id = id,
-                url = addr,
+                variants = variants,
                 headers = headers,
                 title = buildTitle(handle, desc, id),
                 uploader = nick.ifBlank { handle },
@@ -251,9 +322,11 @@ object TikTokCdn {
                 width = video["width"]?.jsonPrimitive?.intOrNull ?: 0,
                 height = video["height"]?.jsonPrimitive?.intOrNull ?: 0,
                 durationSeconds = video["duration"]?.jsonPrimitive?.intOrNull ?: 0,
-                sizeBytes = contentLength(addr, headers),
             )
-        TrawlLog.i("$TAG: $id resolved ${media.width}x${media.height}, ${media.sizeBytes} bytes")
+        TrawlLog.i(
+            "$TAG: $id resolved ${media.width}x${media.height}, " +
+                variants.joinToString { "${it.kind.name.lowercase()}=${it.sizeBytes}B" }
+        )
         return media
     }
 

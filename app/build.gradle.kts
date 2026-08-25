@@ -112,9 +112,11 @@ android {
             }
         }
         debug {
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("githubPublish")
-            }
+            // Deliberately NOT signed with the publishing key, which is what upstream does here.
+            // That key can push an update to every installed copy of the released app, and a
+            // debug APK is the build most likely to be sideloaded around or left on a machine.
+            // Keeping the default debug key also means a debug build installs over a previous
+            // debug build, which stopped working the moment a keystore.properties appeared.
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }

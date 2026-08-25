@@ -94,6 +94,9 @@ import androidx.compose.runtime.LaunchedEffect
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.PreferenceUtil
 import com.junkfood.seal.util.CLIPBOARD_AUTOPASTE
+import com.junkfood.seal.util.TrawlLog
+import com.junkfood.seal.util.FileUtil
+import androidx.compose.ui.platform.LocalContext
 
 /** What the bubble is currently saying, in priority order. */
 enum class BubbleState {
@@ -630,8 +633,24 @@ private fun BubbleTaskRow(task: BubbleTask, onAction: (String, BubbleAction) -> 
             BubbleTaskState.QUEUED -> Icons.Rounded.Close to BubbleAction.CANCEL
             else -> Icons.Rounded.Pause to BubbleAction.PAUSE
         }
+    val context = LocalContext.current
+    val playable = task.state == BubbleTaskState.DONE && !task.filePath.isNullOrBlank()
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                // Only finished rows with a real path react. A running row has nothing to open,
+                // and a dead click on a control surface reads as a broken app.
+                .then(
+                    if (playable)
+                        Modifier.clickable {
+                            FileUtil.openFile(task.filePath.orEmpty()) {
+                                TrawlLog.w("Bubble: could not open ${task.filePath}: ${it.message}")
+                            }
+                        }
+                    else Modifier
+                )
+                .padding(horizontal = 4.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {

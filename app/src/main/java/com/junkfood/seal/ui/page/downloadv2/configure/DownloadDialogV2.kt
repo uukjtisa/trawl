@@ -185,6 +185,14 @@ import com.junkfood.seal.util.USE_CUSTOM_AUDIO_PRESET
 import com.junkfood.seal.util.VIDEO_FORMAT
 import com.junkfood.seal.util.VIDEO_QUALITY
 import kotlinx.coroutines.launch
+import com.junkfood.seal.util.PreferenceUtil.getInt
+import com.junkfood.seal.util.DownloadRoutes
+import com.junkfood.seal.util.DownloadRoute
+import com.junkfood.seal.util.CONVERT_OPUS
+import com.junkfood.seal.util.CONVERT_OGG
+import com.junkfood.seal.util.CONVERT_MP3
+import com.junkfood.seal.util.CONVERT_M4A
+import androidx.compose.material.icons.outlined.Bolt
 
 @Composable
 private fun DownloadType.label(): String =
@@ -560,6 +568,62 @@ private fun ConfigurePagePreview() {
     }
 }
 
+/** One line: which engine claims this link. The reasoning lives in docs/RESOLVERS.md. */
+@Composable
+private fun RouteChip(route: DownloadRoute.Direct) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Bolt,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(15.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = stringResource(R.string.route_direct_chip, route.platform),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+        }
+    }
+}
+
+/**
+ * The Format selection content for a direct audio download.
+ *
+ * Chips rather than the big Preset/Custom rows because there is no second level to drill into:
+ * every option here is one ffmpeg flag, and a full-width row per container would be four times
+ * the height for the same four words.
+ */
+@Composable
+private fun DirectAudioFormats(selected: Int, onPick: (Int) -> Unit) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        listOf(
+                CONVERT_MP3 to "MP3",
+                CONVERT_M4A to "M4A",
+                CONVERT_OPUS to "Opus",
+                CONVERT_OGG to "Ogg",
+            )
+            .forEach { (code, label) ->
+                FilterChip(
+                    selected = selected == code,
+                    onClick = { onPick(code) },
+                    label = { Text(label) },
+                )
+            }
+    }
+}
+
 @Composable
 private fun ConfigurePage(
     modifier: Modifier = Modifier,
@@ -575,6 +639,10 @@ private fun ConfigurePage(
     var selectedType by remember(config) { mutableStateOf(config.downloadType) }
     var useFormatSelection by remember(config) { mutableStateOf(config.useFormatSelection) }
     val canProceed = selectedType in config.typeEntries
+
+    // Seeded from the preference once, then owned by the composition. See the note at the tap
+    // handler for why reading it back per-frame does not work.
+    var audioFormat by remember { mutableIntStateOf(AUDIO_CONVERSION_FORMAT.getInt()) }
 
     var showTemplateSelectionDialog by remember { mutableStateOf(false) }
     var showTemplateCreatorDialog by remember { mutableStateOf(false) }
@@ -601,6 +669,13 @@ private fun ConfigurePage(
             title = stringResource(R.string.settings_before_download),
             icon = Icons.Outlined.SettingsSuggest,
         )
+        // Which engine claims this link. A host check, so it costs nothing and is correct the
+        // moment the sheet opens -- see DownloadRoute.kt for why it is not a network probe.
+        val route = remember(url) { DownloadRoutes.of(url) }
+        (route as? DownloadRoute.Direct)?.let { direct ->
+            Spacer(Modifier.height(8.dp))
+            RouteChip(direct)
+        }
         Spacer(Modifier.height(4.dp))
         SectionLabel(text = stringResource(id = R.string.download_type))
         DownloadTypeSelectionGroup(
@@ -612,22 +687,42 @@ private fun ConfigurePage(
             },
         )
         Spacer(Modifier.height(4.dp))
+        val directAudio =
+            route is DownloadRoute.Direct && route.audioConvertible && selectedType == Audio
         if (selectedType != Command) {
             SectionLabel(text = stringResource(id = R.string.format_selection))
-            Preset(
-                modifier = Modifier,
-                preference = preferences,
-                selected = !useFormatSelection,
-                downloadType = selectedType,
-                onClick = { useFormatSelection = false },
-                showEditIcon = !useFormatSelection && selectedType != Playlist,
-                onEdit = { onPresetEdit(selectedType) },
-            )
-            Custom(
-                selected = useFormatSelection,
-                enabled = selectedType != Playlist,
-                onClick = { useFormatSelection = true },
-            )
+            if (directAudio) {
+                // Preset and Custom both describe yt-dlp's format ladder, and a resolver does not
+                // publish one -- it hands back a single progressive MP4. So on this route the
+                // only meaningful format question is which container to transcode into.
+                DirectAudioFormats(
+                    selected = audioFormat,
+                    onPick = { code ->
+                        // State FIRST, preference second. Reading the preference back during
+                        // composition looked like it worked but MMKV is not observable, so the
+                        // tap wrote a value nothing was watching -- the chips only caught up when
+                        // something else forced a recomposition, like switching Download type.
+                        audioFormat = code
+                        AUDIO_CONVERT.updateBoolean(true)
+                        AUDIO_CONVERSION_FORMAT.updateInt(code)
+                    },
+                )
+            } else {
+                Preset(
+                    modifier = Modifier,
+                    preference = preferences,
+                    selected = !useFormatSelection,
+                    downloadType = selectedType,
+                    onClick = { useFormatSelection = false },
+                    showEditIcon = !useFormatSelection && selectedType != Playlist,
+                    onEdit = { onPresetEdit(selectedType) },
+                )
+                Custom(
+                    selected = useFormatSelection,
+                    enabled = selectedType != Playlist,
+                    onClick = { useFormatSelection = true },
+                )
+            }
         } else {
             if (showTemplateSelectionDialog) {
                 TemplatePickerDialog { showTemplateSelectionDialog = false }
