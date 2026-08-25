@@ -42,6 +42,20 @@ interface VideoInfoDao {
     @Query("select * from DownloadedVideoInfo where id=:id")
     suspend fun getInfoById(id: Int): DownloadedVideoInfo
 
+    /**
+     * One-off correction for rows written before the DIRECT/YT-DLP marker existed.
+     *
+     * The resolvers used to copy yt-dlp's own extractor names into the column the badge reads, so
+     * their downloads now show as yt-dlp's work. Matching on those two literals is only sound
+     * because Trawl has never shipped a build where a Twitter or TikTok row could have come from
+     * anywhere else; new rows are written as TrawlDirect and never match.
+     */
+    @Query(
+        "UPDATE DownloadedVideoInfo SET extractor = :marker " +
+            "WHERE extractor IN ('Twitter', 'TikTok', 'twitter', 'tiktok')"
+    )
+    suspend fun relabelPreMarkerResolverRows(marker: String): Int
+
     @Query("DELETE FROM DownloadedVideoInfo WHERE id = :id") suspend fun deleteInfoById(id: Int)
 
     @Query("DELETE FROM DownloadedVideoInfo WHERE videoPath = :path")

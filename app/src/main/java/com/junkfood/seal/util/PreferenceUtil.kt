@@ -145,6 +145,9 @@ const val CLIPBOARD_AUTOPASTE = "clipboard_autopaste"
 // Whether "Delete" also removes the downloaded file. Default ON: leaving the file behind while
 // removing its only listing is how storage fills with things the app can no longer show you.
 const val DELETE_FILE_WITH_ENTRY = "delete_file_with_entry"
+// Set once the pre-marker history rows have been relabelled. A plain flag rather than a schema
+// migration: nothing about the schema changed, only four rows of stale data.
+const val TOOL_BADGE_BACKFILLED = "tool_badge_backfilled"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"

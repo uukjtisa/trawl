@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 
 private val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(database: SupportSQLiteDatabase) {
@@ -100,6 +101,24 @@ object DatabaseUtil {
             .fallbackToDestructiveMigration()
             .build()
     private val dao = db.videoInfoDao()
+
+    /**
+     * Relabel history rows that predate the DIRECT/YT-DLP badge, once.
+     *
+     * The resolvers used to copy yt-dlp's own extractor names into the column the badge reads, so
+     * their downloads now claim yt-dlp did the work. Silent by design -- it corrects a label, and
+     * there is nothing for anyone to act on -- but it logs the row count, because "the badge is
+     * still wrong" is otherwise impossible to tell apart from "the backfill never ran".
+     */
+    suspend fun backfillToolBadgeOnce() {
+        if (TOOL_BADGE_BACKFILLED.getBoolean()) return
+        runCatching { dao.relabelPreMarkerResolverRows(TRAWL_DIRECT) }
+            .onSuccess { rows ->
+                PreferenceUtil.updateValue(TOOL_BADGE_BACKFILLED, true)
+                if (rows > 0) TrawlLog.i("relabelled $rows pre-marker history rows as TrawlDirect")
+            }
+            .onFailure { TrawlLog.w("tool badge backfill failed: ${it.message}") }
+    }
 
     fun insertInfo(vararg infoList: DownloadedVideoInfo) {
         applicationScope.launch(Dispatchers.IO) {

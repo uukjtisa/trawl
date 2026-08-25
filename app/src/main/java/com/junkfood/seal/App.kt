@@ -67,6 +67,7 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import com.junkfood.seal.util.DatabaseUtil
 
 class App : Application(), SingletonImageLoader.Factory {
 
@@ -146,6 +147,9 @@ class App : Application(), SingletonImageLoader.Factory {
         connectivityManager = getSystemService()!!
 
         applicationScope.launch((Dispatchers.IO)) {
+            // Before anything renders the history, and cheap enough to be unconditional: after
+            // the first launch it reads one boolean and returns.
+            runCatching { DatabaseUtil.backfillToolBadgeOnce() }
             try {
                 YoutubeDL.init(this@App)
                 FFmpeg.init(this@App)
