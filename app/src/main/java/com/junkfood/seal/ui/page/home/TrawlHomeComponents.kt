@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
@@ -216,15 +217,15 @@ fun TrawlFastTray(
 ) {
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
+        enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+        modifier = Modifier.offset(y = (-20).dp),
     ) {
         Column(
             modifier =
                 modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp)
-                    .offset(y = (-20).dp)
                     .clip(RoundedCornerShape(bottomStart = 18.dp, bottomEnd = 18.dp))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
@@ -426,6 +427,9 @@ fun TrawlUrlSection(
 ) {
     Column(modifier.fillMaxWidth()) {
         TrawlUrlBar(
+            // Painted above the tray. The tray tucks 20dp up underneath it, so without this the
+            // later sibling wins and the tray's edge cuts across the pill and the go button.
+            modifier = Modifier.zIndex(1f),
             value = value,
             onValueChange = onValueChange,
             fastEnabled = fastEnabled,

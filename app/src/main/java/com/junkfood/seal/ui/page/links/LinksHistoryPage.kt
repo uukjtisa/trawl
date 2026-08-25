@@ -68,6 +68,9 @@ import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.em
+import com.junkfood.seal.ui.common.AsyncImageImpl
 
 /** What became of the file this link produced. */
 enum class LinkStatus {
@@ -77,6 +80,9 @@ enum class LinkStatus {
     /** Downloaded once; the file is no longer where it was recorded. */
     MISSING,
 }
+
+/** Bucket for rows with no usable timestamp. */
+private const val EARLIER = "Earlier"
 
 private data class LinkEntry(val info: DownloadedVideoInfo, val status: LinkStatus)
 
@@ -140,7 +146,7 @@ fun LinksHistoryPage(onNavigateBack: () -> Unit, onRedownload: (String) -> Unit)
         remember(visible) {
             visible
                 .sortedByDescending { it.info.downloadTimeMillis }
-                .groupBy { dayKey(it.info.downloadTimeMillis) }
+                .groupBy { dayKey(it.info.downloadTimeMillis) ?: EARLIER }
         }
 
     Scaffold(
@@ -243,62 +249,132 @@ private fun DayHeader(day: String) {
     )
 }
 
-/** `.lrow` -- thumbnail, two-line title, monospace URL, status pill, and a re-download action. */
+/**
+ * `.lrow` -- thumbnail, title, source badge, URL and status, with a re-download action.
+ *
+ * The thumbnail prefers the LOCAL FILE over the remote URL: for a saved download the video is
+ * already on disk, so Coil can pull a frame from it without a network round trip, and it still
+ * works offline. A missing file falls back to the stored thumbnail URL, and only if both are
+ * absent does the mark stand in -- an empty grey square says "broken", the mark says "no
+ * preview".
+ */
 @Composable
 private fun LinkRow(entry: LinkEntry, onRedownload: () -> Unit) {
     val tokens = LocalTrawlTokens.current
+    val scheme = MaterialTheme.colorScheme
+    val model =
+        remember(entry) {
+            when {
+                entry.status == LinkStatus.SAVED && entry.info.videoPath.isNotBlank() ->
+                    File(entry.info.videoPath)
+                entry.info.thumbnailUrl.isNotBlank() -> entry.info.thumbnailUrl
+                else -> null
+            }
+        }
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(18.dp))
+                .background(scheme.surface)
+                .border(1.dp, scheme.outline, RoundedCornerShape(18.dp))
                 .padding(11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
-            Modifier.size(52.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+            Modifier.size(64.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(scheme.surfaceVariant),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (model != null) {
+                AsyncImageImpl(
+                    model = model,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Icon(
+                    painter = painterResource(R.drawable.trawl_mark),
+                    contentDescription = null,
+                    tint = scheme.primary.copy(alpha = 0.35f),
+                    modifier = Modifier.size(26.dp),
+                )
+            }
+            // A missing file still shows its thumbnail, dimmed, so the row stays recognisable
+            // instead of becoming an anonymous grey block the moment you free up space.
+            if (entry.status == LinkStatus.MISSING) {
+                Box(Modifier.fillMaxSize().background(scheme.surface.copy(alpha = 0.55f)))
+            }
+        }
+
         Column(Modifier.weight(1f)) {
             Text(
                 text = entry.info.videoTitle,
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight(550),
                 lineHeight = 17.5.sp,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = scheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                text = entry.info.videoUrl,
-                fontSize = 10.5.sp,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            StatusPill(entry.status, tokens.ok, tokens.warn)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(top = 5.dp),
+            ) {
+                SourceBadge(entry.info.videoUrl)
+                StatusPill(entry.status, tokens.ok, tokens.warn)
+            }
         }
-        // .lact -- 38dp, radius 11. One tap re-runs the link at the remembered quality.
+
+        // .lact -- one tap re-runs the link at the remembered quality.
         Box(
             Modifier.size(38.dp)
                 .clip(RoundedCornerShape(11.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(tokens.surfaceHigh)
                 .clickable(onClick = onRedownload),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Outlined.Refresh,
                 contentDescription = stringResource(R.string.redownload),
-                tint = MaterialTheme.colorScheme.primary,
+                tint = scheme.primary,
                 modifier = Modifier.size(19.dp),
             )
         }
     }
+}
+
+/**
+ * Where the link came from, as a word.
+ *
+ * "tiktok" is instantly readable; `https://www.tiktok.com/@toscaa.fgl/v...` is not, and it is
+ * what the row used to lead with.
+ */
+@Composable
+private fun SourceBadge(url: String) {
+    val host =
+        remember(url) {
+            runCatching { java.net.URI(url).host.orEmpty() }
+                .getOrDefault("")
+                .removePrefix("www.")
+                .removePrefix("m.")
+                .substringBefore('.')
+                .ifBlank { "link" }
+        }
+    Text(
+        text = host.uppercase(),
+        fontSize = 9.sp,
+        fontWeight = FontWeight.W700,
+        letterSpacing = 0.06.em,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier =
+            Modifier.clip(RoundedCornerShape(50))
+                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(50))
+                .padding(horizontal = 7.dp, vertical = 3.dp),
+    )
 }
 
 @Composable
@@ -314,8 +390,7 @@ private fun StatusPill(status: LinkStatus, ok: Color, warn: Color) {
         fontWeight = FontWeight.W700,
         color = color,
         modifier =
-            Modifier.padding(top = 6.dp)
-                .clip(RoundedCornerShape(50))
+            Modifier.clip(RoundedCornerShape(50))
                 .background(color.copy(alpha = 0.12f))
                 .padding(horizontal = 8.dp, vertical = 3.dp),
     )
@@ -352,9 +427,16 @@ private fun EmptyLinks(hasHistory: Boolean) {
     }
 }
 
-/** Today / Yesterday / a formatted date, so recent entries read in human terms. */
-private fun dayKey(millis: Long): String {
-    if (millis <= 0L) return "—"
+/**
+ * Today / Yesterday / a date -- or nothing at all.
+ *
+ * `downloadTimeMillis` defaults to -1 on rows written before that column existed, and handing
+ * that to `Date(...)` produces 1 Jan 1970. A header that is merely ugly is one thing; this one
+ * was also FALSE, which is worse. Undated rows now group under "Earlier" and say nothing they
+ * cannot back up.
+ */
+private fun dayKey(millis: Long): String? {
+    if (millis <= 0L) return null
     val cal = Calendar.getInstance().apply { timeInMillis = millis }
     val today = Calendar.getInstance()
     val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }

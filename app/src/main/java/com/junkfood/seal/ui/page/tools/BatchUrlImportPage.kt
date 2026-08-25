@@ -112,16 +112,6 @@ import com.junkfood.seal.util.findURLsFromString
 import com.junkfood.seal.util.makeToast
 import org.koin.compose.koinInject
 
-private object BatchColors {
-    val Background = Color(0xFF09090B)
-    val Surface = Color(0xFF14141A)
-    val SurfaceVariant = Color(0xFF1E1E28)
-    val Primary = Color(0xFF7C4DFF)
-    val Border = Color(0xFF2A2A35)
-    val TextPrimary = Color(0xFFFFFFFF)
-    val TextSecondary = Color(0xFF9E9EAB)
-    val Warning = Color(0xFFF59E0B)
-}
 
 private val GradientBrush = Brush.horizontalGradient(
     colors = listOf(Color(0xFF7C4DFF), Color(0xFF9C6DFF)),
@@ -168,24 +158,25 @@ fun BatchUrlImportPage(
         }
     }
 
-    val bg = if (isDarkMode) BatchColors.Background else MaterialTheme.colorScheme.background
-    val surface = if (isDarkMode) BatchColors.Surface else MaterialTheme.colorScheme.surface
-    val surfaceVariant = if (isDarkMode) BatchColors.SurfaceVariant else MaterialTheme.colorScheme.surfaceVariant
-    val border = if (isDarkMode) BatchColors.Border else MaterialTheme.colorScheme.outlineVariant
-    val primary = if (isDarkMode) BatchColors.Primary else MaterialTheme.colorScheme.primary
-    val textPrimary = if (isDarkMode) BatchColors.TextPrimary else MaterialTheme.colorScheme.onSurface
-    val textSecondary = if (isDarkMode) BatchColors.TextSecondary else MaterialTheme.colorScheme.onSurfaceVariant
+    // One shared, themed palette instead of a private copy branching on dark mode. The branch
+    // existed only because the dark half was a hardcoded purple set; now both halves come from
+    // the theme, so there is nothing left to branch on.
+    val palette = rememberToolPalette()
+    val bg = palette.background
+    val surface = palette.surface
+    val surfaceVariant = palette.surfaceVariant
+    val border = palette.border
+    val primary = palette.primary
+    val textPrimary = palette.textPrimary
+    val textSecondary = palette.textSecondary
 
-    val chipSelectedBg = if (isDarkMode) BatchColors.Primary.copy(alpha = 0.12f)
-    else MaterialTheme.colorScheme.primaryContainer
-    val chipSelectedBorder = if (isDarkMode) BatchColors.Primary
-    else MaterialTheme.colorScheme.primary
-    val chipUnselectedBorder = if (isDarkMode) BatchColors.Border
-    else MaterialTheme.colorScheme.outlineVariant
+    val chipSelectedBg = palette.chipSelectedBg
+    val chipSelectedBorder = palette.chipSelectedBorder
+    val chipUnselectedBorder = palette.chipUnselectedBorder
 
     val counterColor = when {
-        urlText.length >= 190 -> Color(0xFFEF4444)
-        urlText.length >= 160 -> BatchColors.Warning
+        urlText.length >= 190 -> palette.error
+        urlText.length >= 160 -> palette.warning
         else -> textSecondary.copy(alpha = 0.6f)
     }
 

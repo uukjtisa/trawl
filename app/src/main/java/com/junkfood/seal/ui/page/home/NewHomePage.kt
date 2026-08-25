@@ -190,6 +190,7 @@ import org.koin.compose.koinInject
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.junkfood.seal.ui.common.LocalFastDownload
 import com.junkfood.seal.ui.theme.HaulWash
+import com.junkfood.seal.ui.theme.LocalTrawlTokens
 import com.junkfood.seal.ui.theme.breathe
 import com.junkfood.seal.ui.theme.progressSweep
 import com.junkfood.seal.util.PreferenceUtil
@@ -1297,7 +1298,7 @@ fun RecentDownloadCard(
                             text = stringResource(R.string.completed),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (isGradientDark && isDarkTheme) {
-                                Color(0xFF4ADE80)
+                                LocalTrawlTokens.current.ok
                             } else {
                                 MaterialTheme.colorScheme.primary
                             },
@@ -1539,10 +1540,10 @@ fun ActiveDownloadCard(
         } else {
             MaterialTheme.colorScheme.primary
         }
-        is Task.DownloadState.Paused -> Color(0xFFFBBF24)
-        is Task.DownloadState.Canceled -> Color(0xFFEF4444)
-        is Task.DownloadState.Error -> Color(0xFFEF4444)
-        is Task.DownloadState.Completed -> Color(0xFF4ADE80)
+        is Task.DownloadState.Paused -> LocalTrawlTokens.current.warn
+        is Task.DownloadState.Canceled -> LocalTrawlTokens.current.bad
+        is Task.DownloadState.Error -> LocalTrawlTokens.current.bad
+        is Task.DownloadState.Completed -> LocalTrawlTokens.current.ok
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
@@ -1857,7 +1858,7 @@ fun ActiveDownloadCard(
             // Progress bar for active and paused downloads
             if (downloadState is Task.DownloadState.Running || downloadState is Task.DownloadState.Paused) {
                 val barColor = when (downloadState) {
-                    is Task.DownloadState.Paused -> Color(0xFFFBBF24)
+                    is Task.DownloadState.Paused -> LocalTrawlTokens.current.warn
                     else -> if (isGradientDark && isDarkTheme) MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.primary
                 }

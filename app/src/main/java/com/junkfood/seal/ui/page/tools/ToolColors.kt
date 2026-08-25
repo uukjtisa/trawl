@@ -6,28 +6,19 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.junkfood.seal.ui.common.LocalDarkTheme
+import com.junkfood.seal.ui.theme.LocalTrawlTokens
 
 /**
  * Shared dark-mode palette for the "More Tools" family of screens (Batch URL Import,
  * Video Info Download, etc). Keeping this in one place means every tool page looks and
  * feels consistent, and any future palette tweak only needs to happen here.
  */
-object ToolColors {
-    val Background = Color(0xFF09090B)
-    val Surface = Color(0xFF14141A)
-    val SurfaceVariant = Color(0xFF1E1E28)
-    val Primary = Color(0xFF7C4DFF)
-    val Border = Color(0xFF2A2A35)
-    val TextPrimary = Color(0xFFFFFFFF)
-    val TextSecondary = Color(0xFF9E9EAB)
-    val Warning = Color(0xFFF59E0B)
-    val Error = Color(0xFFEF4444)
-    val Success = Color(0xFF22C55E)
-}
-
-val ToolGradientBrush: Brush = Brush.horizontalGradient(
-    colors = listOf(Color(0xFF7C4DFF), Color(0xFF9C6DFF)),
-)
+/** The tools' accent gradient, from the active theme rather than a fixed purple pair. */
+val ToolGradientBrush: Brush
+    @Composable get() =
+        Brush.horizontalGradient(
+            listOf(MaterialTheme.colorScheme.primary, LocalTrawlTokens.current.accent)
+        )
 
 /**
  * Resolved set of colors for a tool page: [ToolColors] in dark mode, or the app's
@@ -56,39 +47,28 @@ data class ToolPalette(
 fun rememberToolPalette(): ToolPalette {
     val isDarkMode = LocalDarkTheme.current.isDarkTheme()
     val colorScheme = MaterialTheme.colorScheme
-    return if (isDarkMode) {
-        ToolPalette(
-            background = ToolColors.Background,
-            surface = ToolColors.Surface,
-            surfaceVariant = ToolColors.SurfaceVariant,
-            border = ToolColors.Border,
-            primary = ToolColors.Primary,
-            textPrimary = ToolColors.TextPrimary,
-            textSecondary = ToolColors.TextSecondary,
-            chipSelectedBg = ToolColors.Primary.copy(alpha = 0.12f),
-            chipSelectedBorder = ToolColors.Primary,
-            chipUnselectedBorder = ToolColors.Border,
-            warning = ToolColors.Warning,
-            error = ToolColors.Error,
-            success = ToolColors.Success,
-            isDarkMode = true,
-        )
-    } else {
-        ToolPalette(
-            background = colorScheme.background,
-            surface = colorScheme.surface,
-            surfaceVariant = colorScheme.surfaceVariant,
-            border = colorScheme.outlineVariant,
-            primary = colorScheme.primary,
-            textPrimary = colorScheme.onSurface,
-            textSecondary = colorScheme.onSurfaceVariant,
-            chipSelectedBg = colorScheme.primaryContainer,
-            chipSelectedBorder = colorScheme.primary,
-            chipUnselectedBorder = colorScheme.outlineVariant,
-            warning = ToolColors.Warning,
-            error = colorScheme.error,
-            success = ToolColors.Success,
-            isDarkMode = false,
-        )
-    }
+    // BOTH branches derive from the theme now. The dark branch used to be a hardcoded
+    // near-black + #7C4DFF purple set, which is why every More Tools screen stayed Seal Plus
+    // violet while the rest of the app was Ember -- and why fixing it screen by screen would
+    // have been five chances to miss one.
+    //
+    // ok / warn / bad still come from TrawlTokens rather than the ColorScheme, because Material
+    // has no role for "this succeeded" and inventing one would mean each page picking its own.
+    val tokens = LocalTrawlTokens.current
+    return ToolPalette(
+        background = colorScheme.background,
+        surface = colorScheme.surface,
+        surfaceVariant = colorScheme.surfaceVariant,
+        border = colorScheme.outline,
+        primary = colorScheme.primary,
+        textPrimary = colorScheme.onSurface,
+        textSecondary = colorScheme.onSurfaceVariant,
+        chipSelectedBg = colorScheme.primary.copy(alpha = 0.14f),
+        chipSelectedBorder = colorScheme.primary,
+        chipUnselectedBorder = colorScheme.outline,
+        warning = tokens.warn,
+        error = tokens.bad,
+        success = tokens.ok,
+        isDarkMode = isDarkMode,
+    )
 }

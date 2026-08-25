@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.junkfood.seal.ui.theme.AmbientBackground
 import com.junkfood.seal.ui.theme.LocalTrawlTokens
 
 /** Simple or Fancy, matching `[data-anim]`. */
@@ -80,6 +81,23 @@ private const val PUSH_MS = 500
 internal const val MENU_ITEM_MS = 460
 internal const val MENU_STAGGER_MS = 50
 internal const val MENU_FIRST_DELAY_MS = 60
+
+
+/**
+ * One screen's surface: opaque ground, then the ambient wash, then the page.
+ *
+ * The ambient belongs INSIDE this, exactly as `.ambient` lives inside `.stagewrap` in the
+ * contract. Putting it behind the switcher instead forced the card to be transparent for it to
+ * show, and a transparent card let the menu's ripples flash through the pushed-back window --
+ * which is what he saw. An opaque card with its own ambient fixes both at once.
+ */
+@Composable
+private fun ScreenSurface(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        AmbientBackground()
+        content()
+    }
+}
 
 /**
  * Holds the current screen and the menu behind it.
@@ -107,7 +125,7 @@ fun TrawlSwitcher(
             drawerState = drawerState,
             gesturesEnabled = gesturesEnabled,
             drawerContent = { menu() },
-            content = content,
+            content = { ScreenSurface(content) },
         )
         return
     }
@@ -181,7 +199,7 @@ fun TrawlSwitcher(
                     clip = progress > 0.001f
                 }
         ) {
-            content()
+            ScreenSurface(content)
             // While pushed back, the card is a single target that returns you to it. There is no
             // X to close -- he asked for it gone, and a whole screen is a bigger, more obvious
             // target than a 24dp glyph anyway.

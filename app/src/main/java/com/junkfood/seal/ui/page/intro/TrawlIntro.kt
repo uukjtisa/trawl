@@ -21,7 +21,7 @@ package com.junkfood.seal.ui.page.intro
 //   fish           820 @ 520    flap  560 @ 1180 x2
 //   rule           500 @ 730    fade  300 @ 1280
 //   tagline        560 @ 820    fade  300 @ 1280
-//   curtain lifts  620 @ 1420
+//   glare          1500 @ 620   travel 900 @ 2180   curtain lifts 620 @ 2320
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
@@ -65,6 +65,8 @@ import androidx.compose.ui.unit.sp
 import com.junkfood.seal.R
 import com.junkfood.seal.ui.common.LocalShowMascot
 import com.junkfood.seal.ui.theme.FrauncesFamily
+import com.junkfood.seal.ui.theme.glareBrush
+import com.junkfood.seal.ui.theme.glareHighlight
 import com.junkfood.seal.ui.theme.LocalTrawlTokens
 import kotlinx.coroutines.isActive
 
@@ -77,13 +79,13 @@ private val Draw = CubicBezierEasing(0.2f, 0.8f, 0.3f, 1f)
 private val Curtain = CubicBezierEasing(0.6f, 0f, 0.25f, 1f)
 
 /** When the last thing on screen has finished. */
-private const val SEQUENCE_MS = 2100f
+private const val SEQUENCE_MS = 3000f
 
 /**
  * The hard ceiling. Deliberately longer than the sequence and deliberately independent of it:
  * if the timeline above is ever edited wrongly, this is what still gets the user into the app.
  */
-private const val FAILSAFE_MS = 4000L
+private const val FAILSAFE_MS = 5200L
 
 /** 0..1 across [dur] starting at [delay], eased. Values outside the window clamp. */
 private fun phase(t: Float, delay: Float, dur: Float, easing: Easing): Float {
@@ -154,21 +156,23 @@ fun TrawlIntro(onFinished: () -> Unit) {
         val t = clock.floatValue
 
         // Curtain: the background fades once the lockup has landed.
-        val curtain = 1f - phase(t, 1420f, 620f, Curtain)
+        val curtain = 1f - phase(t, 2320f, 620f, Curtain)
 
         // The wordmark travels toward where the app bar's brand will be. The mockup measures
         // this with a FLIP; here the intro fully replaces the app, so there is nothing on screen
         // to measure against -- these are the mockup's own declared fallbacks, which exist for
         // exactly this case.
-        val travel = phase(t, 1280f, 900f, Travel)
+        val travel = phase(t, 2180f, 900f, Travel)
         val rise = phase(t, 90f, 760f, Rise)
-        val sheenP = phase(t, 700f, 900f, Sheen)
+        // 1500ms, not 900 -- a streak that crosses a 54sp word in under a second is a
+        // flicker. This is the effect he could not see.
+        val sheenP = phase(t, 620f, 1500f, Sheen)
         val markP = phase(t, 420f, 700f, Pop)
-        val markFade = 1f - phase(t, 1280f, 320f, Draw)
+        val markFade = 1f - phase(t, 2180f, 320f, Draw)
         val fishP = phase(t, 520f, 820f, Swim)
         val ruleP = phase(t, 730f, 500f, Draw)
         val tagP = phase(t, 820f, 560f, Draw)
-        val tailFade = 1f - phase(t, 1280f, 300f, Draw)
+        val tailFade = 1f - phase(t, 2180f, 300f, Draw)
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -196,7 +200,7 @@ fun TrawlIntro(onFinished: () -> Unit) {
                 if (showMascot) {
                     // The fish swims UP INTO the net, then flaps twice. It arrives from below and
                     // to the left rather than fading in, so it reads as caught rather than placed.
-                    val flapT = ((t - 1180f) / 560f).coerceAtLeast(0f)
+                    val flapT = ((t - 1180f) / 620f).coerceAtLeast(0f)
                     val flap =
                         if (flapT in 0f..2f)
                             kotlin.math.sin(flapT * Math.PI.toFloat()) else 0f
@@ -231,11 +235,11 @@ fun TrawlIntro(onFinished: () -> Unit) {
                         letterSpacing = (-0.01).em,
                         textAlign = TextAlign.Center,
                         brush =
-                            introSheen(
-                                scheme.onSurface,
-                                scheme.primary,
-                                sheenP,
-                                wordWidth.floatValue,
+                            glareBrush(
+                                base = scheme.onSurface,
+                                highlight = glareHighlight(tokens.accent),
+                                phase = sheenP,
+                                width = wordWidth.floatValue,
                             ),
                     ),
                 modifier =
@@ -281,35 +285,3 @@ fun TrawlIntro(onFinished: () -> Unit) {
     }
 }
 
-/**
- * The wordmark's one-pass sheen.
- *
- * The band is sized to the WORD, not to an arbitrary constant. Sized larger than the text the
- * highlight never fully lands on it -- which is what went wrong first time round: the animation
- * ran correctly and could not be seen. A band roughly the width of the word, swept from just
- * before it to just past it, is a highlight actually travelling through the letters.
- *
- * Both ends of the ramp are the plain text colour, so the resting frame is ordinary text.
- */
-private fun introSheen(
-    base: androidx.compose.ui.graphics.Color,
-    primary: androidx.compose.ui.graphics.Color,
-    phase: Float,
-    width: Float,
-): Brush {
-    // Before the first layout pass there is no width to work with; plain text is the right
-    // answer for that frame rather than a gradient sized to nothing.
-    if (width <= 1f) return SolidColor(base)
-    val band = width * 0.9f
-    val start = -band + phase * (width + band * 2f)
-    return Brush.linearGradient(
-        0.00f to base,
-        0.28f to base,
-        0.50f to primary,
-        0.72f to base,
-        1.00f to base,
-        start = Offset(start, 0f),
-        end = Offset(start + band, 0f),
-        tileMode = TileMode.Clamp,
-    )
-}

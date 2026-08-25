@@ -87,6 +87,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.junkfood.seal.ui.component.ConfirmButton
 import com.junkfood.seal.ui.component.BackButton
 import com.junkfood.seal.ui.theme.FrauncesFamily
+import com.junkfood.seal.ui.theme.glareBrush
+import com.junkfood.seal.ui.theme.glareHighlight
+import com.junkfood.seal.ui.theme.rememberGlarePhase
 import com.junkfood.seal.ui.theme.LocalMotionLevel
 import com.junkfood.seal.ui.theme.LocalTrawlTokens
 
@@ -210,15 +213,10 @@ private fun SignatureBanner() {
     // Measured width of the name, so the sheen band can be sized to it (see D-24).
     val nameWidth = remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
 
-    // One pass on entry: 1600ms on cubic-bezier(.36,0,.22,1) after a 180ms beat.
-    val sheen by
-        animateFloatAsState(
-            targetValue = 1f,
-            animationSpec =
-                tween(1600, delayMillis = 180, easing = CubicBezierEasing(0.36f, 0f, 0.22f, 1f)),
-            label = "sigSheen",
-        )
-    val phase = if (motionOn) sheen else 1f
+    // A slow, repeating glare rather than a single quick sheen. This is his signature card --
+    // it should keep catching the light, the way an embossed name does when you tilt it.
+    val glare by rememberGlarePhase(label = "sigGlare")
+    val phase = if (motionOn) glare else 1f
 
     Box(
         Modifier.fillMaxWidth()
@@ -277,12 +275,11 @@ private fun SignatureBanner() {
                         lineHeight = 37.sp,
                         letterSpacing = 0.005.em,
                         brush =
-                            sheenBrush(
-                                scheme.onSurface,
-                                scheme.primary,
-                                tokens.accent,
-                                phase,
-                                nameWidth.floatValue,
+                            glareBrush(
+                                base = scheme.onSurface,
+                                highlight = glareHighlight(tokens.accent),
+                                phase = phase,
+                                width = nameWidth.floatValue,
                             ),
                     ),
                 modifier = Modifier.padding(top = 9.dp),
@@ -316,40 +313,6 @@ private fun SignatureBanner() {
     }
 }
 
-/**
- * The sheen: a wide gradient swept across the glyphs as [phase] runs 0 to 1.
- *
- * Both ends of the ramp are the plain text colour, so the frozen final frame is
- * indistinguishable from ordinary text -- the effect exists only while it is moving, which is
- * what makes it safe to leave in place rather than something that permanently recolours a name.
- *
- * `TileMode.Clamp` matters: without it the gradient repeats and the highlight appears several
- * times across one word instead of travelling across it once.
- */
-private fun sheenBrush(
-    base: Color,
-    primary: Color,
-    accent: Color,
-    phase: Float,
-    width: Float,
-): Brush {
-    // Sized to the NAME, not to a constant. A band wider than the text means the highlight never
-    // properly lands on it and the effect runs invisibly -- the same bug the intro had.
-    if (width <= 1f) return SolidColor(base)
-    val band = width * 0.9f
-    val start = -band + phase * (width + band * 2f)
-    return Brush.linearGradient(
-        0.00f to base,
-        0.26f to base,
-        0.46f to primary,
-        0.54f to accent,
-        0.74f to base,
-        1.00f to base,
-        start = Offset(start, 0f),
-        end = Offset(start + band, 0f),
-        tileMode = TileMode.Clamp,
-    )
-}
 
 @Composable
 private fun SectionLabel(text: String) {
