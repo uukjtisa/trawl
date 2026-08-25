@@ -1275,6 +1275,9 @@ object DownloadUtil {
                         "picked=${variant?.formatId} url=${variant?.url?.take(72)}"
                 )
             }
+            // Set when this download owns its own archive key (the CDN path); written after a
+            // success so a failed download never claims to have been fetched.
+            var pendingArchiveKey: String? = null
             val pathBuilder = StringBuilder()
             val outputBuilder = StringBuilder()
             // Index 0 = start time ms, index 1 = end time ms
@@ -1303,17 +1306,31 @@ object DownloadUtil {
                     }
                     if (useDownloadArchive) {
                         val archiveFile = context.getArchiveFile()
-                        val archiveTarget = "${videoInfo.extractor} ${videoInfo.id}"
+                        // A CDN-resolved download keys on the tweet and the rung. yt-dlp's own id
+                        // for a direct file is a signed CDN filename: it differs per quality, and
+                        // the app's pre-check only ever sees the PROBE's id (always the best
+                        // rung), so one successful download refused every later one at any
+                        // quality. See archive_fix notes.
+                        val archiveTarget =
+                            if (variant != null)
+                                "twitter ${TwitterCdn.statusId(url)}-${variant.bitrate}"
+                            else "${videoInfo.extractor} ${videoInfo.id}"
                         val alreadyDownloaded = archiveFile.exists() &&
                             archiveFile.bufferedReader().useLines { lines ->
                                 lines.any { it.trimEnd() == archiveTarget }
                             }
                         if (alreadyDownloaded) {
+                            TrawlLog.i("Archive: already have [$archiveTarget], refusing")
                             return Result.failure(
                                 YoutubeDLException(
                                     context.getString(R.string.download_archive_error)
                                 )
                             )
+                        } else if (variant != null) {
+                            // Deliberately NOT --download-archive here: yt-dlp would keep writing
+                            // per-rung CDN filenames that nothing can ever match again. The app
+                            // owns this key, so the app writes it, once the download succeeds.
+                            pendingArchiveKey = archiveTarget
                         } else {
                             useDownloadArchive()
                         }
@@ -1426,7 +1443,17 @@ object DownloadUtil {
                     val dlStartTime = System.currentTimeMillis()
                     YoutubeDL.getInstance()
                         .execute(request = this, processId = taskId, callback = progressCallback)
-                        .also { downloadTiming[0] = dlStartTime; downloadTiming[1] = System.currentTimeMillis() }
+                        .also {
+                            downloadTiming[0] = dlStartTime
+                            downloadTiming[1] = System.currentTimeMillis()
+                            // Only after the bytes actually landed. Recording it before would
+                            // make a failed download permanently unrepeatable.
+                            pendingArchiveKey?.let { key ->
+                                runCatching {
+                                    context.getArchiveFile().appendText(key + "\n")
+                                }
+                            }
+                        }
                 }
                 .onFailure { th ->
                     // yt-dlp's stderr otherwise lives only on the task object, so a failure is

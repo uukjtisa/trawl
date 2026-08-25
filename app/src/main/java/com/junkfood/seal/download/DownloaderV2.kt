@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
+import com.junkfood.seal.util.TrawlLog
 
 private const val TAG = "DownloaderV2"
 
@@ -658,6 +659,17 @@ class DownloaderV2Impl(private val appContext: Context) : DownloaderV2, KoinComp
                         if (throwable is YoutubeDL.CanceledException) {
                             return@onFailure
                         }
+                        // The throwable otherwise lives only on the task, so a failed download is
+                        // a red card on screen and nothing in logcat. Class included: an NPE and
+                        // a yt-dlp "format not available" look identical on screen and are
+                        // completely different bugs.
+                        TrawlLog.e(
+                            "Download failed [" +
+                                throwable.javaClass.simpleName +
+                                "]: " +
+                                throwable.message.orEmpty().take(700),
+                            throwable,
+                        )
                         val retries = retryCountMap.getOrDefault(id, 0)
                         val isNetworkError = isNetworkError(throwable)
                         val networkUnavailable = !PreferenceUtil.isNetworkAvailableForDownload()
