@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="fastlane/metadata/android/en-US/images/icon.png" width="120" height="120" align="center" alt="Trawl">
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="120" height="120" align="center" alt="Trawl">
 
 # Trawl
 
-**An Android media downloader that keeps working when a single extraction engine stops.**
+**A general-purpose Android media downloader that keeps working when one extraction engine stops.**
 
 [![Licence](https://img.shields.io/badge/Licence-GPL--3.0-orange?style=flat)](LICENSE)
 [![Platform](https://img.shields.io/badge/Android-7.0%2B-orange?style=flat&logo=android&logoColor=white)](#building)
@@ -37,6 +37,11 @@ to decide whether a link is downloadable.
 This is the feature. Everything else is an app around it.
 
 ### More than one way in
+
+Trawl downloads from **everything yt-dlp supports** — well over a thousand sites — and that is the
+baseline, not the feature. The feature is what happens on the sites where one engine is not enough:
+those get an additional, independent route tried first. Two have one today; the list is meant to
+grow, and the architecture is built for that rather than for those two.
 
 | Platform | Trawl tries | Then | Then |
 |---|---|---|---|

@@ -1,7 +1,0 @@
-Funktionserweiterung:
-Dynamische Farbe für Android 12+ aktivierbar
-
-Fehlerbehebung:
-Dropdown-Menü wird bei der Auswahl der Videoauflösung nicht angezeigt
-
-Kroatische Übersetzungen von @ElizabethWega hinzugefügt

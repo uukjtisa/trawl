@@ -1,3 +1,0 @@
-Bug fixes and UI Improvements
-
-For full changelogs, please refer to GitHub

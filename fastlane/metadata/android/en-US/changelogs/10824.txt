@@ -1,4 +1,0 @@
-### Fixed
-- Trimmed ASCII characters filename
-- Unexpected error when downloading multiple video to SD card with quick download
-- Error when cropping vertical thumbnails as artwork
