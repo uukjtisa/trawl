@@ -1,120 +1,174 @@
 <div align="center">
 
-<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="120" height="120" align="center" alt="Trawl">
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="112" height="112" alt="Trawl">
 
 # Trawl
 
-**A general-purpose Android media downloader that keeps working when one extraction engine stops.**
+**An Android media downloader that does not give up when one extractor breaks.**
 
-[![Licence](https://img.shields.io/badge/Licence-GPL--3.0-orange?style=flat)](LICENSE)
-[![Platform](https://img.shields.io/badge/Android-7.0%2B-orange?style=flat&logo=android&logoColor=white)](#building)
-[![Kotlin](https://img.shields.io/badge/Kotlin-Compose-orange?style=flat&logo=kotlin&logoColor=white)](#building)
+[![Licence](https://img.shields.io/badge/Licence-GPL--3.0-D98E4A?style=for-the-badge)](LICENSE)
+[![Android](https://img.shields.io/badge/Android-7.0%2B-D98E4A?style=for-the-badge&logo=android&logoColor=white)](#building-it-yourself)
+[![Kotlin](https://img.shields.io/badge/Kotlin-Compose-D98E4A?style=for-the-badge&logo=kotlin&logoColor=white)](#building-it-yourself)
+[![Status](https://img.shields.io/badge/v0.1.0-early%20development-C25E3A?style=for-the-badge)](docs/STATUS.md)
 
-A personal fork of [Seal Plus](https://github.com/MaheshTechnicals/Seal-Plus), itself a fork of
-[Seal](https://github.com/JunkFood02/Seal). Built by [**uukjtisa**](https://github.com/uukjtisa).
+A personal fork of **[Seal Plus](https://github.com/MaheshTechnicals/Seal-Plus)**, itself a fork of
+**[Seal](https://github.com/JunkFood02/Seal)**.
+Built by **[uukjtisa](https://github.com/uukjtisa)**.
 
 </div>
 
+> [!WARNING]
+> **v0.1.0. Early development.** I wrote this for my own phone and I am still finding bugs in it.
+> There is no release build, no store listing, and nobody but me has run it. What is written below
+> is what the code does today, not what I hope it will do. See **[docs/STATUS.md](docs/STATUS.md)**
+> for the honest list of what is finished, half-built and missing.
+
 ---
 
-## Why this fork exists
+## Table of Contents
 
-Every app in this family is a front-end for [yt-dlp](https://github.com/yt-dlp/yt-dlp), which does
-the genuinely hard part and does it well. But a front-end that can *only* ask yt-dlp inherits every
-one of its bad days: when a site changes shape, or starts demanding a browser fingerprint a bundled
-Python runtime cannot produce, the download fails and the user is told something unhelpful about
-extractor errors.
+- [What Trawl is](#what-trawl-is)
+- [A glimpse of it](#a-glimpse-of-it)
+- [Platform support, without the marketing](#platform-support-without-the-marketing)
+  - [How the resolvers behave](#how-the-resolvers-behave)
+  - [Why X and TikTok specifically](#why-x-and-tiktok-specifically)
+  - [Checking any of this yourself](#checking-any-of-this-yourself)
+- [The rest of the app](#the-rest-of-the-app)
+- [What it is for, and what it will not do](#what-it-is-for-and-what-it-will-not-do)
+- [Building it yourself](#building-it-yourself)
+- [Project status](#project-status)
+- [Credits](#credits)
+- [Licence](#licence)
+- [Documentation](#documentation)
 
-**Trawl treats extraction as a question that can be asked more than one way.** Where a platform can
-be resolved by a second, independent route, Trawl tries that route too — and falls back to yt-dlp
-rather than replacing it.
+---
 
-yt-dlp remains the engine and the final fallback. It is simply no longer the only thing that gets
-to decide whether a link is downloadable.
+## What Trawl is
 
-## Reliability
+Every app in this family is a front-end for [yt-dlp](https://github.com/yt-dlp/yt-dlp). Trawl is
+still one of those, so it downloads from the same thousand-plus sites Seal does, using the same
+engine underneath.
 
-This is the feature. Everything else is an app around it.
+What this fork adds is a second way in.
 
-### More than one way in
+When yt-dlp's extractor for a site stops working, an ordinary front-end has nothing left to try. It
+shows you an extractor error and that is the end of the download. Trawl resolves two sites itself,
+without yt-dlp's extractor, and only falls back to yt-dlp when its own attempt comes up empty.
 
-Trawl downloads from **everything yt-dlp supports** — well over a thousand sites — and that is the
-baseline, not the feature. The feature is what happens on the sites where one engine is not enough:
-those get an additional, independent route tried first. Two have one today; the list is meant to
-grow, and the architecture is built for that rather than for those two.
+Every download card shows which route actually ran, `DIRECT` or `YT-DLP`, so the claim is visible
+in the app rather than only in this file.
 
-| Platform | Trawl tries | Then | Then |
-|---|---|---|---|
-| **X / Twitter** | X's own syndication endpoint — direct, full variant ladder | a public mirror, for age-restricted posts X refuses to serve signed-out clients | yt-dlp |
-| **TikTok** | TikTok's mobile share page, with the session cookies that make its CDN URLs work | — | yt-dlp |
-| Everything else | — | — | yt-dlp |
+---
 
-The **download** is still yt-dlp's job in every case. The resolvers replace *extraction* — the part
-that decides which URL holds the video — not the transfer, and not the progress reporting, file
-naming, history, notifications, resume or ffmpeg post-processing that come with it.
+## A glimpse of it
 
-Both resolvers have a Settings switch, and both are off-switchable without losing the platform.
+<p align="center">
+  <img src="docs/screenshots/home.jpg" width="31%" alt="Home screen with recent downloads">
+  <img src="docs/screenshots/downloading.jpg" width="31%" alt="A download in progress">
+  <img src="docs/screenshots/links.jpg" width="31%" alt="Links history">
+</p>
+<p align="center">
+  <img src="docs/screenshots/configure.jpg" width="31%" alt="Configure before download">
+  <img src="docs/screenshots/formats.jpg" width="31%" alt="Format selection">
+  <img src="docs/screenshots/float.jpg" width="31%" alt="Floating window">
+</p>
 
-### Fail softly, never silently
+<p align="center"><sub>
+Home &middot; download in progress &middot; links history &middot; configure &middot; format
+selection &middot; floating window
+</sub></p>
 
-Every resolver returns "no result" rather than an error, and "no result" means *carry on to the next
-route*. The worst case is the behaviour the app had before the resolver existed. When something does
-fail, the app names the reason where it knows it — "this post is age-restricted" rather than "no
-video could be found".
+---
 
-### Nothing is refused outright
+## Platform support, without the marketing
 
-Upstream blocked repeat downloads using a hidden archive file the user could neither see nor reset,
-with an error indistinguishable from a real failure. Duplicate handling belongs to the visible
-history instead.
+| Site | How Trawl gets it | Fallback |
+|---|---|---|
+| **X / Twitter** | Trawl's own resolver, via X's syndication endpoint, then a public mirror for age-restricted posts | yt-dlp |
+| **TikTok** | Trawl's own resolver, via TikTok's mobile page and the session cookies its CDN insists on | yt-dlp |
+| **YouTube** | yt-dlp | &mdash; |
+| **Everything else** | yt-dlp | &mdash; |
 
-### Verified, not asserted
+**Two sites have independent tooling. That is the whole list.**
 
-Every route in [`docs/RESOLVERS.md`](docs/RESOLVERS.md) was measured against the live endpoints
-before it was written — including three TikTok routes that were tried and **rejected** on evidence.
-The probes that produced those measurements ship in [`tools/`](tools/) and are runnable:
+YouTube works well here because yt-dlp is good at YouTube, and the same goes for Instagram, Reddit,
+Facebook, Twitch and every other site in yt-dlp's catalogue. Trawl adds nothing of its own there
+yet. More resolvers are the plan, and each one is a self-contained file behind its own switch, but
+nothing beyond X and TikTok is written. I would rather say that plainly than let a feature list
+imply otherwise.
+
+### How the resolvers behave
+
+A resolver replaces one step: working out which URL holds the video. yt-dlp still fetches the bytes.
+
+That split is deliberate. Transferring the file was never the broken part, and yt-dlp is what gives
+you progress, resume, file naming, the history row, notifications and ffmpeg post-processing.
+Replacing all of that to save a single HTTP request would trade a working system for a worse copy
+of one.
+
+When a resolver cannot answer it returns nothing, and nothing means *try the next route*. It never
+raises an error of its own, so the worst case is the behaviour the app had before the resolver
+existed. Both resolvers have an off switch in Settings.
+
+### Why X and TikTok specifically
+
+These two kept catching me out, and for different reasons.
+
+yt-dlp's Twitter extractor wants a guest token, and increasingly a logged-in session. On a phone
+with no cookies it fails often, and the error tells you nothing useful.
+
+yt-dlp's TikTok path expects a TLS fingerprint that the Android build cannot produce, because
+`curl_cffi` is not part of it. The result is `Unable to extract universal data for rehydration` on
+links that open fine in a browser.
+
+Neither is yt-dlp's fault. Both meant a link I could watch on the page would not download.
+
+### Checking any of this yourself
+
+I measured every route against the live endpoints before writing a line of Kotlin, including three
+TikTok approaches I tried and threw away. Those probes are in [`tools/`](tools/) and still run:
 
 ```bash
 python tools/probe_twitter.py 1491475671058681863
 python tools/probe_tiktok.py  <aweme id> --check-url
 ```
 
-When a download breaks, they answer the only question that matters first — *did the endpoint change,
-or did the app?* — in seconds, with no build and no device.
+They answer the first question worth asking when a download breaks: did the endpoint change, or did
+the app? No build, no device, a few seconds. [`tools/README.md`](tools/README.md) maps each probe
+step to the Kotlin function that implements it, so the two cannot quietly drift apart.
 
-## The rest of it
+---
 
-- **A floating window** that outlives the app: per-download progress, pause and retry, a link field
-  that pastes what you copied, and drag-to-dismiss.
-- **Seven warm palettes**, optional glass on chrome, an ambient background and an intro — all of
-  which can be turned off.
-- **A window switcher** in place of a plain drawer.
-- **A links history** with thumbnails, source badges, and one-tap re-download.
-- **No ads, no analytics, no telemetry, no accounts.** Nothing is uploaded and nothing phones home.
-  The donation, sponsor and crypto surfaces inherited from upstream were removed in full.
+## The rest of the app
 
-## Screenshots
+- **A floating window** that survives leaving the app. Progress per download, pause, retry, a link
+  field, clipboard auto-paste, the session's finished downloads, drag to dismiss.
+- **Seven warm palettes**, optional glass on the chrome, an ambient background and an intro. All of
+  it can be switched off.
+- **A links history** with thumbnails, platform and tool labels, status, and one-tap re-download.
+- **A window switcher** in place of a plain navigation drawer.
+- **Downloads land in your gallery and your music player**, and a tap on a finished row plays it.
+- **No ads, analytics, telemetry or accounts.** Nothing is uploaded. The donation, sponsor and
+  crypto pages inherited from upstream were deleted rather than hidden.
 
-<div align="center">
-<!-- SCREENSHOTS -->
-</div>
+---
 
-## Scope and intended use
+## What it is for, and what it will not do
 
-Trawl saves media from public web pages for offline or personal use — the same thing a browser's
-"save video" does, for platforms that do not offer one.
+Trawl saves media from public pages so you can keep it offline. That is the job a browser's "save
+video" already does, for sites that do not offer one.
 
-Please use it for material you have the right to keep: your own uploads, content you have permission
-to save, media offered for download, or works whose licence allows it. Downloading or redistributing
-someone else's work without permission may breach copyright law or a platform's terms of service
-depending on where you are and what you do with it. That responsibility rests with the person using
-the tool.
+Use it for material you have the right to keep: your own uploads, content you have permission to
+save, media offered for download, or work under a licence that allows it. Copyright law and site
+terms still apply, they differ by country, and what you do with a file is on you.
 
-Trawl is **not** a way around paywalls, DRM or private accounts. The resolvers read what a
-signed-out browser can already see; where a platform gates content behind an account, Trawl says so
-rather than pretending otherwise.
+It will not get past paywalls, DRM or private accounts. The resolvers read what a signed-out
+browser can already see. Where a site gates something behind an account, Trawl says so instead of
+failing vaguely.
 
-## Building
+---
+
+## Building it yourself
 
 ```bash
 git clone https://github.com/uukjtisa/trawl.git
@@ -122,7 +176,7 @@ cd trawl
 ./gradlew assembleGenericDebug
 ```
 
-Android Studio opens it as-is — no local setup beyond a JDK 21 toolchain, which Gradle resolves.
+Android Studio opens the project as is. Gradle resolves the JDK 21 toolchain on its own.
 
 | | |
 |---|---|
@@ -131,34 +185,55 @@ Android Studio opens it as-is — no local setup beyond a JDK 21 toolchain, whic
 | Language | Kotlin, Jetpack Compose |
 | Application id | `dev.niccc2007.trawl` |
 
+There is no signed release APK yet. Debug builds only.
+
+---
+
+## Project status
+
+**[docs/STATUS.md](docs/STATUS.md)** is the honest version: what works, what is half-built, what has
+not been started, and what is missing deliberately. Short summary of the gaps I would fix first:
+
+- Audio conversion carries no artwork or tags, and there is no way to extract audio from a file you
+  already downloaded.
+- Re-downloading a post you already have makes a second copy silently. The prompt that should ask
+  first is not built.
+- While a link resolves you get a spinner, not a trace of which route is being tried.
+- No resolvers beyond X and TikTok. No tests beyond the Python probes.
+
+---
+
 ## Credits
 
-Trawl stands on other people's work, and the chain is recorded in full in
-[**ATTRIBUTION.md**](ATTRIBUTION.md).
+Trawl is built on other people's work. [**ATTRIBUTION.md**](ATTRIBUTION.md) records the chain in
+full.
 
-- **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — the download engine, and the genuinely hard part.
-- **[youtubedl-android](https://github.com/yausername/youtubedl-android)** — Android bindings and
-  the bundled Python runtime.
-- **[Seal](https://github.com/JunkFood02/Seal)** by **JunkFood02** — the original app: architecture,
-  Compose UI and the yt-dlp integration this is built on.
-- **[Seal Plus](https://github.com/MaheshTechnicals/Seal-Plus)** by **MaheshTechnicals** — carried
-  it forward when the original went quiet.
-- **[FFmpeg](https://ffmpeg.org/)** — media post-processing.
-- **[FixTweet](https://github.com/FixTweet/FixTweet)** — the public resolver used as tier 2 for
-  restricted X posts.
+| Project | What it does here |
+|---|---|
+| **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** | The download engine, and the hard part |
+| **[youtubedl-android](https://github.com/yausername/youtubedl-android)** | Android bindings and the bundled Python runtime |
+| **[Seal](https://github.com/JunkFood02/Seal)** by JunkFood02 | The original app: its architecture, Compose UI and yt-dlp integration are what this is built on |
+| **[Seal Plus](https://github.com/MaheshTechnicals/Seal-Plus)** by MaheshTechnicals | Carried the project forward when the original went quiet |
+| **[FFmpeg](https://ffmpeg.org/)** | Media post-processing |
+| **[FixTweet](https://github.com/FixTweet/FixTweet)** | The public resolver Trawl falls back to for restricted X posts |
 
-Trawl is **not** an official build of Seal or Seal Plus and is not affiliated with either project.
-It uses neither project's name, icon or branding in the app.
+Trawl is not an official build of Seal or Seal Plus, and is not affiliated with either project. It
+uses neither project's name, icon nor branding in the app.
+
+---
 
 ## Licence
 
-[GPL-3.0](LICENSE), inherited and unchanged. The source is here, modified files carry a change
+[**GPL-3.0**](LICENSE), inherited and unchanged. The source is here, modified files carry a change
 notice, and the attribution chain is intact.
+
+---
 
 ## Documentation
 
-| | |
+| File | What is in it |
 |---|---|
+| [docs/STATUS.md](docs/STATUS.md) | What works, what is half-built, what is missing |
 | [docs/GOALS.md](docs/GOALS.md) | What Trawl is for, and how it differs from Seal and Seal Plus |
 | [docs/RESOLVERS.md](docs/RESOLVERS.md) | How each resolver works, what it cannot do, and why |
 | [tools/README.md](tools/README.md) | The probes, and how each maps to the Kotlin |
