@@ -87,16 +87,25 @@ selection &middot; floating window
 |---|---|---|
 | **X / Twitter** | Trawl's own resolver, via X's syndication endpoint, then a public mirror for age-restricted posts | yt-dlp |
 | **TikTok** | Trawl's own resolver, via TikTok's mobile page and the session cookies its CDN insists on | yt-dlp |
+| **Facebook** | Trawl's own resolver, via the watch page. HD and SD | yt-dlp |
+| **Newgrounds** | Trawl's own resolver, via its portal JSON. Three rungs, age-restricted entries included | yt-dlp |
 | **YouTube** | yt-dlp | &mdash; |
 | **Everything else** | yt-dlp | &mdash; |
 
-**Two sites have independent tooling. That is the whole list.**
+And some NSFW sites, through yt-dlp rather than a Trawl resolver, listed in
+[docs/SUPPORTED-SITES.md](docs/SUPPORTED-SITES.md).
 
-YouTube works well here because yt-dlp is good at YouTube, and the same goes for Instagram, Reddit,
-Facebook, Twitch and every other site in yt-dlp's catalogue. Trawl adds nothing of its own there
-yet. More resolvers are the plan, and each one is a self-contained file behind its own switch, but
-nothing beyond X and TikTok is written. I would rather say that plainly than let a feature list
-imply otherwise.
+**Four sites have independent tooling. That is the whole list.**
+
+YouTube works well here because yt-dlp is good at YouTube, and the same goes for Reddit, Twitch,
+Vimeo and every other site in yt-dlp's catalogue. Trawl adds nothing of its own there. A resolver
+is only worth writing where yt-dlp's extractor is unreliable on Android, so a site yt-dlp handles
+well is not a gap.
+
+Instagram was tried and does not work signed out: every profile returns the same ~617 KB JavaScript
+shell with no post data in it, and the `/embed/` surface returns the same shell for a real reel.
+The measurements are in [docs/SUPPORTED-SITES.md](docs/SUPPORTED-SITES.md) along with the one other
+site that was measured and rejected.
 
 ### How the resolvers behave
 
@@ -254,6 +263,8 @@ notice, and the attribution chain is intact.
 | File | What is in it |
 |---|---|
 | [docs/STATUS.md](docs/STATUS.md) | What works, what is half-built, what is missing |
+| [docs/SUPPORTED-SITES.md](docs/SUPPORTED-SITES.md) | Which sites get a Trawl resolver, and which were measured and rejected |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Platforms worth probing next. Nothing here is a commitment |
 | [docs/GOALS.md](docs/GOALS.md) | What Trawl is for, and how it differs from Seal and Seal Plus |
 | [docs/RESOLVERS.md](docs/RESOLVERS.md) | How each resolver works, what it cannot do, and why |
 | [tools/README.md](tools/README.md) | The probes, and how each maps to the Kotlin |

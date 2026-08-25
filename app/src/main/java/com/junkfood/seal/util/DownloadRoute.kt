@@ -62,6 +62,16 @@ object DirectResolvers {
                 claims = { TwitterCdn.isTweet(it) },
                 enabled = { X_CDN_FIRST.getBoolean() },
             ),
+            Entry(
+                platform = "Facebook",
+                claims = { FacebookCdn.isFacebook(it) },
+                enabled = { FACEBOOK_CDN_FIRST.getBoolean() },
+            ),
+            Entry(
+                platform = "Newgrounds",
+                claims = { NewgroundsCdn.isNewgrounds(it) },
+                enabled = { NEWGROUNDS_CDN_FIRST.getBoolean() },
+            ),
         )
 
     /** The platform names, for anywhere that wants to list them. */

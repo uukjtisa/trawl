@@ -138,6 +138,9 @@ const val X_CDN_FIRST = "x_cdn_first"
 // needs TLS impersonation (curl_cffi) that the Android build does not ship and so fails with
 // "Unable to extract universal data for rehydration". Default ON.
 const val TIKTOK_CDN_FIRST = "tiktok_cdn_first"
+const val NEWGROUNDS_CDN_FIRST = "newgrounds_cdn_first"
+const val FACEBOOK_CDN_FIRST = "facebook_cdn_first"
+const val PORNHUB_CDN_FIRST = "pornhub_cdn_first"
 // Paste a copied link straight into the floating panel's field when it opens. Default ON: it
 // fills a text field and nothing more, so there is nothing to protect the user from. Only
 // readable while that window has focus -- since Android 10 an unfocused app reads null.
@@ -319,6 +322,9 @@ private val BooleanPreferenceDefaults =
     mapOf(
         X_CDN_FIRST to true,
         TIKTOK_CDN_FIRST to true,
+        NEWGROUNDS_CDN_FIRST to true,
+        FACEBOOK_CDN_FIRST to true,
+        PORNHUB_CDN_FIRST to true,
         CLIPBOARD_AUTOPASTE to true,
         DELETE_FILE_WITH_ENTRY to true,
         SHOW_INTRO to true,

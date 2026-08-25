@@ -51,6 +51,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Stored in a history row's `extractor` when one of Trawl's own resolvers produced the download,
@@ -346,6 +347,7 @@ object DownloadUtil {
         // page yt-dlp is pointed at.
         val tweet = resolveTweet(url)
         val tok = if (tweet == null) resolveTok(url) else null
+        val page = if (tweet == null && tok == null) resolvePage(url) else null
         // Probe the top rung: yt-dlp only has to confirm the file exists and is playable, and the
         // ladder the user chooses from comes from the resolver, not from this probe.
         val requestUrl = tweet?.best?.url ?: tok?.url ?: url
@@ -396,6 +398,26 @@ object DownloadUtil {
                     addOption("--socket-timeout", "15")
                 }
             val info = getVideoInfo(request, taskKey)
+            // Same reasoning as the tweet and TikTok copies below: yt-dlp saw a bare MP4 on a CDN
+            // host, so left alone it reports the CDN path as the title and stores that signed URL
+            // in the history -- a row that can never be re-downloaded.
+            if (page != null) {
+                return info.map {
+                    it.copy(
+                        originalUrl = url,
+                        webpageUrl = url,
+                        title = page.title,
+                        uploader = page.uploader.ifBlank { it.uploader.orEmpty() },
+                        thumbnail = page.thumbnail ?: it.thumbnail,
+                        extractorKey = TRAWL_DIRECT,
+                        id = page.id,
+                        formats = page.toFormats(),
+                        vcodec = "h264",
+                        acodec = "mp4a.40.2",
+                        ext = "mp4",
+                    )
+                }
+            }
             // Same reasoning as the tweet copy below: yt-dlp saw a bare MP4 on a CDN host, so
             // left alone it reports the CDN path as the title and stores that URL in the history
             // -- and a history row pointing at a session-bound URL can never be re-downloaded.
@@ -929,6 +951,23 @@ object DownloadUtil {
      *
      * Same contract as [resolveTweet]: null means "carry on as before", never "fail".
      */
+    /**
+     * Newgrounds, Facebook and PornHub, cached the same way the others are.
+     *
+     * Every one of these signs its URLs and PornHub binds them to the requesting IP, so a stale
+     * entry here is not a slow download -- it is a 403. Two minutes, same as TikTok.
+     */
+    private val pageCache = ConcurrentHashMap<String, Pair<Long, PageMedia?>>()
+
+    private fun resolvePage(url: String): PageMedia? {
+        if (!PageResolvers.claims(url)) return null
+        val now = System.currentTimeMillis()
+        pageCache[url]?.let { (at, cached) -> if (now - at < 120_000L) return cached }
+        val media = runCatching { PageResolvers.resolve(url) }.getOrNull()
+        pageCache[url] = now to media
+        return media
+    }
+
     private fun resolveTok(url: String): TikTokMedia? {
         if (!TIKTOK_CDN_FIRST.getBoolean()) return null
         if (!TikTokCdn.isTikTok(url)) return null
@@ -1330,6 +1369,7 @@ object DownloadUtil {
             // Cached from the info fetch a moment ago, so this is not a second round trip.
             val tweet = resolveTweet(url)
             val tok = if (tweet == null) resolveTok(url) else null
+            val page = if (tweet == null && tok == null) resolvePage(url) else null
             // Each rung is its own complete file, so choosing a format means choosing a URL --
             // not passing an id to -f, which yt-dlp would reject because it never published one.
             val variant =
@@ -1338,11 +1378,13 @@ object DownloadUtil {
             // format means choosing a URL. Without this the watermarked row was selectable in the
             // sheet and downloaded the clean one anyway.
             val tokVariant = tok?.let { m -> m.byFormatId(formatIdString) ?: m.preferred }
+            val pageVariant = page?.let { m -> m.byFormatId(formatIdString) ?: m.best }
             val request =
-                (variant?.url ?: tokVariant?.url ?: url).let {
+                (variant?.url ?: tokVariant?.url ?: pageVariant?.url ?: url).let {
                     YoutubeDLRequest(it).applySiteWorkarounds(it)
                 }
             tok?.let { request.addResolverHeaders(it.headers) }
+            page?.let { request.addResolverHeaders(it.headers) }
             // The id is ours, so it must not reach yt-dlp. Cleared rather than filtered because
             // every downstream option-builder reads it, and one missed call site downloads the
             // wrong thing silently.
@@ -1351,9 +1393,9 @@ object DownloadUtil {
             // is what keeps the name we download to and the name we then look for in agreement --
             // without that they disagreed, the scan matched nothing, and the download completed
             // into a file the gallery, the player and the history all failed to find.
-            val resolvedTitle = tweet?.title ?: tok?.title
+            val resolvedTitle = tweet?.title ?: tok?.title ?: page?.title
             val effectivePreferences =
-                if (variant != null || tok != null)
+                if (variant != null || tok != null || page != null)
                     downloadPreferences.copy(
                         formatIdString = "",
                         newTitle =
