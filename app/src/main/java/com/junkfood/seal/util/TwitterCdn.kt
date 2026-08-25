@@ -121,6 +121,20 @@ object TwitterCdn {
             .build()
     }
 
+    /**
+     * Size probes get their own, impatient client.
+     *
+     * A Content-Length is a nicety; the download works without it. Sharing the 12s client meant
+     * one unresponsive edge node could stall the whole sheet for a minute, so this one gives up
+     * quickly and the variant simply shows no size.
+     */
+    private val probeClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(4, TimeUnit.SECONDS)
+            .readTimeout(4, TimeUnit.SECONDS)
+            .build()
+    }
+
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
@@ -132,10 +146,17 @@ object TwitterCdn {
 
     private const val CACHE_TTL_MS = 10 * 60 * 1000L
 
-    /** `x.com/user/status/123`, `twitter.com/...`, with or without a query string. */
+    /**
+     * Any x.com / twitter.com link that names a status.
+     *
+     * Deliberately loose about what sits between the host and `status`: the X app shares
+     * `x.com/i/web/status/<id>` and `x.com/i/status/<id>` as readily as `x.com/<user>/status/<id>`,
+     * and the original pattern -- which demanded exactly one path segment -- silently refused
+     * those. A link the resolver never attempts looks identical to a link it cannot resolve.
+     */
     private val STATUS =
         Regex(
-            """https?://(?:www\.|mobile\.)?(?:twitter|x)\.com/[^/]+/status(?:es)?/(\d+)""",
+            """https?://(?:[\w.-]+\.)?(?:twitter|x)\.com/\S*?status(?:es)?/(\d+)""",
             RegexOption.IGNORE_CASE,
         )
 
@@ -207,16 +228,32 @@ object TwitterCdn {
 
     private fun fetch(id: String): TweetMedia? {
         val body = request(id, token(id)) ?: request(id, "a") ?: return null
-        val root = runCatching { json.parseToJsonElement(body).jsonObject }.getOrNull() ?: return null
+        val root =
+            runCatching { json.parseToJsonElement(body).jsonObject }.getOrNull()
+                ?: run {
+                    TrawlLog.i("$TAG: $id did not return JSON")
+                    return null
+                }
+
+        // Age-restricted and sensitive posts answer with a tombstone and no media. That is a real
+        // limitation of an unauthenticated endpoint, not a parse failure, and it should read as
+        // one in the log rather than looking like the extractor is broken.
+        val typeName = root["__typename"]?.jsonPrimitive?.contentOrNull
+        if (typeName != null && typeName != "Tweet") {
+            TrawlLog.i("$TAG: $id came back as $typeName (restricted or removed), leaving it to yt-dlp")
+            return null
+        }
 
         val variants = collectVariants(root)
         if (variants.isEmpty()) {
             // A photo-only post lands here. Falling through to yt-dlp is deliberate: its Twitter
-            // extractor does handle images, and refusing outright would be us removing a
-            // capability the app already had.
-            TrawlLog.i("$TAG: tweet $id carries no video, leaving it to yt-dlp")
+            // extractor does handle images, and refusing outright would remove a capability the
+            // app already had.
+            val photos = (root["mediaDetails"] as? JsonArray)?.size ?: 0
+            TrawlLog.i("$TAG: $id carries no video (mediaDetails=$photos), leaving it to yt-dlp")
             return null
         }
+        TrawlLog.i("$TAG: $id resolved ${variants.size} variants")
 
         val user = root["user"]?.jsonObject
         val handle = user?.get("screen_name")?.jsonPrimitive?.contentOrNull.orEmpty()
@@ -270,7 +307,7 @@ object TwitterCdn {
     private fun contentLength(url: String): Long {
         val req = Request.Builder().url(url).head().header("User-Agent", BROWSER_UA).build()
         return runCatching {
-                client.newCall(req).execute().use { resp ->
+                probeClient.newCall(req).execute().use { resp ->
                     resp.header("Content-Length")?.toLongOrNull() ?: 0L
                 }
             }
@@ -294,6 +331,23 @@ object TwitterCdn {
                 val link = o["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
                 val bitrate = o["bitrate"]?.jsonPrimitive?.intOrNull ?: 0
                 if (type == "video/mp4" && link.isNotBlank()) raw += link to bitrate
+            }
+        }
+
+        // A quote-post keeps its own media at the root and the quoted post's under `quoted_tweet`.
+        // Someone sharing a quote of a video expects the video, so look there before giving up.
+        if (raw.isEmpty()) {
+            (root["quoted_tweet"] as? JsonObject)?.let { quoted ->
+                (quoted["mediaDetails"] as? JsonArray)?.forEach { media ->
+                    val vi = media.jsonObject["video_info"]?.jsonObject ?: return@forEach
+                    (vi["variants"] as? JsonArray)?.forEach { v ->
+                        val o = v.jsonObject
+                        val type = o["content_type"]?.jsonPrimitive?.contentOrNull.orEmpty()
+                        val link = o["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
+                        val bitrate = o["bitrate"]?.jsonPrimitive?.intOrNull ?: 0
+                        if (type == "video/mp4" && link.isNotBlank()) raw += link to bitrate
+                    }
+                }
             }
         }
 
