@@ -208,6 +208,8 @@ import com.junkfood.seal.ui.bubble.BubbleService
 import com.junkfood.seal.ui.bubble.BubbleTask
 import com.junkfood.seal.ui.bubble.BubbleTasks
 import com.junkfood.seal.ui.common.LocalFloatingBubble
+import com.junkfood.seal.ui.theme.GlintIcon
+import com.junkfood.seal.ui.bubble.BubbleTaskState
 
 /**
  * The fast tray's one-tap options.
@@ -718,11 +720,14 @@ fun NewHomePage(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(
+                        // Same press glint as the home wordmark. The bar's mark is the one
+                        // piece of the app's identity that is on screen at every scroll
+                        // position, so it is the one most worth making answer a finger.
+                        GlintIcon(
                             painter = painterResource(R.drawable.trawl_mark),
                             contentDescription = null,
+                            size = 22.dp,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp),
                         )
                         Text(
                             text = stringResource(R.string.app_name),
@@ -816,14 +821,33 @@ fun NewHomePage(
                 activeDownloads.map { (task, state) ->
                     val ds = state.downloadState
                     BubbleTask(
-                        id = task.id.toString(),
+                        id = task.id,
+                        // The URL is the fallback, not "Unknown": before yt-dlp has resolved the
+                        // page there is no title yet, and the link is at least the thing the
+                        // user just pasted.
+                        title = state.viewState.title.ifBlank { task.url },
                         progress =
                             when (ds) {
                                 is Task.DownloadState.Running -> ds.progress
+                                is Task.DownloadState.Paused -> ds.progress ?: 0f
                                 is Task.DownloadState.Completed -> 1f
                                 else -> 0f
                             },
-                        error = ds is Task.DownloadState.Error,
+                        state =
+                            when (ds) {
+                                is Task.DownloadState.Running -> BubbleTaskState.RUNNING
+                                // Canceled offers the same verb as paused in this app's own
+                                // task card, so it reads as the same thing here.
+                                is Task.DownloadState.Paused,
+                                is Task.DownloadState.Canceled -> BubbleTaskState.PAUSED
+                                is Task.DownloadState.Error -> BubbleTaskState.ERROR
+                                is Task.DownloadState.Completed -> BubbleTaskState.DONE
+                                else -> BubbleTaskState.QUEUED
+                            },
+                        detail =
+                            (ds as? Task.DownloadState.Running)?.progressText?.let(
+                                ::bubbleDetail
+                            ) ?: "",
                     )
                 }
             BubbleTasks.publish(live)
@@ -1414,6 +1438,22 @@ fun RecentDownloadCard(
             }
         }
     }
+}
+
+
+/**
+ * The one useful fragment of a yt-dlp progress line, for a 300dp panel row.
+ *
+ * A line reads "45.3% of 10.00MiB at 2.50MiB/s ETA 00:03". The percentage is already the row's
+ * progress bar and its own label, so repeating it wastes the space; the speed is the part that
+ * answers "is this moving?". Falls back to the total size when there is no speed yet, and to
+ * nothing at all rather than to a half-parsed string.
+ */
+private fun bubbleDetail(progressText: String): String {
+    if (progressText.isBlank()) return ""
+    Regex("""at\s+([\d.]+\s*\S+/s)""").find(progressText)?.let { return it.groupValues[1] }
+    Regex("""of\s+([\d.]+\s*\S+)""").find(progressText)?.let { return it.groupValues[1] }
+    return ""
 }
 
 @Composable

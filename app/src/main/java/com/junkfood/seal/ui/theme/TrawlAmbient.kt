@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.random.Random
 import kotlinx.coroutines.isActive
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.graphics.drawscope.scale
 
 /** Off / Subtle / Full, matching `[data-motion]` in the mockup. */
 enum class MotionLevel(val id: String) {
@@ -331,19 +332,39 @@ fun BoxScope.HaulWash(active: Boolean, enabled: Boolean = LocalDownloadFx.curren
 
     Canvas(Modifier.matchParentSize()) {
         val h = with(density) { 150.dp.toPx() }
+        // rx = 60% of the width, ry = the 150dp height -- the mockup's ellipse. Brush
+        // .radialGradient is circular only, so the circle is drawn at radius = ry and squashed
+        // horizontally to reach rx. Getting this wrong is what produced a hard-edged band: a
+        // circle of radius 0.6*WIDTH does not fade out within a 150dp box, so the box CLIPPED
+        // it, and a clipped gradient is a rectangle with a glow inside it.
+        val sx = (size.width * 0.6f) / h
         repeat(2) { i ->
             val p = ((clock / 5.5f) + i * 0.5f) % 1f
-            val top = size.height - h * p * 2f
-            drawRect(
-                brush = Brush.radialGradient(
-                    0f to tokens.glassTint.copy(alpha = 0.13f),
-                    0.7f to Color.Transparent,
-                    center = Offset(size.width / 2f, top + h),
-                    radius = size.width * 0.6f,
-                ),
-                topLeft = Offset(0f, top),
-                size = Size(size.width, h),
-            )
+            // The CSS element starts at bottom:-150px and rises 300px, so its bottom edge --
+            // where the gradient is centred -- travels from height+h to height-h.
+            val cy = size.height + h - 2f * h * p
+            // The mockup snaps back at the end of each cycle; two washes half a cycle apart
+            // mostly hide it. Ramping the ends kills it outright, and a wash that pops is read
+            // as a glitch rather than as light.
+            val fade =
+                when {
+                    p < 0.08f -> p / 0.08f
+                    p > 0.85f -> (1f - p) / 0.15f
+                    else -> 1f
+                }
+            scale(scaleX = sx, scaleY = 1f, pivot = Offset(size.width / 2f, cy)) {
+                drawCircle(
+                    brush =
+                        Brush.radialGradient(
+                            0f to tokens.glassTint.copy(alpha = 0.13f * fade),
+                            0.7f to Color.Transparent,
+                            center = Offset(size.width / 2f, cy),
+                            radius = h,
+                        ),
+                    radius = h,
+                    center = Offset(size.width / 2f, cy),
+                )
+            }
         }
     }
 }

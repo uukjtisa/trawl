@@ -62,6 +62,14 @@ import com.junkfood.seal.ui.theme.FrauncesFamily
 import com.junkfood.seal.ui.theme.LocalTrawlTokens
 import com.junkfood.seal.ui.theme.TrawlShape
 import com.junkfood.seal.ui.theme.trawlGlass
+import com.junkfood.seal.ui.theme.touchGlareHighlight
+import com.junkfood.seal.ui.theme.rememberTouchGlare
+import com.junkfood.seal.ui.theme.glareTouch
+import com.junkfood.seal.ui.theme.glareBrush
+import com.junkfood.seal.ui.theme.GlintIcon
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableFloatStateOf
 
 /**
  * `.brandhead` -- the 32dp mark, the wordmark at 31sp/700 in the display face, and the fish.
@@ -73,31 +81,49 @@ import com.junkfood.seal.ui.theme.trawlGlass
 @Composable
 fun TrawlBrandHead(showMascot: Boolean, modifier: Modifier = Modifier) {
     val tokens = LocalTrawlTokens.current
+    // The wordmark answers a finger: the streak sweeps in, parks under it, and runs out on
+    // release. Nothing here navigates -- it is the app's own name, and the glint is the whole
+    // point of touching it -- so this is press feedback, not a button (see Modifier.glareTouch).
+    val glare = rememberTouchGlare()
+    val wordWidth = remember { mutableFloatStateOf(0f) }
     Row(
         modifier = modifier.fillMaxWidth().padding(top = 12.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
+        GlintIcon(
             painter = painterResource(R.drawable.trawl_mark),
             contentDescription = null,
+            size = 32.dp,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(32.dp),
         )
         Text(
             text = stringResource(R.string.app_name),
-            fontFamily = FrauncesFamily,
-            fontSize = 31.sp,
-            fontWeight = FontWeight.W700,
-            lineHeight = 31.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            style =
+                TextStyle(
+                    fontFamily = FrauncesFamily,
+                    fontSize = 31.sp,
+                    fontWeight = FontWeight.W700,
+                    lineHeight = 31.sp,
+                    // Measured, not guessed: a band sized to a constant against ~180px of text
+                    // only ever grazes the glyphs. This is the same lesson as D-24.
+                    brush =
+                        glareBrush(
+                            base = MaterialTheme.colorScheme.onSurface,
+                            highlight = touchGlareHighlight(tokens.accent),
+                            phase = glare.phase,
+                            width = wordWidth.floatValue,
+                        ),
+                ),
+            onTextLayout = { wordWidth.floatValue = it.size.width.toFloat() },
+            modifier = Modifier.glareTouch(glare),
         )
         if (showMascot) {
-            Icon(
+            GlintIcon(
                 painter = painterResource(R.drawable.ic_fish),
                 contentDescription = null,
+                size = 25.dp,
                 tint = tokens.accent.copy(alpha = 0.9f),
-                modifier = Modifier.size(25.dp),
             )
         }
     }

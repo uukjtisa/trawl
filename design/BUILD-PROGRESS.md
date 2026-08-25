@@ -139,7 +139,10 @@ Ticked only when the behaviour is real in the app, not merely coded.
       — the mockup's centred card was NOT built. The app's is a bottom sheet shared with
       the in-app flow (format selection, playlists, preferences); replacing it wholesale is
       a core-path change, not a restyle. Scoped to the mark + title + source badge. D-22.
-- [ ] 56 Reachable from the bubble
+- [x] 56 Reachable from the bubble
+      — the panel's dashed "Paste a link · QUICK" row. It cannot read the clipboard
+      itself (since Android 10 only the focused app may), so it launches the app with a
+      flag and MainActivity reads it in onResume, once it has focus.
 - [~] 57 Source badge, URL chip, preview, quality chips, More…
       — source badge done; the rest belongs to the centred-card rebuild above.
 
@@ -147,12 +150,23 @@ Ticked only when the behaviour is real in the app, not merely coded.
 - [x] 58 Draggable overlay, default on
 - [x] 59 One conic ring per download, ≤4 then a count
 - [x] 60 Accent running · green done · red + pulse on error
-- [ ] 61 Expandable panel: progress, pause, retry
-- [ ] 62 Drag onto the bottom-centre X to dismiss
-- [~] 63 Off-switch in its own panel and in Settings
-      — Settings switch done (and it reflects the PERMISSION, not just the preference).
-      The in-panel switch belongs with the expandable panel, item 61.
-- [ ] 64 Multi-queue: 3 concurrent, rest queued
+- [x] 61 Expandable panel: progress, pause, retry
+      — tap the bubble. Per-row verb matched to the row's state: pause a running task,
+      resume a paused one, retry a failed one, drop a queued one. The service holds the
+      DownloaderV2 singleton directly rather than posting to the Activity, so the panel
+      still works with the app's UI gone — which is the entire point of a bubble.
+- [x] 62 Drag onto the bottom-centre X to dismiss
+      — plus edge-snap on release. The X is its own FLAG_NOT_TOUCHABLE window and the
+      hit test is by distance, exactly as the mockup does it, so it can never eat a
+      touch meant for the app underneath.
+- [x] 63 Off-switch in its own panel and in Settings
+      — the panel's footer carries both halves: "Hide bubble" ends this run, "Turn off"
+      writes the preference off so the next download does not bring it back. Two
+      different intentions that one X would have collapsed into one ambiguous gesture.
+- [x] 64 Multi-queue: 3 concurrent, rest queued
+      — the CONCURRENCY was already upstream's (MAX_CONCURRENT_DOWNLOADS, honoured in
+      DownloaderV2). What was missing was the bubble showing it: queued tasks now
+      publish as QUEUED and appear in the panel as such. Not claiming a queue I wrote.
 - [x] 65 Permission gate degrading to the notification
 
 ### Removals — step 4

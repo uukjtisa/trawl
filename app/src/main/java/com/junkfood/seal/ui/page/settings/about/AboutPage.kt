@@ -92,6 +92,20 @@ import com.junkfood.seal.ui.theme.glareHighlight
 import com.junkfood.seal.ui.theme.rememberGlarePhase
 import com.junkfood.seal.ui.theme.LocalMotionLevel
 import com.junkfood.seal.ui.theme.LocalTrawlTokens
+import com.junkfood.seal.ui.theme.touchGlareHighlight
+import com.junkfood.seal.ui.theme.rememberTouchGlare
+import com.junkfood.seal.ui.theme.glareTouch
+import com.junkfood.seal.ui.theme.TrawlGold
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Path
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.animateColorAsState
 
 // Kept for LanguagesPage, which links contributors to the translation project these strings
 // came from. Trawl inherits upstream's translations, so that link still improves what it ships.
@@ -213,10 +227,33 @@ private fun SignatureBanner() {
     // Measured width of the name, so the sheen band can be sized to it (see D-24).
     val nameWidth = remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
 
-    // A slow, repeating glare rather than a single quick sheen. This is his signature card --
-    // it should keep catching the light, the way an embossed name does when you tilt it.
-    val glare by rememberGlarePhase(label = "sigGlare")
-    val phase = if (motionOn) glare else 1f
+    // Nine seconds between glints, which is the contract's own number. The first cut ran one
+    // every 4.8s: on a page you sit and read, that stops being "catches the light occasionally"
+    // and becomes a blinking element in the corner of your eye.
+    val ambient by rememberGlarePhase(sweepMs = 2600, restMs = 6400, label = "sigGlare")
+    // Touching the name overrides the clock. `active` stays true through the release sweep, so
+    // control hands back to the ambient loop only once the streak has finished leaving -- taking
+    // it back mid-streak would cut the highlight off in the middle of the glyphs.
+    val touch = rememberTouchGlare()
+    val phase =
+        when {
+            touch.active -> touch.phase
+            motionOn -> ambient
+            else -> 1f
+        }
+    val highlight =
+        if (touch.active) touchGlareHighlight(tokens.accent) else glareHighlight(tokens.accent)
+
+    // The rule draws ONCE, on arrival. It used to be sized by the glare's phase, so every loop
+    // collapsed it to zero and redrew it -- an entrance animation wired to a forever-loop.
+    var ruleIn by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { ruleIn = true }
+    val reveal by
+        animateFloatAsState(
+            targetValue = if (ruleIn || !motionOn) 1f else 0f,
+            animationSpec = tween(1100, delayMillis = 120, easing = FastOutSlowInEasing),
+            label = "sigRule",
+        )
 
     Box(
         Modifier.fillMaxWidth()
@@ -277,22 +314,18 @@ private fun SignatureBanner() {
                         brush =
                             glareBrush(
                                 base = scheme.onSurface,
-                                highlight = glareHighlight(tokens.accent),
+                                highlight = highlight,
                                 phase = phase,
                                 width = nameWidth.floatValue,
                             ),
                     ),
-                modifier = Modifier.padding(top = 9.dp),
+                modifier = Modifier.padding(top = 9.dp).glareTouch(touch),
                 onTextLayout = { nameWidth.floatValue = it.size.width.toFloat() },
             )
-            // .sigrule -- draws left-to-right on entry. A border-width cannot be animated, which
-            // is why this is a drawn box rather than an underline.
-            Box(
-                Modifier.padding(top = 12.dp, bottom = 10.dp)
-                    .height(2.dp)
-                    .width(64.dp * phase.coerceAtLeast(0.001f))
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(scheme.primary.copy(alpha = 0.85f))
+            SignatureFlourish(
+                reveal = reveal,
+                lit = touch.active,
+                modifier = Modifier.padding(top = 12.dp, bottom = 10.dp),
             )
             Text(
                 text = stringResource(R.string.signature_subtitle),
@@ -313,6 +346,106 @@ private fun SignatureBanner() {
     }
 }
 
+
+
+/**
+ * `.sigrule`, rebuilt as an engraved flourish rather than a 64dp bar.
+ *
+ * A tapering rule with a lozenge and diminishing dots -- the shape a struck line takes on a
+ * printed plate, which is the register the rest of this card is already in (the watermark, the
+ * display face, the sheen). It draws left to right ONCE on arrival, because an entrance is a
+ * thing that happens on arrival; the old one was tied to the glare's loop and redrew itself every
+ * few seconds.
+ *
+ * Drawn rather than composed out of Boxes because the taper is a gradient along the rule's own
+ * length, and a border-width cannot be animated at all.
+ */
+@Composable
+private fun SignatureFlourish(reveal: Float, lit: Boolean, modifier: Modifier = Modifier) {
+    val primary = MaterialTheme.colorScheme.primary
+    val gold = TrawlGold
+    val ink by
+        animateColorAsState(
+            targetValue = if (lit) gold else primary,
+            animationSpec = tween(if (lit) 200 else 620, easing = LinearEasing),
+            label = "flourishInk",
+        )
+    // 210dp, not fillMaxWidth. Run across the whole card and the ornament bunches into the
+    // first sixth of a long bare line -- it reads as a tape measure. An engraved rule has to be
+    // short enough that the cluster IS the rule.
+    Canvas(modifier.width(210.dp).height(14.dp)) {
+        val w = size.width
+        val midY = size.height / 2f
+        val cut = w * reveal.coerceIn(0f, 1f)
+        if (cut <= 0f) return@Canvas
+        clipRect(right = cut) {
+            // The rule: full strength at the name's left edge, gone by the right margin, so it
+            // reads as an underline that trails off rather than a bar that stops.
+            drawLine(
+                brush =
+                    Brush.horizontalGradient(
+                        0.00f to ink,
+                        0.34f to ink.copy(alpha = 0.62f),
+                        0.72f to ink.copy(alpha = 0.16f),
+                        1.00f to Color.Transparent,
+                    ),
+                start = Offset(0f, midY),
+                end = Offset(w, midY),
+                strokeWidth = 1.6.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            // The left cap -- a short upright tick. Without it the rule looks cut off by the
+            // padding instead of started at the name.
+            drawLine(
+                color = ink,
+                start = Offset(0.8.dp.toPx(), midY - 4.dp.toPx()),
+                end = Offset(0.8.dp.toPx(), midY + 4.dp.toPx()),
+                strokeWidth = 1.6.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            // The lozenge, rotated 45 degrees so it reads as a diamond rather than a box.
+            val d = 4.4.dp.toPx()
+            val cx = w * 0.24f
+            drawPath(
+                path =
+                    Path().apply {
+                        moveTo(cx, midY - d)
+                        lineTo(cx + d, midY)
+                        lineTo(cx, midY + d)
+                        lineTo(cx - d, midY)
+                        close()
+                    },
+                color = ink,
+            )
+            // Dots either side, then three more diminishing away to the right -- the thing that
+            // makes it read as ornament rather than as punctuation.
+            listOf(
+                0.14f to 0.85f,
+                0.34f to 0.85f,
+                0.50f to 0.50f,
+                0.63f to 0.32f,
+                0.74f to 0.18f,
+            )
+                .map { (f, a) -> w * f to a }
+                .forEach { (x, a) ->
+                    if (x < w) drawCircle(ink.copy(alpha = a), 1.6.dp.toPx(), Offset(x, midY))
+                }
+            // A hairline echo under the first third, the way a plate leaves a second impression.
+            drawLine(
+                brush =
+                    Brush.horizontalGradient(
+                        0.00f to ink.copy(alpha = 0.30f),
+                        1.00f to Color.Transparent,
+                        startX = 0f,
+                        endX = w * 0.42f,
+                    ),
+                start = Offset(0f, midY + 4.5.dp.toPx()),
+                end = Offset(w * 0.42f, midY + 4.5.dp.toPx()),
+                strokeWidth = 1.dp.toPx(),
+            )
+        }
+    }
+}
 
 @Composable
 private fun SectionLabel(text: String) {

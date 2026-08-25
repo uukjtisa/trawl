@@ -3,6 +3,8 @@
 **Status: PLACEHOLDER. Nothing cloned, forked or built.** Planning documents only.
 Read `HANDOFF.md` first, then `ATTRIBUTION.md`.
 
+EXCLUDE THIS CLAUDE.MD fILE IN THE REPO ORIGIN! NEVER COMMIT!
+
 ---
 
 ## What this is

@@ -38,6 +38,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.layout.size
 
 /** How long one pass takes. Slow enough to watch the streak travel. */
 const val GLARE_SWEEP_MS = 2200
@@ -121,17 +133,34 @@ fun glareHighlight(accent: Color): Color =
         alpha = 1f,
     )
 
-// ── touch glare ──────────────────────────────────────────────────────────────────────────────
+// ── touch glare ────────────────────────────────────────────────────────────────────────────
 
 /**
- * A glare that fires when something is pressed, on top of whatever it does at rest.
+ * The gold the touch glare uses.
  *
- * Held at full brightness for as long as the finger is DOWN, then released as a sweep. Running
- * the sweep on press-down instead would finish while the finger is still there, which reads as
- * the thing having flashed at you rather than responding to you.
+ * The ambient glare is the THEME's accent lifted toward white, because it runs unprompted and has
+ * to stay quiet. A touch is different: it was asked for, so it is allowed to be a colour of its
+ * own. Gold rather than a brighter accent, because on the warm palettes a lifted accent is nearly
+ * the accent itself, and the press then reads as nothing having happened.
+ */
+val TrawlGold = Color(0xFFFFC66B)
+
+/**
+ * The touch highlight: mostly gold, with enough of the theme's accent left in it that Grove and
+ * Plum do not suddenly sprout a colour from a different app.
+ */
+fun touchGlareHighlight(accent: Color): Color = lerp(accent, TrawlGold, 0.72f)
+
+/**
+ * A glare driven by a finger rather than by a clock.
+ *
+ * [phase] moves through the same 0..1 the ambient sweep uses, so it feeds [glareBrush] unchanged.
+ * [active] stays true through the release sweep, which is how a caller knows to keep showing the
+ * touch colour instead of handing the brush back to the ambient loop mid-streak.
  */
 @Stable
-class TouchGlare internal constructor(
+class TouchGlare
+internal constructor(
     val interactionSource: MutableInteractionSource,
     private val phaseState: State<Float>,
     private val pressedState: State<Boolean>,
@@ -141,29 +170,69 @@ class TouchGlare internal constructor(
 
     val pressed: Boolean
         get() = pressedState.value
+
+    /** Pressed, or still sweeping out after the release. */
+    val active: Boolean
+        get() = pressedState.value || phaseState.value < 1f
 }
 
+/**
+ * Press -> the streak sweeps in from the left and PARKS under the finger. Release -> it sweeps
+ * out to the right over [sweepMs].
+ *
+ * Parking matters. Running the whole sweep on press-down finishes while the finger is still on
+ * the glyphs, so it reads as the thing having flashed at you rather than as light held under
+ * your touch -- and holding longer would then do nothing at all, which is the opposite of what a
+ * press-and-hold should feel like.
+ */
 @Composable
-fun rememberTouchGlare(sweepMs: Int = 900): TouchGlare {
+fun rememberTouchGlare(sweepMs: Int = 1100): TouchGlare {
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    // While held: parked mid-sweep so the highlight sits on the glyphs. On release: runs out.
-    val phase by
-        animateFloatAsState(
-            targetValue = if (pressed) 0.5f else 1f,
-            animationSpec = tween(if (pressed) 220 else sweepMs, easing = LinearEasing),
-            label = "touchGlare",
-        )
+    // Starts at 1 -- the far end of the ramp, where the brush resolves to plain text. So an
+    // untouched wordmark is ordinary type, not a permanently half-lit one.
+    val phase = remember { Animatable(1f) }
+    LaunchedEffect(pressed) {
+        if (pressed) {
+            phase.snapTo(0f)
+            phase.animateTo(0.5f, tween(260, easing = LinearEasing))
+        } else if (phase.value < 1f) {
+            phase.animateTo(1f, tween(sweepMs, easing = LinearEasing))
+        }
+    }
     val pressedDerived = rememberUpdatedState(pressed)
-    val phaseDerived = rememberUpdatedState(phase)
+    val phaseDerived = remember { derivedStateOf { phase.value } }
     return remember(source) { TouchGlare(source, phaseDerived, pressedDerived) }
 }
 
 /**
+ * Feeds presses into a [TouchGlare] without making the thing a button.
+ *
+ * `clickable` would be the short way, but it also adds click semantics and a ripple to a
+ * wordmark that does not navigate anywhere -- a control that announces itself to TalkBack and
+ * then does nothing is worse than no control. This emits the press interactions and nothing else.
+ */
+@Composable
+fun Modifier.glareTouch(glare: TouchGlare): Modifier =
+    this.pointerInput(glare) {
+        detectTapGestures(
+            onPress = {
+                val press = PressInteraction.Press(it)
+                glare.interactionSource.emit(press)
+                val released = tryAwaitRelease()
+                glare.interactionSource.emit(
+                    if (released) PressInteraction.Release(press)
+                    else PressInteraction.Cancel(press)
+                )
+            }
+        )
+    }
+
+/**
  * Press feedback for something that is not text -- the mark, the fish.
  *
- * A brief lift and brighten rather than a ripple: these sit on the background with no container,
- * and a ripple needs edges to look like anything.
+ * A lift rather than a ripple: these sit on the background with no container, and a ripple needs
+ * edges to look like anything.
  */
 @Composable
 fun Modifier.pressGlow(interactionSource: MutableInteractionSource): Modifier {
@@ -171,6 +240,8 @@ fun Modifier.pressGlow(interactionSource: MutableInteractionSource): Modifier {
     val scale by
         animateFloatAsState(
             targetValue = if (pressed) 1.18f else 1f,
+            // Quick in, slow out: the response has to feel immediate, the recovery must not
+            // snatch the change away before it has been seen.
             animationSpec = tween(if (pressed) 160 else 420, easing = LinearEasing),
             label = "pressGlowScale",
         )
@@ -178,4 +249,33 @@ fun Modifier.pressGlow(interactionSource: MutableInteractionSource): Modifier {
         scaleX = scale
         scaleY = scale
     }
+}
+
+/**
+ * An icon that lifts and turns gold while it is held.
+ *
+ * The three marks he named -- the app-bar mark, the home mark, the fish -- are all this, so it is
+ * one composable rather than the same six lines copied into three files.
+ */
+@Composable
+fun GlintIcon(
+    painter: Painter,
+    contentDescription: String?,
+    size: Dp,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    val glare = rememberTouchGlare()
+    val live by
+        animateColorAsState(
+            targetValue = if (glare.pressed) TrawlGold else tint,
+            animationSpec = tween(if (glare.pressed) 160 else 520, easing = LinearEasing),
+            label = "glintTint",
+        )
+    Icon(
+        painter = painter,
+        contentDescription = contentDescription,
+        tint = live,
+        modifier = modifier.size(size).pressGlow(glare.interactionSource).glareTouch(glare),
+    )
 }
