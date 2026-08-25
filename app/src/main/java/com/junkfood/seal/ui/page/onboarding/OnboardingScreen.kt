@@ -666,7 +666,20 @@ private fun stagger(active: Boolean, delayMs: Int): Float {
 private fun MaskRise(active: Boolean, delayMs: Int, content: @Composable () -> Unit) {
     val p = stagger(active, delayMs)
     Box(Modifier.clipToBounds()) {
-        Box(Modifier.graphicsLayer { translationY = (1f - p) * 1.2f * size.height }) { content() }
+        Box(
+            Modifier.graphicsLayer {
+                translationY = (1f - p) * 1.2f * size.height
+                // Hides the FIRST FRAME. `size` inside graphicsLayer is zero until the layer has
+                // been measured, so on frame one the translation resolves to 0 and the text draws
+                // at its final position -- a glimpse of the finished headline, then it vanishes
+                // and the animation plays. Alpha does not depend on measurement, so it is correct
+                // from the first frame and covers the gap. A hard cut rather than a fade, so the
+                // mask still does all the visible work.
+                alpha = if (p <= 0f) 0f else 1f
+            }
+        ) {
+            content()
+        }
     }
 }
 
