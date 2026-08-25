@@ -58,10 +58,10 @@ cost. So Trawl offers the two renders that exist and does not pretend there is a
 | Platform | Why it might work | Variants to look for | Status |
 |---|---|---|---|
 | **Douyin** | Same company as TikTok, so probably the same page-parse shape. Mobile UA likely load-bearing again | Clean vs watermarked, as TikTok | Unprobed |
-| **Instagram** Reels/posts | Embed page or GraphQL exposes a `video_url` on public content | Source MP4, carousels return several items | Unprobed. Signed URLs expire fast, ~30 min |
+| **Instagram** Reels/posts | The `/embed/` surface is the one anonymous route Instagram keeps on purpose, for third-party sites | Source MP4, carousels return several items | **Partly probed, see below** |
 | **Reddit** | `v.redd.it` is plain DASH, no signing | Video and audio arrive as **separate streams** and must be merged | Unprobed. The merge makes this more work than it looks |
 | **Streamable** | Small service, historically a plain JSON endpoint | One or two progressive MP4s | Unprobed. Cheapest thing on this list to test |
-| **Facebook** public video/Reels | HD and SD progressive links appear in public page markup | HD / SD | Unprobed. Heavily anti-bot; expect this one to fail |
+| **Facebook** public video/Reels | HD and SD progressive links appear in public page markup | HD / SD | **Partly probed, see below** |
 | **Dailymotion, Vimeo** | Documented-ish player configs | Progressive plus adaptive | Unprobed. yt-dlp already handles both well, so the payoff is small |
 | **Twitch clips** | Clips are progressive MP4, unlike VODs | One or two renditions | Unprobed |
 | **Snapchat Spotlight** | Public items expose a direct MP4 | Single rendition | Unprobed |
@@ -72,6 +72,34 @@ resolver would have to reimplement stream selection and merging, which is precis
 is best at. It stays on yt-dlp.
 
 ---
+
+### Instagram and Facebook: what the first probes found (2026-08-25)
+
+Requested, so measured. Neither is written yet and neither is ruled out; what follows is how far
+an anonymous request gets.
+
+**Neither shows a login wall.** Instagram's post, reel and embed URLs all answer `200` to a
+signed-out request, and Facebook's `/watch/` page does too. That was the first thing worth knowing
+and it is the good news.
+
+**Instagram no longer server-renders anything.** `instagram.com/<user>/` returns a ~617 KB
+JavaScript shell for every account tried, byte-for-byte the same size within a few hundred bytes,
+containing zero post data -- no shortcodes, no `video_url`, nothing. The feed arrives later over an
+authenticated GraphQL call. So the profile route is dead for an anonymous client, and the only
+surface still worth testing is `/p/<shortcode>/embed/`, which exists for third-party embedding and
+is therefore *meant* to answer without a session.
+
+That last test needs a real shortcode, which cannot be discovered from the shell. It is the next
+step, not a conclusion.
+
+**Facebook's mobile hosts reject the probe outright.** `mbasic.facebook.com` and
+`m.facebook.com/reel/` both return `400` with a 3.6 KB body. The desktop `/watch/` page answers
+`200` with ~498 KB. Whether that page carries `browser_native_hd_url` for a real public video is
+untested, again for want of a known-public id.
+
+**Neither resolver will be written before a real public URL of each is put through a probe.** That
+rule is why three TikTok routes were discarded on evidence instead of after a build, and it is not
+being relaxed because these two were asked for by name.
 
 ## What would have to be true
 
@@ -102,3 +130,5 @@ Recorded so nobody spends an afternoon rediscovering them.
 | TikTok `api/item/detail/` | `200`, empty body |
 | TikTok oEmbed | Works, but metadata only. No video URL |
 | X syndication on restricted posts | Returns `TweetTombstone` with no media. Server-side gate, nothing to parse. FixTweet covers it |
+| Instagram profile HTML, signed out | ~617 KB JS shell, identical across accounts, zero post data |
+| `mbasic.facebook.com`, `m.facebook.com/reel/` | `400` with a 3.6 KB body |

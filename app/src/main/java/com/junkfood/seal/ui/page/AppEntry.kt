@@ -80,6 +80,8 @@ import com.junkfood.seal.ui.page.tools.VideoInfoDownloadPage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import com.junkfood.seal.ui.component.AnimStyle
+import com.junkfood.seal.ui.common.LocalAnimStyle
 
 private const val TAG = "HomeEntry"
 
@@ -142,6 +144,27 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                 }
             },
         ) {
+            // Every app-bar shortcut goes through this, so they cannot drift apart again.
+            //
+            // Under Fancy the shortcut REPLAYS the switcher move -- open, switch window, close --
+            // so the bar and the menu read as one navigation system rather than two. Under Simple
+            // it just navigates, because a user who picked Simple asked for exactly that.
+            val animStyle = LocalAnimStyle.current
+            val navigateViaSwitcher: (String) -> Unit = { route ->
+                view.slightHapticFeedback()
+                if (animStyle == AnimStyle.FANCY) {
+                    scope.launch {
+                        drawerState.open()
+                        delay(260)
+                        navController.navigate(route) { launchSingleTop = true }
+                        delay(140)
+                        drawerState.close()
+                    }
+                } else {
+                    navController.navigate(route) { launchSingleTop = true }
+                }
+            }
+
             NavHost(
                 modifier = Modifier.align(Alignment.Center),
                 navController = navController,
@@ -154,35 +177,9 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
                             view.slightHapticFeedback()
                             scope.launch { drawerState.open() }
                         },
-                        onNavigateToDownloads = {
-                            view.slightHapticFeedback()
-                            navController.navigate(Route.DOWNLOADS) {
-                                launchSingleTop = true
-                            }
-                        },
-                        onNavigateToLinks = {
-                            view.slightHapticFeedback()
-                            navController.navigate(Route.LINKS_HISTORY) {
-                                launchSingleTop = true
-                            }
-                        },
-                        onNavigateToSettings = {
-                            view.slightHapticFeedback()
-                            // The restored gear REPLAYS the switcher move rather than jumping.
-                            // He asked for it to read as "opened the switcher, then switched
-                            // window" -- so the shortcut is visibly the same navigation, just
-                            // without the intermediate tap. Jumping straight there would make
-                            // the bar shortcut and the menu feel like two different systems.
-                            scope.launch {
-                                drawerState.open()
-                                delay(260)
-                                navController.navigate(Route.SETTINGS_PAGE) {
-                                    launchSingleTop = true
-                                }
-                                delay(140)
-                                drawerState.close()
-                            }
-                        },
+                        onNavigateToDownloads = { navigateViaSwitcher(Route.DOWNLOADS) },
+                        onNavigateToLinks = { navigateViaSwitcher(Route.LINKS_HISTORY) },
+                        onNavigateToSettings = { navigateViaSwitcher(Route.SETTINGS_PAGE) },
                         onNavigateToBatchUrlImport = {
                             navController.navigate(Route.BATCH_URL_IMPORT) {
                                 launchSingleTop = true

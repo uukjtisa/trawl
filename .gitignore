@@ -27,3 +27,6 @@ HANDOFF*.md
 /.idea/.name
 /.idea/deviceManager.xml
 /.idea/markdown.xml
+
+# Working notes, never published
+/convo between me and grok for claude to understand stuff faster.txt
