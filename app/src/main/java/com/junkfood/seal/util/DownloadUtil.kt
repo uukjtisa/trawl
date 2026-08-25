@@ -336,12 +336,14 @@ object DownloadUtil {
         // YoutubeDLRequest at construction -- a workaround that adds OPTIONS cannot change which
         // page yt-dlp is pointed at.
         val tweet = resolveTweet(url)
+        val tok = if (tweet == null) resolveTok(url) else null
         // Probe the top rung: yt-dlp only has to confirm the file exists and is playable, and the
-        // ladder the user chooses from comes from X, not from this probe.
-        val requestUrl = tweet?.best?.url ?: url
+        // ladder the user chooses from comes from the resolver, not from this probe.
+        val requestUrl = tweet?.best?.url ?: tok?.url ?: url
         with(preferences) {
             val request =
                 YoutubeDLRequest(requestUrl).applySiteWorkarounds(requestUrl).apply {
+                    tok?.let { addResolverHeaders(it.headers) }
                     addOption("-o", BASENAME)
                     if (restrictFilenames) {
                         addOption("--restrict-filenames")
@@ -385,6 +387,29 @@ object DownloadUtil {
                     addOption("--socket-timeout", "15")
                 }
             val info = getVideoInfo(request, taskKey)
+            // Same reasoning as the tweet copy below: yt-dlp saw a bare MP4 on a CDN host, so
+            // left alone it reports the CDN path as the title and stores that URL in the history
+            // -- and a history row pointing at a session-bound URL can never be re-downloaded.
+            if (tok != null) {
+                return info.map {
+                    it.copy(
+                        originalUrl = url,
+                        webpageUrl = url,
+                        title = tok.title,
+                        uploader = tok.uploader,
+                        thumbnail = tok.thumbnail ?: it.thumbnail,
+                        extractorKey = "TikTok",
+                        // Not yt-dlp's guess from a signed URL: that id was the query string,
+                        // which then became the temp directory's name and killed the download.
+                        id = tok.id,
+                        formats = tok.toFormats(),
+                        vcodec = "h264",
+                        acodec = "mp4a.40.2",
+                        ext = "mp4",
+                        duration = tok.durationSeconds.takeIf { d -> d > 0 }?.toDouble(),
+                    )
+                }
+            }
             // Put the TWEET back into the result. yt-dlp saw a bare MP4 on video.twimg.com, so
             // left alone it would report the CDN path as the title and store that URL in the
             // history -- and a history row pointing at a CDN URL cannot be re-downloaded later.
@@ -398,6 +423,9 @@ object DownloadUtil {
                         uploader = tweet.uploader,
                         thumbnail = tweet.thumbnail ?: it.thumbnail,
                         extractorKey = "Twitter",
+                        // Same reasoning as TikTok's: the tweet is the identity, not whatever
+                        // yt-dlp makes of a CDN filename.
+                        id = TwitterCdn.statusId(url) ?: it.id,
                         // X's own rungs, with real resolutions and real byte counts. Without
                         // this the picker shows one nameless 0.00 MB entry, because a direct MP4
                         // has no ladder for yt-dlp to report.
@@ -887,6 +915,33 @@ object DownloadUtil {
         }
     }
 
+    /**
+     * Resolves a TikTok link through the mobile share page, or null to leave it to yt-dlp.
+     *
+     * Same contract as [resolveTweet]: null means "carry on as before", never "fail".
+     */
+    private fun resolveTok(url: String): TikTokMedia? {
+        if (!TIKTOK_CDN_FIRST.getBoolean()) return null
+        if (!TikTokCdn.isTikTok(url)) return null
+        return TikTokCdn.resolve(url).also {
+            if (it == null) TrawlLog.i("TikTok: resolve failed, falling back to yt-dlp")
+        }
+    }
+
+    /**
+     * Replays the resolver's headers on the request.
+     *
+     * Not optional for TikTok: the CDN URL is bound to the cookies the page handed out, so
+     * without these yt-dlp gets a 403 that reads like the video was deleted.
+     */
+    private fun YoutubeDLRequest.addResolverHeaders(
+        headers: Map<String, String>
+    ): YoutubeDLRequest = apply {
+        headers.forEach { (name, value) ->
+            if (value.isNotBlank()) addOption("--add-header", "$name:$value")
+        }
+    }
+
     private fun YoutubeDLRequest.applySiteWorkarounds(url: String): YoutubeDLRequest = apply {
         if (url.contains("tiktok.", ignoreCase = true)) {
             addOption("--extractor-args", "tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com")
@@ -1257,17 +1312,21 @@ object DownloadUtil {
                 }
             // Cached from the info fetch a moment ago, so this is not a second round trip.
             val tweet = resolveTweet(url)
+            val tok = if (tweet == null) resolveTok(url) else null
             // Each rung is its own complete file, so choosing a format means choosing a URL --
             // not passing an id to -f, which yt-dlp would reject because it never published one.
             val variant =
                 tweet?.let { m -> m.byFormatId(formatIdString) ?: m.best }
             val request =
-                (variant?.url ?: url).let { YoutubeDLRequest(it).applySiteWorkarounds(it) }
+                (variant?.url ?: tok?.url ?: url).let {
+                    YoutubeDLRequest(it).applySiteWorkarounds(it)
+                }
+            tok?.let { request.addResolverHeaders(it.headers) }
             // The id is ours, so it must not reach yt-dlp. Cleared rather than filtered because
             // every downstream option-builder reads it, and one missed call site downloads the
             // wrong thing silently.
             val effectivePreferences =
-                if (variant != null) downloadPreferences.copy(formatIdString = "")
+                if (variant != null || tok != null) downloadPreferences.copy(formatIdString = "")
                 else downloadPreferences
             if (TwitterCdn.isTweet(url)) {
                 TrawlLog.i(
@@ -1312,9 +1371,12 @@ object DownloadUtil {
                         // rung), so one successful download refused every later one at any
                         // quality. See archive_fix notes.
                         val archiveTarget =
-                            if (variant != null)
-                                "twitter ${TwitterCdn.statusId(url)}-${variant.bitrate}"
-                            else "${videoInfo.extractor} ${videoInfo.id}"
+                            when {
+                                variant != null ->
+                                    "twitter ${TwitterCdn.statusId(url)}-${variant.bitrate}"
+                                tok != null -> "tiktok ${tok.id}"
+                                else -> "${videoInfo.extractor} ${videoInfo.id}"
+                            }
                         val alreadyDownloaded = archiveFile.exists() &&
                             archiveFile.bufferedReader().useLines { lines ->
                                 lines.any { it.trimEnd() == archiveTarget }
@@ -1326,7 +1388,7 @@ object DownloadUtil {
                                     context.getString(R.string.download_archive_error)
                                 )
                             )
-                        } else if (variant != null) {
+                        } else if (variant != null || tok != null) {
                             // Deliberately NOT --download-archive here: yt-dlp would keep writing
                             // per-rung CDN filenames that nothing can ever match again. The app
                             // owns this key, so the app writes it, once the download succeeds.
@@ -1401,7 +1463,7 @@ object DownloadUtil {
                     }
                     if (newTitle.isNotEmpty()) {
                         addCommands(listOf("--replace-in-metadata", "title", ".+", newTitle))
-                    } else if (tweet != null) {
+                    } else if (tweet != null || tok != null) {
                         // Otherwise %(title)s resolves to the CDN basename -- something like
                         // "ZxQ3n1Kd7", which is useless in a gallery six weeks later. Backslashes
                         // are stripped because this lands in a regex replacement.
@@ -1410,9 +1472,15 @@ object DownloadUtil {
                                 "--replace-in-metadata",
                                 "title",
                                 ".+",
-                                tweet.title.replace("\\", ""),
+                                (tweet?.title ?: tok?.title.orEmpty()).replace("\\", ""),
                             )
                         )
+                    }
+                    // Same problem one field over: %(id)s comes from yt-dlp's metadata, so for a
+                    // resolved direct file it expands to the CDN URL's query string -- which is
+                    // how a filename became too long for the filesystem to accept.
+                    (tok?.id ?: tweet?.let { TwitterCdn.statusId(url) })?.let { realId ->
+                        addCommands(listOf("--replace-in-metadata", "id", ".+", realId))
                     }
                     if (Build.VERSION.SDK_INT > 23 && !sdcard) {
                         addOption("-P", "temp:" + getExternalTempDir(videoInfo.id))
@@ -1435,8 +1503,12 @@ object DownloadUtil {
                     addOption("-o", outputBuilder.append(output).toString())
 
                     for (s in request.buildCommand()) Log.d(TAG, s)
-                    if (tweet != null) {
-                        TrawlLog.i("X: yt-dlp argv = " + request.buildCommand().joinToString(" "))
+                    if (tweet != null || tok != null) {
+                        TrawlLog.i(
+                            (if (tweet != null) "X" else "TikTok") +
+                                ": yt-dlp argv = " +
+                                request.buildCommand().joinToString(" ")
+                        )
                     }
                 }
                 .runCatching {

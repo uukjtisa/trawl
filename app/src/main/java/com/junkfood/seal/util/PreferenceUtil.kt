@@ -134,6 +134,10 @@ const val FLOATING_BUBBLE = "floating_bubble"
 // Twitter extractor, which needs a guest token or a login and fails often without one.
 // Default ON -- it is the path that actually works. Off hands X back to yt-dlp.
 const val X_CDN_FIRST = "x_cdn_first"
+// TikTok: resolve through the mobile share page instead of yt-dlp's TikTok extractor, which
+// needs TLS impersonation (curl_cffi) that the Android build does not ship and so fails with
+// "Unable to extract universal data for rehydration". Default ON.
+const val TIKTOK_CDN_FIRST = "tiktok_cdn_first"
 const val DISABLE_PREVIEW = "disable_preview"
 const val PRIVATE_DIRECTORY = "private_directory"
 const val CROP_ARTWORK = "crop_artwork"
@@ -300,6 +304,7 @@ private val StringPreferenceDefaults =
 private val BooleanPreferenceDefaults =
     mapOf(
         X_CDN_FIRST to true,
+        TIKTOK_CDN_FIRST to true,
         SHOW_INTRO to true,
         FLOATING_BUBBLE to true,
         HEADER_WORDMARK to true,

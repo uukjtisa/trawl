@@ -108,6 +108,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.junkfood.seal.util.X_CDN_FIRST
 import androidx.compose.material.icons.outlined.Bolt
+import com.junkfood.seal.util.TIKTOK_CDN_FIRST
+import androidx.compose.material.icons.outlined.MusicNote
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -328,6 +330,20 @@ fun GeneralDownloadPreferences(onNavigateBack: () -> Unit, navigateToTemplate: (
                         onClick = {
                             xCdn = !xCdn
                             PreferenceUtil.updateValue(X_CDN_FIRST, xCdn)
+                        },
+                    )
+                }
+
+                item {
+                    var ttCdn by remember { mutableStateOf(TIKTOK_CDN_FIRST.getBoolean()) }
+                    PreferenceSwitch(
+                        title = stringResource(R.string.tiktok_cdn_first),
+                        description = stringResource(R.string.tiktok_cdn_first_desc),
+                        icon = Icons.Outlined.MusicNote,
+                        isChecked = ttCdn,
+                        onClick = {
+                            ttCdn = !ttCdn
+                            PreferenceUtil.updateValue(TIKTOK_CDN_FIRST, ttCdn)
                         },
                     )
                 }
