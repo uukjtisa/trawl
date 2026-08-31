@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -149,95 +150,110 @@ fun DirectFormatPage(
     Column(
         modifier =
             Modifier.fillMaxWidth()
-                // Painted explicitly. The M2 sheet variant this sits in does not supply a surface
-                // of its own, so without this the screen behind it reads straight through and the
-                // whole sheet looks like a rendering fault.
+                // Painted explicitly, and clipped to the same 28.dp corner the configure sheet
+                // uses. The M2 sheet variant this sits in supplies neither surface nor shape, so
+                // without these two the screen behind reads straight through and the sheet meets
+                // the screen edge as a square slab -- both of which look like rendering faults.
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(MaterialTheme.colorScheme.surface)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
     ) {
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = resolution.title,
-            fontWeight = FontWeight.W700,
-            fontSize = 19.sp,
-            color = scheme.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = stringResource(R.string.route_direct_chip, resolution.platform),
-            fontSize = 12.5.sp,
-            color = scheme.primary,
-            modifier = Modifier.padding(top = 2.dp, bottom = 10.dp),
-        )
+        // Outside the scrolling column on purpose: a handle that scrolls away with the content is
+        // decoration, not an affordance.
+        DragHandle()
 
-        SectionLabel(text = stringResource(R.string.direct_source))
-        resolution.formats.forEach { f ->
-            SourceRow(format = f, selected = f.formatId == selected.formatId) { selected = f }
-        }
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    // fill = false so a short sheet still wraps its content instead of stretching
+                    // to the full screen; the weight bounds a long one so it scrolls beneath the
+                    // handle rather than pushing the handle off the top.
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp)
+        ) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = resolution.title,
+                fontWeight = FontWeight.W700,
+                fontSize = 19.sp,
+                color = scheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = stringResource(R.string.route_direct_chip, resolution.platform),
+                fontSize = 12.5.sp,
+                color = scheme.primary,
+                modifier = Modifier.padding(top = 2.dp, bottom = 10.dp),
+            )
 
-        if (state.audio) {
-            Spacer(Modifier.height(10.dp))
-            SectionLabel(text = stringResource(R.string.direct_convert_to))
-            FlowRow(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                CONTAINERS.forEach { (code, label) ->
-                    FilterChip(
-                        selected = container == code,
-                        onClick = { container = code },
-                        label = { Text(label) },
+            SectionLabel(text = stringResource(R.string.direct_source))
+            resolution.formats.forEach { f ->
+                SourceRow(format = f, selected = f.formatId == selected.formatId) { selected = f }
+            }
+
+            if (state.audio) {
+                Spacer(Modifier.height(10.dp))
+                SectionLabel(text = stringResource(R.string.direct_convert_to))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    CONTAINERS.forEach { (code, label) ->
+                        FilterChip(
+                            selected = container == code,
+                            onClick = { container = code },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+                // M4A off an MP4 source is a remux rather than a re-encode, so it is both faster and
+                // lossless. Worth saying, because "MP3" looks like the safe default and is not.
+                if (container == CONVERT_M4A) {
+                    Text(
+                        text = stringResource(R.string.direct_m4a_note),
+                        fontSize = 12.sp,
+                        color = scheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp),
                     )
                 }
             }
-            // M4A off an MP4 source is a remux rather than a re-encode, so it is both faster and
-            // lossless. Worth saying, because "MP3" looks like the safe default and is not.
-            if (container == CONVERT_M4A) {
+
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { showPreset = true }
+                        .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Outlined.Edit,
+                    contentDescription = null,
+                    tint = scheme.primary,
+                    modifier = Modifier.size(17.dp),
+                )
+                Spacer(Modifier.width(9.dp))
                 Text(
-                    text = stringResource(R.string.direct_m4a_note),
-                    fontSize = 12.sp,
-                    color = scheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 6.dp),
+                    text =
+                        stringResource(
+                            R.string.direct_edit_preset,
+                            resolution.platform,
+                            stringResource(if (state.audio) R.string.audio else R.string.video),
+                        ),
+                    fontSize = 13.sp,
+                    color = scheme.primary,
                 )
             }
-        }
 
-        Spacer(Modifier.height(12.dp))
-        Row(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { showPreset = true }
-                    .padding(vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                Icons.Outlined.Edit,
-                contentDescription = null,
-                tint = scheme.primary,
-                modifier = Modifier.size(17.dp),
+            Spacer(Modifier.height(6.dp))
+            ActionButtonsRow(
+                onCancel = onDismissRequest,
+                onConfirm = { onDownload(selected, container) },
             )
-            Spacer(Modifier.width(9.dp))
-            Text(
-                text =
-                    stringResource(
-                        R.string.direct_edit_preset,
-                        resolution.platform,
-                        stringResource(if (state.audio) R.string.audio else R.string.video),
-                    ),
-                fontSize = 13.sp,
-                color = scheme.primary,
-            )
+            Spacer(Modifier.height(20.dp))
         }
-
-        Spacer(Modifier.height(6.dp))
-        ActionButtonsRow(
-            onCancel = onDismissRequest,
-            onConfirm = { onDownload(selected, container) },
-        )
-        Spacer(Modifier.height(20.dp))
     }
 
     if (showPreset) {
@@ -253,6 +269,27 @@ fun DirectFormatPage(
                 container = preset.container
                 showPreset = false
             },
+        )
+    }
+}
+
+/**
+ * The 32x4 bar every other sheet in the app shows.
+ *
+ * Reproduced here rather than shared, because the only copy lives baked inside
+ * SealModalBottomSheetM2 -- and this screen sits in the *Variant* container, which draws no
+ * chrome whatsoever. That is precisely why it reached the user with nothing to grab.
+ */
+@Composable
+private fun DragHandle() {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 2.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier.size(32.dp, 4.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
         )
     }
 }
