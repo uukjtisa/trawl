@@ -52,7 +52,7 @@ android {
         applicationId = "dev.niccc2007.trawl"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1_000_400
+        versionCode = 1_010_400
         check(versionCode == currentVersionCode)
 
         versionName = baseVersionName

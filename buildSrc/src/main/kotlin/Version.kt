@@ -62,4 +62,4 @@ private const val RELEASE_CANDIDATE = VARIANT * 3
 // That is safe ONLY because the applicationId also changes, so this is a fresh install
 // rather than a downgrade over an existing Seal Plus.
 val currentVersion: Version =
-    Version.Stable(versionMajor = 0, versionMinor = 1, versionPatch = 0)
+    Version.Stable(versionMajor = 0, versionMinor = 1, versionPatch = 1)
