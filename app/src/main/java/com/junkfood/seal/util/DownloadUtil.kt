@@ -350,11 +350,18 @@ object DownloadUtil {
         val page = if (tweet == null && tok == null) resolvePage(url) else null
         // Probe the top rung: yt-dlp only has to confirm the file exists and is playable, and the
         // ladder the user chooses from comes from the resolver, not from this probe.
-        val requestUrl = tweet?.best?.url ?: tok?.url ?: url
+        // `page` belongs in this chain too. Leaving it out pointed yt-dlp at the original
+        // Newgrounds / Facebook page while our resolver had already produced a perfectly good CDN
+        // URL -- so the resolver logged success and the user still got "could not fetch video",
+        // because the failure came from yt-dlp's own extractor on a page it cannot read.
+        val requestUrl = tweet?.best?.url ?: tok?.url ?: page?.best?.url ?: url
         with(preferences) {
             val request =
                 YoutubeDLRequest(requestUrl).applySiteWorkarounds(requestUrl).apply {
                     tok?.let { addResolverHeaders(it.headers) }
+                    // Same reason: Newgrounds and Facebook both hand back URLs that only answer
+                    // for a request carrying the headers the resolver used.
+                    page?.let { addResolverHeaders(it.headers) }
                     addOption("-o", BASENAME)
                     if (restrictFilenames) {
                         addOption("--restrict-filenames")
