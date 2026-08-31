@@ -437,6 +437,14 @@ fun TrawlSectionHead(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    /**
+     * An optional SECOND action, drawn to the left of the primary one and in a quieter colour.
+     *
+     * Added for Recent's "Hide all", which is a bulk edit rather than navigation and should not
+     * read with the same weight as "All links".
+     */
+    secondaryActionLabel: String? = null,
+    onSecondaryAction: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth().padding(start = 2.dp, end = 2.dp, top = 6.dp),
@@ -450,15 +458,27 @@ fun TrawlSectionHead(
             letterSpacing = 0.075.em,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        if (actionLabel != null && onAction != null) {
-            Text(
-                text = actionLabel,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.W600,
-                letterSpacing = 0.02.em,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable(onClick = onAction).padding(4.dp),
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (secondaryActionLabel != null && onSecondaryAction != null) {
+                Text(
+                    text = secondaryActionLabel,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.W600,
+                    letterSpacing = 0.02.em,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.clickable(onClick = onSecondaryAction).padding(4.dp),
+                )
+            }
+            if (actionLabel != null && onAction != null) {
+                Text(
+                    text = actionLabel,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.W600,
+                    letterSpacing = 0.02.em,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable(onClick = onAction).padding(4.dp),
+                )
+            }
         }
     }
 }

@@ -127,6 +127,7 @@ import com.junkfood.seal.ui.common.LocalQuickHistory
 import com.junkfood.seal.ui.component.AnimStyle
 import androidx.compose.material.icons.outlined.Animation
 import com.junkfood.seal.ui.common.LocalShowIntro
+import com.junkfood.seal.ui.common.LocalShowRecentSection
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -375,6 +376,16 @@ fun AppearancePreferences(onNavigateBack: () -> Unit, onNavigateTo: (String) -> 
                     icon = Icons.Outlined.Animation,
                     isChecked = LocalShowIntro.current,
                     onClick = { PreferenceUtil.switchShowIntro() },
+                )
+                // SHOW_RECENT_SECTION. Off is a real way to use the app: All links is the actual
+                // record, so the home section is a convenience and some people would rather have
+                // the space back.
+                PreferenceSwitch(
+                    title = stringResource(R.string.show_recent_section),
+                    description = stringResource(R.string.show_recent_section_desc),
+                    icon = Icons.Outlined.History,
+                    isChecked = LocalShowRecentSection.current,
+                    onClick = { PreferenceUtil.switchShowRecentSection() },
                 )
                 TrawlSettingRow(
                     title = stringResource(R.string.transition_style),

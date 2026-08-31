@@ -96,6 +96,10 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
     val view = LocalView.current
     val windowWidth = LocalWindowWidthState.current
     val sheetState by dialogViewModel.sheetStateFlow.collectAsStateWithLifecycle()
+    // The sheet's VALUE, not just its state. See the pop-to-Home effect below: the state alone
+    // cannot say whether the sheet is actually on screen, and acting on it when it is not is
+    // what pinned the whole app to Home.
+    val sheetValue by dialogViewModel.sheetValueFlow.collectAsStateWithLifecycle()
     val cookiesViewModel: CookiesViewModel = koinViewModel()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -111,8 +115,27 @@ fun AppEntry(dialogViewModel: DownloadDialogViewModel) {
         }
     }
 
-    if (sheetState is DownloadDialogViewModel.SheetState.Configure) {
-        if (navController.currentDestination?.route != Route.HOME) {
+    // The configure sheet belongs on Home, so a link arriving from a share sheet while the user
+    // is somewhere else pops back there first.
+    //
+    // THIS WAS THE "STUCK ON THE MAIN PAGE" BUG, and it was two mistakes compounding.
+    //
+    // First, the pop was a bare call in the composable body, so it re-ran on EVERY
+    // recomposition rather than once when the condition became true. Second, hideDialog() only
+    // sets the sheet VALUE to Hidden -- it deliberately leaves sheetState as Configure(urlList)
+    // so re-opening the sheet restores what you were configuring. Together that meant: once you
+    // had opened a link this session, `sheetState is Configure` stayed true forever, and every
+    // attempt to reach Settings was undone a frame after the switcher animated. The animation
+    // was real; the navigation was being reverted behind it.
+    //
+    // Keyed on both, and guarded on the sheet actually being expanded, so the pop happens when
+    // the sheet genuinely appears and at no other time.
+    LaunchedEffect(sheetState, sheetValue) {
+        if (
+            sheetValue is DownloadDialogViewModel.SheetValue.Expanded &&
+                sheetState is DownloadDialogViewModel.SheetState.Configure &&
+                navController.currentDestination?.route != Route.HOME
+        ) {
             navController.popBackStack(route = Route.HOME, inclusive = false, saveState = true)
         }
     }

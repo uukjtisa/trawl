@@ -86,6 +86,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -151,6 +154,7 @@ import com.junkfood.seal.util.DatabaseUtil
 import com.junkfood.seal.util.DownloadUtil
 import com.junkfood.seal.util.FileUtil
 import java.io.File
+import java.util.Calendar
 import com.junkfood.seal.util.toFileSizeText
 import com.junkfood.seal.util.getErrorReport
 import com.junkfood.seal.util.makeToast
@@ -177,6 +181,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -184,6 +189,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -208,6 +214,7 @@ import com.junkfood.seal.ui.bubble.BubbleService
 import com.junkfood.seal.ui.bubble.BubbleTask
 import com.junkfood.seal.ui.bubble.BubbleTasks
 import com.junkfood.seal.ui.common.LocalFloatingBubble
+import com.junkfood.seal.ui.common.LocalShowRecentSection
 import com.junkfood.seal.ui.theme.GlintIcon
 import com.junkfood.seal.ui.bubble.BubbleTaskState
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -419,12 +426,47 @@ fun NewHomePage(
         localHiddenIds = localHiddenIds.intersect(currentIds)
     }
     
-    // Get recent 5 downloads (remove duplicates by video URL and path to prevent duplicate cards)
-    val recentFiveDownloads = remember(recentDownloads) {
-        recentDownloads
-            .distinctBy { it.videoUrl + it.videoPath } // Use both URL and path to ensure uniqueness
-            .takeLast(5)
-            .reversed()
+    // Recent means TODAY, and only today.
+    //
+    // This was `takeLast(5)` over the whole visible history, so "Recent" actually meant "the
+    // newest five rows that still exist". Delete or hide one and a row from last week slid up to
+    // fill the gap -- which is why the section looked like it was refilling itself out of nowhere.
+    // A section that repopulates from the past is not a recent list, it is a truncated history.
+    //
+    // Dated from the file's mtime, which is the same mechanism LinksHistoryPage uses and for the
+    // same reason: the entity has no download-date column, and `downloadTimeMillis` is a DURATION,
+    // not a timestamp. A row whose file is gone has no knowable date and is therefore not today's.
+    //
+    // Stat-ing files is real IO and this list sits on the home screen, so it runs on
+    // Dispatchers.IO and only when the history itself changes -- never per recomposition.
+    var recentToday by remember { mutableStateOf(emptyList<DownloadedVideoInfo>()) }
+    LaunchedEffect(recentDownloads) {
+        recentToday =
+            withContext(Dispatchers.IO) {
+                val startOfDay =
+                    Calendar.getInstance()
+                        .apply {
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        .timeInMillis
+                recentDownloads
+                    // Both URL and path, to ensure uniqueness.
+                    .distinctBy { it.videoUrl + it.videoPath }
+                    .filter { info ->
+                        val mtime =
+                            runCatching {
+                                    val f = File(info.videoPath)
+                                    if (f.exists()) f.lastModified() else 0L
+                                }
+                                .getOrDefault(0L)
+                        mtime >= startOfDay
+                    }
+                    .takeLast(5)
+                    .reversed()
+            }
     }
     
     // Get active downloads with proper state observation for real-time updates.
@@ -444,8 +486,8 @@ fun NewHomePage(
     }
 
     // Create a comprehensive set of identifiers from recent downloads to avoid duplicates
-    val recentDownloadIdentifiers = remember(recentFiveDownloads) {
-        recentFiveDownloads.flatMap { download ->
+    val recentDownloadIdentifiers = remember(recentToday) {
+        recentToday.flatMap { download ->
             listOf(
                 download.videoUrl,
                 download.videoPath,
@@ -499,8 +541,8 @@ fun NewHomePage(
     // Exclude recent-DB entries whose URL still has a live (non-completed) active task so items
     // don't appear in both sections simultaneously during the Running → Completed transition.
     // Also exclude optimistically hidden items so the card vanishes before the DB Flow re-emits.
-    val recentFiveDownloadsFiltered = remember(recentFiveDownloads, activeTaskUrls, localHiddenIds) {
-        recentFiveDownloads.filter { it.videoUrl !in activeTaskUrls && it.id !in localHiddenIds }
+    val recentFiveDownloadsFiltered = remember(recentToday, activeTaskUrls, localHiddenIds) {
+        recentToday.filter { it.videoUrl !in activeTaskUrls && it.id !in localHiddenIds }
     }
 
     // Prune Completed tasks from the in-memory taskStateMap as soon as their DB row is confirmed
@@ -536,6 +578,24 @@ fun NewHomePage(
             }
             .map { it.key }
             .forEach { task -> downloader.remove(task) }
+    }
+
+    // Tell the bubble what still exists.
+    //
+    // The bubble's list is process-scoped and merges rather than assigns, so it retains finished
+    // rows on purpose -- but it had no way to hear that a download had been DELETED. Its publisher
+    // only ever describes what is live, and "gone" is not a value that list can carry. So a row
+    // the user had already deleted stayed in the panel, and the badge kept counting it, which is
+    // the "it still says 5+ but I deleted those" complaint.
+    //
+    // Reconciling against the visible history plus every registered task closes that gap without
+    // giving the bubble its own opinion about what a download is. The age-out is the same idea
+    // applied to time rather than deletion: a finished row is worth reading for a few minutes and
+    // is clutter after that. Errors survive both, because a failure nobody saw is the one row
+    // that has to wait.
+    LaunchedEffect(allVisibleIdentifiers, taskStateMap.size) {
+        BubbleTasks.reconcile(allVisibleIdentifiers + taskStateMap.keys.map { it.url })
+        BubbleTasks.ageOut()
     }
 
     // Hoisted state for the Spotify-style swipeable download-details sheet: holds the index
@@ -839,6 +899,9 @@ fun NewHomePage(
                     val ds = state.downloadState
                     BubbleTask(
                         id = task.id,
+                        // Carried so BubbleTasks.reconcile can ask whether this download still
+                        // exists. Rows are keyed by task id; history is keyed by URL.
+                        url = task.url,
                         // The URL is the fallback, not "Unknown": before yt-dlp has resolved the
                         // page there is no title yet, and the link is at least the thing the
                         // user just pasted.
@@ -872,15 +935,23 @@ fun NewHomePage(
                 }
             BubbleTasks.publish(live)
             if (bubbleOn && live.isNotEmpty()) BubbleService.start(context)
-            // Only tear down a bubble that appeared by itself. One the user summoned from the
-            // tools strip is a tool, and a tool does not vanish because the queue drained --
-            // which is precisely what it used to do, one recomposition after being switched on.
-            else if (live.isEmpty() && !BubbleService.summoned) BubbleService.stop(context)
+            // NOTHING STOPS THE BUBBLE HERE ANY MORE.
+            //
+            // It used to tear itself down as soon as `live` emptied, exempting only a bubble the
+            // user had summoned by hand. But the queue drains the instant the last download
+            // finishes, so the window vanished at exactly the moment it had something worth
+            // reading -- the finished row, and the tap that opens the file. A downloader's
+            // floating window that disappears when the download completes is backwards.
+            //
+            // Every bubble is now a tool: it lives until it is dragged to the dismiss target,
+            // hidden from the panel, or turned off in Settings. Those three are the only exits,
+            // and they are all deliberate.
         }
 
         // Read before entering LazyListScope: `item {}` bodies are composable but the builder
         // lambda around them is not, so a CompositionLocal cannot be read at that level.
         val showWordmark = LocalHeaderWordmark.current
+        val showRecentSection = LocalShowRecentSection.current
         val showMascot = LocalShowMascot.current
         val fastEnabled = LocalFastDownload.current
         val rememberedQuality = LocalRememberedQuality.current
@@ -1027,12 +1098,30 @@ fun NewHomePage(
             // Recent Downloads Section - combines both active and completed.
             // Use activeDownloads (not taskStateMap) so the header hides correctly when all
             // tasks are Completed and already present in the DB-backed section.
-            if (activeDownloads.isNotEmpty() || recentFiveDownloadsFiltered.isNotEmpty()) {
+            // The completed half of this section obeys the Settings switch; a download that is
+            // still RUNNING does not. Hiding work in progress would leave the app looking idle
+            // while it was busy, which is a different bug from the one the switch is for.
+            val showCompletedRecent = showRecentSection && recentFiveDownloadsFiltered.isNotEmpty()
+            if (activeDownloads.isNotEmpty() || showCompletedRecent) {
                 item {
                     TrawlSectionHead(
                         title = stringResource(R.string.recent),
                         actionLabel = stringResource(R.string.all_links),
                         onAction = onNavigateToLinks,
+                        // Bulk version of the swipe-right verb. Session-local, exactly like the
+                        // per-card hide -- it clears the section without touching a file or a
+                        // history row, both of which remain in All links.
+                        secondaryActionLabel =
+                            if (showCompletedRecent) stringResource(R.string.hide_all) else null,
+                        onSecondaryAction =
+                            if (showCompletedRecent) {
+                                {
+                                    view.slightHapticFeedback()
+                                    localHiddenIds =
+                                        localHiddenIds +
+                                            recentFiveDownloadsFiltered.map { it.id }.toSet()
+                                }
+                            } else null,
                     )
                 }
             }
@@ -1143,7 +1232,7 @@ fun NewHomePage(
             }
             
             // Show recent completed downloads
-            if (recentFiveDownloadsFiltered.isNotEmpty()) {
+            if (showCompletedRecent) {
                 items(
                     items = recentFiveDownloadsFiltered,
                     key = { it.id }
@@ -1154,7 +1243,39 @@ fun NewHomePage(
                     var alsoDeleteFile by remember {
                         mutableStateOf(DELETE_FILE_WITH_ENTRY.getBoolean())
                     }
-                    
+
+                    // Left deletes, right hides -- the two verbs the card already had behind a
+                    // menu, promoted to gestures because clearing the section was the single most
+                    // repeated thing here and it cost three taps a row.
+                    val dismissState = rememberSwipeToDismissBoxState()
+                    LaunchedEffect(dismissState.currentValue) {
+                        when (dismissState.currentValue) {
+                            SwipeToDismissBoxValue.EndToStart -> {
+                                view.slightHapticFeedback()
+                                showRecentDeleteDialog = true
+                                // Delete asks first, and the answer can be no -- so the card is
+                                // put back rather than left sitting off-screen awaiting a verdict.
+                                dismissState.reset()
+                            }
+                            SwipeToDismissBoxValue.StartToEnd -> {
+                                view.slightHapticFeedback()
+                                localHiddenIds = localHiddenIds + downloadInfo.id
+                                scope.launch(Dispatchers.IO) {
+                                    DatabaseUtil.hideItem(downloadInfo)
+                                }
+                            }
+                            else -> {}
+                        }
+                    }
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        enableDismissFromEndToStart = true,
+                        enableDismissFromStartToEnd = true,
+                        backgroundContent = {
+                            RecentSwipeBackground(target = dismissState.targetValue)
+                        },
+                    ) {
                     RecentDownloadCard(
                         downloadInfo = downloadInfo,
                         refreshKey = lifecycleRefreshTrigger,
@@ -1193,7 +1314,8 @@ fun NewHomePage(
                             }
                         }
                     )
-                    
+                    }
+
                     if (showRecentDeleteDialog) {
                         SealDialog(
                             onDismissRequest = { showRecentDeleteDialog = false },
@@ -1354,6 +1476,42 @@ fun NewHomePage(
     }
 }
 
+/**
+ * What sits behind a Recent card mid-swipe.
+ *
+ * Colour and icon both track the direction, so the gesture says which verb it is committing to
+ * before it commits -- a swipe that looked identical either way would make "delete" and "hide"
+ * a coin toss.
+ */
+@Composable
+private fun RecentSwipeBackground(target: SwipeToDismissBoxValue) {
+    val deleting = target == SwipeToDismissBoxValue.EndToStart
+    val container by
+        animateColorAsState(
+            when (target) {
+                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.secondaryContainer
+                else -> MaterialTheme.colorScheme.surfaceContainer
+            },
+            label = "recentSwipeBg",
+        )
+    Box(
+        Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)).background(container),
+        contentAlignment = if (deleting) Alignment.CenterEnd else Alignment.CenterStart,
+    ) {
+        if (target != SwipeToDismissBoxValue.Settled) {
+            Icon(
+                imageVector = if (deleting) Icons.Outlined.Delete else Icons.Outlined.VisibilityOff,
+                contentDescription =
+                    stringResource(if (deleting) R.string.delete else R.string.hide),
+                tint =
+                    if (deleting) MaterialTheme.colorScheme.onErrorContainer
+                    else MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(horizontal = 22.dp).size(24.dp),
+            )
+        }
+    }
+}
 
 @Composable
 fun RecentDownloadCard(

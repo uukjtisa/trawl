@@ -94,7 +94,11 @@ enum class MotionLevel(val id: String) {
         }
 
     companion object {
-        val Default = SUBTLE
+        // FULL by default. The ambient layer is the app's own character and it is already
+        // bounded so it cannot distract -- nothing faster than 34s, nothing above 8% opacity --
+        // so shipping it dialled down was hiding the design rather than protecting anyone.
+        // Both quieter levels are one tap away in Settings.
+        val Default = FULL
 
         fun fromId(id: String?): MotionLevel = entries.firstOrNull { it.id == id } ?: Default
     }

@@ -27,6 +27,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -44,6 +45,9 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -57,6 +61,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -145,6 +150,10 @@ fun BubbleOverlay(
         val tokens = LocalTrawlTokens.current
         val scheme = MaterialTheme.colorScheme
         val live = tasks.filterNot { it.finished }
+        // What the bubble DRAWS is outstanding work, not session history. Rings and the overflow
+        // badge both counted `tasks`, which retains finished and failed rows on purpose -- so a
+        // drained queue still showed "+5", and a ring per row, long after everything was done.
+        val active = tasks.filter { it.active }
 
         val state =
             when {
@@ -186,7 +195,7 @@ fun BubbleOverlay(
                     )
                     .drawBehind {
                         // Rings sit outside the core, innermost first, 3dp thick with a 2dp gap.
-                        val visible = tasks.take(MAX_RINGS)
+                        val visible = active.take(MAX_RINGS)
                         visible.forEachIndexed { i, task ->
                             val inset = i * 5.dp.toPx()
                             val stroke = 3.dp.toPx()
@@ -219,7 +228,7 @@ fun BubbleOverlay(
             Box(
                 modifier =
                     Modifier.size(
-                            if (tasks.isEmpty()) BUBBLE_SIZE_DP.dp
+                            if (active.isEmpty()) BUBBLE_SIZE_DP.dp
                             else (BUBBLE_SIZE_DP - MAX_RINGS * 5).dp
                         )
                         .clip(CircleShape)
@@ -227,9 +236,9 @@ fun BubbleOverlay(
                         .border(1.dp, tokens.glassLine, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                if (tasks.size > MAX_RINGS) {
+                if (active.size > MAX_RINGS) {
                     Text(
-                        text = "+${tasks.size - MAX_RINGS}",
+                        text = "+${active.size - MAX_RINGS}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.W800,
                         color = scheme.onSurface,
@@ -522,7 +531,7 @@ fun BubblePanel(
                 }
             }
 
-            if (live.isEmpty()) {
+            if (tasks.isEmpty()) {
                 // .bempty
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 12.dp),
@@ -546,12 +555,18 @@ fun BubblePanel(
                 // Scrolls rather than truncates. `take(4)` hid the rest of the queue, and letting
                 // the column grow instead would push the footer -- "Hide bubble" and "Turn off" --
                 // off the bottom of the screen, which is where the way out lives.
+                //
+                // EVERY row, not just the unfinished ones. This listed `live`, so a DONE row was
+                // retained in BubbleTasks, counted by the badge, and never actually shown -- which
+                // is why the count could say 5 with nothing on screen to act on. It also left the
+                // row's own "tap a finished download to play it" branch unreachable, since the
+                // only rows that could be tapped were the ones still running.
                 Column(
                     modifier =
                         Modifier.heightIn(max = 208.dp)
                             .verticalScroll(rememberScrollState())
                 ) {
-                    live.forEach { task -> BubbleTaskRow(task, onAction) }
+                    tasks.forEach { task -> BubbleTaskRow(task, onAction) }
                 }
             }
 
@@ -619,19 +634,69 @@ fun BubblePanel(
 }
 
 /** `.btask` -- name, status, a 3dp progress hairline, and the verb that fits its state. */
+/**
+ * One row, with the swipe that was missing.
+ *
+ * ONLY SETTLED ROWS SWIPE. A finished or failed row is the stale thing the panel had no verb for
+ * -- Clear was all-or-nothing, so one dead row meant losing the live ones too. A running row is
+ * deliberately not swipeable: it already carries pause and cancel as explicit buttons, and a
+ * gesture that silently killed a download in progress is a worse bug than the one being fixed.
+ */
 @Composable
 private fun BubbleTaskRow(task: BubbleTask, onAction: (String, BubbleAction) -> Unit) {
+    if (!task.settled) {
+        BubbleTaskRowContent(task, onAction)
+        return
+    }
+    val dismissState = rememberSwipeToDismissBoxState()
+    val onDismiss = { BubbleTasks.dismiss(task.id) }
+    LaunchedEffect(dismissState.currentValue) {
+        when (dismissState.currentValue) {
+            SwipeToDismissBoxValue.EndToStart,
+            SwipeToDismissBoxValue.StartToEnd -> onDismiss()
+            else -> {}
+        }
+    }
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromEndToStart = true,
+        enableDismissFromStartToEnd = true,
+        backgroundContent = {
+            Box(
+                Modifier.fillMaxSize()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            ) {
+                Icon(
+                    Icons.Rounded.Close,
+                    contentDescription = stringResource(R.string.clear),
+                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+    ) {
+        BubbleTaskRowContent(task, onAction)
+    }
+}
+
+@Composable
+private fun BubbleTaskRowContent(task: BubbleTask, onAction: (String, BubbleAction) -> Unit) {
     val tokens = LocalTrawlTokens.current
     val scheme = MaterialTheme.colorScheme
     val bad = task.state == BubbleTaskState.ERROR
-    val (icon, action) =
+    // Null for a finished row: there is no verb left. It offered PAUSE, because DONE fell through
+    // to the catch-all -- harmless while finished rows were never drawn, and plainly wrong the
+    // moment they were. Opening it is the row's own tap, and forgetting it is the swipe.
+    val control: Pair<ImageVector, BubbleAction>? =
         when (task.state) {
             BubbleTaskState.ERROR -> Icons.Rounded.Refresh to BubbleAction.RETRY
             BubbleTaskState.PAUSED -> Icons.Rounded.PlayArrow to BubbleAction.RESUME
             // Pausing something that has not started is a no-op dressed as a control; a queued
             // task's only meaningful verb is "drop it".
             BubbleTaskState.QUEUED -> Icons.Rounded.Close to BubbleAction.CANCEL
-            else -> Icons.Rounded.Pause to BubbleAction.PAUSE
+            BubbleTaskState.DONE -> null
+            BubbleTaskState.RUNNING -> Icons.Rounded.Pause to BubbleAction.PAUSE
         }
     val context = LocalContext.current
     val playable = task.state == BubbleTaskState.DONE && !task.filePath.isNullOrBlank()
@@ -691,19 +756,21 @@ private fun BubbleTaskRow(task: BubbleTask, onAction: (String, BubbleAction) -> 
                 )
             }
         }
-        Box(
-            Modifier.size(30.dp)
-                .clip(RoundedCornerShape(9.dp))
-                .background(tokens.surfaceHigh)
-                .clickable { onAction(task.id, action) },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = action.name,
-                tint = scheme.onSurfaceVariant,
-                modifier = Modifier.size(15.dp),
-            )
+        control?.let { (icon, action) ->
+            Box(
+                Modifier.size(30.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(tokens.surfaceHigh)
+                    .clickable { onAction(task.id, action) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = action.name,
+                    tint = scheme.onSurfaceVariant,
+                    modifier = Modifier.size(15.dp),
+                )
+            }
         }
     }
 }

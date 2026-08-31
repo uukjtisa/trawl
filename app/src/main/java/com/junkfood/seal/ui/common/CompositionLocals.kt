@@ -53,6 +53,7 @@ val LocalQuickGear = compositionLocalOf { false }
 val LocalQuickHistory = compositionLocalOf { true }
 val LocalShowIntro = compositionLocalOf { true }
 val LocalFloatingBubble = compositionLocalOf { true }
+val LocalShowRecentSection = compositionLocalOf { true }
 
 val LocalFixedColorRoles = staticCompositionLocalOf {
     FixedColorRoles.fromColorSchemes(
@@ -97,6 +98,7 @@ fun SettingsProvider(windowWidthSizeClass: WindowWidthSizeClass, content: @Compo
             LocalQuickHistory provides quickHistory,
             LocalShowIntro provides showIntro,
             LocalFloatingBubble provides floatingBubble,
+            LocalShowRecentSection provides showRecentSection,
             content = content,
         )
     }

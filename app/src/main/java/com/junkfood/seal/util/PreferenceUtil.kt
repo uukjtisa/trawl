@@ -130,6 +130,14 @@ const val SHOW_INTRO = "show_intro"
 // Default ON per the design, but the bubble only actually appears once the user
 // has granted "Display over other apps" -- a special permission, not a runtime one.
 const val FLOATING_BUBBLE = "floating_bubble"
+
+/**
+ * Whether the home screen carries a Recent section at all.
+ *
+ * Off is a legitimate way to use Trawl: the links history keeps every download anyway, so
+ * this section is a convenience rather than the record.
+ */
+const val SHOW_RECENT_SECTION = "show_recent_section"
 // X/Twitter: resolve the video through X's public syndication endpoint instead of yt-dlp's
 // Twitter extractor, which needs a guest token or a login and fails often without one.
 // Default ON -- it is the path that actually works. Off hands X back to yt-dlp.
@@ -329,6 +337,7 @@ private val BooleanPreferenceDefaults =
         DELETE_FILE_WITH_ENTRY to true,
         SHOW_INTRO to true,
         FLOATING_BUBBLE to true,
+        SHOW_RECENT_SECTION to true,
         HEADER_WORDMARK to true,
         SHOW_MASCOT to true,
         FAST_DOWNLOAD to true,
@@ -573,6 +582,7 @@ object PreferenceUtil {
         val quickHistory: Boolean = true,
         val showIntro: Boolean = true,
         val floatingBubble: Boolean = true,
+        val showRecentSection: Boolean = true,
         val isDynamicColorEnabled: Boolean = false,
         val seedColor: Int = DEFAULT_SEED_COLOR,
         val paletteStyleIndex: Int = 0,
@@ -609,6 +619,7 @@ object PreferenceUtil {
                 quickHistory = kv.decodeBool(QUICK_HISTORY, BooleanPreferenceDefaults.getValue(QUICK_HISTORY)),
                 showIntro = kv.decodeBool(SHOW_INTRO, BooleanPreferenceDefaults.getValue(SHOW_INTRO)),
                 floatingBubble = kv.decodeBool(FLOATING_BUBBLE, BooleanPreferenceDefaults.getValue(FLOATING_BUBBLE)),
+                showRecentSection = kv.decodeBool(SHOW_RECENT_SECTION, BooleanPreferenceDefaults.getValue(SHOW_RECENT_SECTION)),
             )
         )
     val AppSettingsStateFlow = mutableAppSettingsStateFlow.asStateFlow()
@@ -665,6 +676,15 @@ object PreferenceUtil {
         applicationScope.launch(Dispatchers.IO) {
             mutableAppSettingsStateFlow.update { it.copy(showIntro = enabled) }
             kv.encode(SHOW_INTRO, enabled)
+        }
+    }
+
+    fun switchShowRecentSection(
+        enabled: Boolean = !mutableAppSettingsStateFlow.value.showRecentSection
+    ) {
+        applicationScope.launch(Dispatchers.IO) {
+            mutableAppSettingsStateFlow.update { it.copy(showRecentSection = enabled) }
+            kv.encode(SHOW_RECENT_SECTION, enabled)
         }
     }
 
