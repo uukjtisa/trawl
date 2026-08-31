@@ -66,7 +66,7 @@ claim in the app instead of taking this file's word for it.
 <p align="center">
   <img src="docs/screenshots/home.jpg" width="31%" alt="Home screen with recent downloads">
   <img src="docs/screenshots/downloading.jpg" width="31%" alt="A download in progress">
-  <img src="docs/screenshots/links.jpg" width="31%" alt="Links history">
+  <img src="docs/screenshots/history.jpg" width="31%" alt="Links history">
 </p>
 <p align="center">
   <img src="docs/screenshots/configure.jpg" width="31%" alt="Configure before download">
