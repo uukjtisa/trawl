@@ -40,3 +40,5 @@ hs_err_pid*.log
 replay_pid*.log
 build-phase-a.log
 BACKLOG.md
+test-bcde.log
+build-bcde.log

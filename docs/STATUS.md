@@ -23,6 +23,7 @@ against the code, not remembered.
 |---|---|
 | X / Twitter resolver | Two tiers, then yt-dlp. Full variant ladder with real sizes |
 | TikTok resolver | Mobile page plus session cookies, then yt-dlp. Cached two minutes |
+| Direct-file resolver | Bare CDN URLs, link shorteners, and player pages that serve HTML at a `.mp4` address. Walks HTTP, meta-refresh and JavaScript redirects, then verifies container magic before saving |
 | Fallback chain | A resolver that cannot answer returns nothing, and nothing means "try yt-dlp" |
 | Everything yt-dlp supports | Unchanged from Seal Plus |
 | `DIRECT` / `YT-DLP` badge | On every history row and Recent card |
@@ -63,10 +64,15 @@ The information exists in the log already, so this is a display job.
   yt-dlp. Gathering every image from an album is not implemented in either resolver.
 - **Cookie import for the resolvers.** The app can import cookies for yt-dlp, but neither resolver
   uses them, so protected accounts and private posts stay out of reach.
-- **Tests.** The only test files are upstream's two generated stubs. The resolvers are covered by
-  the Python probes in [`tools/`](../tools/), which is not the same thing as a test suite.
-- **A release build.** No signed APK, no GitHub release, no F-Droid or IzzyOnDroid listing. Debug
-  builds only.
+- **Tests.** `DirectFileCdnTest` covers the direct-file resolver's decisions -- claiming, URL
+  mechanics, both kinds of in-page redirect, player-page extraction, and container-magic
+  verification. 21 cases, and they earned their place immediately by catching a real defect:
+  `substringAfterLast('/', "")` returns the *missing-delimiter* value, so every single-segment
+  path reported no extension and the resolver refused to claim the exact shape it exists for.
+  The other four resolvers are still covered only by the Python probes in [`tools/`](../tools/),
+  which is not the same thing.
+- **A release build.** A signed APK is produced and the keystore is wired through
+  `keystore.properties`. Still absent: a GitHub release, and any F-Droid or IzzyOnDroid listing.
 - **Playlists and batch downloads** are inherited from Seal and untested against the resolvers.
 - **aria2c** is inherited and off by default. It almost certainly cannot carry TikTok's
   session-bound headers, so leave it off for resolved downloads.

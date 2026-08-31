@@ -603,28 +603,6 @@ private fun RouteChip(route: DownloadRoute.Direct) {
  * the height for the same four words.
  */
 @Composable
-private fun DirectAudioFormats(selected: Int, onPick: (Int) -> Unit) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        listOf(
-                CONVERT_MP3 to "MP3",
-                CONVERT_M4A to "M4A",
-                CONVERT_OPUS to "Opus",
-                CONVERT_OGG to "Ogg",
-            )
-            .forEach { (code, label) ->
-                FilterChip(
-                    selected = selected == code,
-                    onClick = { onPick(code) },
-                    label = { Text(label) },
-                )
-            }
-    }
-}
-
-@Composable
 private fun ConfigurePage(
     modifier: Modifier = Modifier,
     url: String = "",
@@ -640,9 +618,6 @@ private fun ConfigurePage(
     var useFormatSelection by remember(config) { mutableStateOf(config.useFormatSelection) }
     val canProceed = selectedType in config.typeEntries
 
-    // Seeded from the preference once, then owned by the composition. See the note at the tap
-    // handler for why reading it back per-frame does not work.
-    var audioFormat by remember { mutableIntStateOf(AUDIO_CONVERSION_FORMAT.getInt()) }
 
     var showTemplateSelectionDialog by remember { mutableStateOf(false) }
     var showTemplateCreatorDialog by remember { mutableStateOf(false) }
@@ -687,42 +662,39 @@ private fun ConfigurePage(
             },
         )
         Spacer(Modifier.height(4.dp))
-        val directAudio =
-            route is DownloadRoute.Direct && route.audioConvertible && selectedType == Audio
         if (selectedType != Command) {
             SectionLabel(text = stringResource(id = R.string.format_selection))
-            if (directAudio) {
-                // Preset and Custom both describe yt-dlp's format ladder, and a resolver does not
-                // publish one -- it hands back a single progressive MP4. So on this route the
-                // only meaningful format question is which container to transcode into.
-                DirectAudioFormats(
-                    selected = audioFormat,
-                    onPick = { code ->
-                        // State FIRST, preference second. Reading the preference back during
-                        // composition looked like it worked but MMKV is not observable, so the
-                        // tap wrote a value nothing was watching -- the chips only caught up when
-                        // something else forced a recomposition, like switching Download type.
-                        audioFormat = code
-                        AUDIO_CONVERT.updateBoolean(true)
-                        AUDIO_CONVERSION_FORMAT.updateInt(code)
-                    },
-                )
-            } else {
-                Preset(
-                    modifier = Modifier,
-                    preference = preferences,
-                    selected = !useFormatSelection,
-                    downloadType = selectedType,
-                    onClick = { useFormatSelection = false },
-                    showEditIcon = !useFormatSelection && selectedType != Playlist,
-                    onEdit = { onPresetEdit(selectedType) },
-                )
-                Custom(
-                    selected = useFormatSelection,
-                    enabled = selectedType != Playlist,
-                    onClick = { useFormatSelection = true },
-                )
-            }
+            // THE AUDIO TAB IS NOT A SPECIAL CASE ANY MORE.
+            //
+            // A direct route used to replace these two rows with a strip of container chips, on
+            // the reasoning that a resolver publishes no format ladder so the only question left
+            // is which container to transcode into. That reasoning was right and the execution
+            // was wrong: the chips never touched `useFormatSelection`, which the Preset and Custom
+            // rows are the only things that set. So the Audio tab silently inherited whatever the
+            // Video tab had been left on -- land on it after Custom and the Download button became
+            // "fetch formats", which on a resolved MP4 opens a format list containing one video
+            // rung and no audio at all. A dead end reachable only by a route nobody could see.
+            //
+            // Two surfaces owning one piece of state, with nothing reconciling them. The same
+            // shape of fault as the SHOW_INTRO default split in D-23.
+            //
+            // The container question was never homeless: AudioQuickSettingsDialog already owns
+            // both container and quality, and it is one tap away behind the Preset row's pencil.
+            // So the answer is to delete the second surface, not to sync it.
+            Preset(
+                modifier = Modifier,
+                preference = preferences,
+                selected = !useFormatSelection,
+                downloadType = selectedType,
+                onClick = { useFormatSelection = false },
+                showEditIcon = !useFormatSelection && selectedType != Playlist,
+                onEdit = { onPresetEdit(selectedType) },
+            )
+            Custom(
+                selected = useFormatSelection,
+                enabled = selectedType != Playlist,
+                onClick = { useFormatSelection = true },
+            )
         } else {
             if (showTemplateSelectionDialog) {
                 TemplatePickerDialog { showTemplateSelectionDialog = false }
