@@ -348,9 +348,19 @@ object PageResolvers {
         when {
             NewgroundsCdn.isNewgrounds(url) -> NewgroundsCdn.resolve(url)
             FacebookCdn.isFacebook(url) -> FacebookCdn.resolve(url)
+            // LAST, deliberately. DirectFileCdn claims by URL SHAPE rather than by host, so left
+            // earlier it would swallow a Facebook video URL ending in .mp4 and resolve it as an
+            // anonymous file -- losing the title, uploader and thumbnail the site-specific
+            // resolver above knows how to get. Generic goes after specific, always.
+            directFileEnabled() && DirectFileCdn.isDirectCandidate(url) ->
+                DirectFileCdn.resolve(url)
             else -> null
         }
 
     fun claims(url: String): Boolean =
-        NewgroundsCdn.isNewgrounds(url) || FacebookCdn.isFacebook(url)
+        NewgroundsCdn.isNewgrounds(url) ||
+            FacebookCdn.isFacebook(url) ||
+            (directFileEnabled() && DirectFileCdn.isDirectCandidate(url))
+
+    private fun directFileEnabled(): Boolean = DIRECT_FILE_FIRST.getBoolean()
 }

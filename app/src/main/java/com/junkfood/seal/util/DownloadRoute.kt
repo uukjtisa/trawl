@@ -72,6 +72,14 @@ object DirectResolvers {
                 claims = { NewgroundsCdn.isNewgrounds(it) },
                 enabled = { NEWGROUNDS_CDN_FIRST.getBoolean() },
             ),
+            // LAST in the list, because DownloadRoutes.of takes the FIRST entry that claims and
+            // this one claims by URL shape rather than by host. A Facebook video URL ending in
+            // .mp4 has to be recognised as Facebook, not as an anonymous file.
+            Entry(
+                platform = "Direct link",
+                claims = { DirectFileCdn.isDirectCandidate(it) },
+                enabled = { DIRECT_FILE_FIRST.getBoolean() },
+            ),
         )
 
     /** The platform names, for anywhere that wants to list them. */

@@ -148,6 +148,16 @@ const val X_CDN_FIRST = "x_cdn_first"
 const val TIKTOK_CDN_FIRST = "tiktok_cdn_first"
 const val NEWGROUNDS_CDN_FIRST = "newgrounds_cdn_first"
 const val FACEBOOK_CDN_FIRST = "facebook_cdn_first"
+
+/**
+ * The generic direct-file resolver: bare media URLs, link shorteners, and player pages that dress
+ * themselves up as files.
+ *
+ * Its own switch rather than folded into the per-site ones, because it is the only resolver that
+ * claims by URL SHAPE instead of by host -- so it is the only one that can be wrong about a site
+ * it has never heard of, and the only one worth being able to turn off on its own.
+ */
+const val DIRECT_FILE_FIRST = "direct_file_first"
 const val PORNHUB_CDN_FIRST = "pornhub_cdn_first"
 // Paste a copied link straight into the floating panel's field when it opens. Default ON: it
 // fills a text field and nothing more, so there is nothing to protect the user from. Only
@@ -332,6 +342,7 @@ private val BooleanPreferenceDefaults =
         TIKTOK_CDN_FIRST to true,
         NEWGROUNDS_CDN_FIRST to true,
         FACEBOOK_CDN_FIRST to true,
+        DIRECT_FILE_FIRST to true,
         PORNHUB_CDN_FIRST to true,
         CLIPBOARD_AUTOPASTE to true,
         DELETE_FILE_WITH_ENTRY to true,
