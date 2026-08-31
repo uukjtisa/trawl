@@ -81,6 +81,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -184,6 +185,7 @@ import com.junkfood.seal.util.TEMPLATE_ID
 import com.junkfood.seal.util.USE_CUSTOM_AUDIO_PRESET
 import com.junkfood.seal.util.VIDEO_FORMAT
 import com.junkfood.seal.util.VIDEO_QUALITY
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.junkfood.seal.util.PreferenceUtil.getInt
 import com.junkfood.seal.util.DownloadRoutes
@@ -535,14 +537,39 @@ fun DirectFormatSheet(
         )
     LaunchedEffect(state) { sheetState.show() }
     val scope = rememberCoroutineScope()
-    BackHandler { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() } }
 
-    SealModalBottomSheetM2Variant(sheetState = sheetState, sheetGesturesEnabled = false) {
+    // There are now four ways out of this sheet -- back, Cancel, Download, and the drag the handle
+    // advertises -- and the drag is the one that does not pass through any code of ours on the way
+    // down. All four have to reach onDismissRequest exactly once: it resets the view model, and
+    // from QuickDownloadActivity it also finishes the activity. Fire it twice and the second is at
+    // best wasted; fire it zero times and the sheet is gone while the state that produced it is
+    // still set, which is the stuck-screen class of bug all over again.
+    var dismissed by remember(state) { mutableStateOf(false) }
+    val dismissOnce = {
+        if (!dismissed) {
+            dismissed = true
+            onDismissRequest()
+        }
+    }
+    val hideThenDismiss = {
+        scope.launch { sheetState.hide() }.invokeOnCompletion { dismissOnce() }
+    }
+
+    // The drag route. It waits for the sheet to be up before it watches for it going away:
+    // currentValue is Hidden for the frames between composition and show() landing, and collecting
+    // that straight away would dismiss the sheet on the frame it appeared.
+    LaunchedEffect(sheetState) {
+        snapshotFlow { sheetState.currentValue }.first { it != ModalBottomSheetValue.Hidden }
+        snapshotFlow { sheetState.currentValue }.first { it == ModalBottomSheetValue.Hidden }
+        dismissOnce()
+    }
+
+    BackHandler { hideThenDismiss() }
+
+    SealModalBottomSheetM2Variant(sheetState = sheetState, sheetGesturesEnabled = true) {
         DirectFormatPage(
             state = state,
-            onDismissRequest = {
-                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
-            },
+            onDismissRequest = { hideThenDismiss() },
             onDownload = { format, container ->
                 onActionPost(
                     Action.DownloadWithPreset(
@@ -559,7 +586,7 @@ fun DirectFormatSheet(
                             ),
                     )
                 )
-                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+                hideThenDismiss()
             },
         )
     }
@@ -1244,17 +1271,11 @@ internal fun Header(
         )
 
     Column(modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(top = 8.dp, bottom = 12.dp)
-                .width(36.dp)
-                .height(4.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                    shape = CircleShape,
-                )
-        )
+        // No grab bar here. This header renders inside SealModalBottomSheet -- Material3's
+        // ModalBottomSheet -- which already draws BottomSheetDefaults.DragHandle above it, so a
+        // second hand-drawn bar just stacked two of them on top of each other. M3's is the one
+        // that carries the drag semantics; this one was a rectangle.
+        Spacer(Modifier.height(8.dp))
         if (icon != null) {
             Box(
                 modifier = Modifier
