@@ -1,69 +1,102 @@
-name: Bug Report
-description: Create a report to help us improve
-labels: [ bug, new issue ]
+name: Bug report
+description: Something in Trawl behaves incorrectly
+labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The single most useful thing you can give me is **steps that
+        reproduce it on a clean install** — a bug I can trigger is a bug I can fix, and one I
+        cannot is mostly guesswork.
 
+        If a *site* stopped working rather than the app, use the **Site support** template instead.
 
   - type: checkboxes
     id: checklist
     attributes:
-      label: Checklist
-      description: |
-        Carefully read and work through this check list in order to prevent the most common mistakes and misuse of Seal/Yt-dlp:
+      label: Before reporting
       options:
-        - label: I'm reporting a bug unrelated to a specific site.
-          required: false
-        - label: I've verified that I'm running the [**latest version**](https://github.com/yt-dlp/yt-dlp/releases/latest) of yt-dlp.
+        - label: I am running the latest [Trawl release](https://github.com/uukjtisa/trawl/releases/latest).
           required: true
-        - label: I've verified that I'm running the latest [**stable version**](https://github.com/JunkFood02/Seal/releases/latest/) of Seal or any later [**preview versions**](https://github.com/JunkFood02/Seal/releases).
+        - label: I searched the existing issues and this is not a duplicate.
           required: true
-        - label: I've read the [**Contributing guidelines**](https://github.com/JunkFood02/Seal/blob/main/CONTRIBUTING.md) and [**Code Of Conduct.**](https://github.com/JunkFood02/Seal/blob/main/CODE_OF_CONDUCT.md)
-          required: true
-        - label: I've checked that the site i'm trying to download from is in the [**Supported Sites**](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) list from yt-dlp
-          required: true
-        - label: I understand that the issue will be (ignored/closed) if I intentionally remove or skip any mandatory field.
+        - label: This is a fault in Trawl itself, not a site that stopped working (that goes in the Site support template).
           required: true
 
   - type: textarea
+    id: what-happens
     attributes:
-      label: Describe the bug
-      description:
+      label: What happens
+      description: What you see, and what you expected instead.
       placeholder: |
-        A clear and concise description of what the bug is.
-    validations:
-      required: false
-
-  - type: textarea
-    attributes:
-      label: To Reproduce
-      placeholder: |
-        Steps to reproduce the behavior:
-        1.Go to '...'
-        2.Click on '....'
-        3.Scroll down to '....'
-        4.See error
-    validations:
-      required: false
-
-  - type: textarea
-    attributes:
-      label: Error reports
-      placeholder: |
-        Click on the displayed error report to copy it.
+        Tapping Audio in the configure sheet opens the format list, which contains no audio
+        formats, so there is no way to continue.
     validations:
       required: true
 
   - type: textarea
+    id: repro
     attributes:
-      label: Screenshots & Screen Records
+      label: Exact steps to reproduce
+      description: |
+        Numbered, from a cold start of the app. Include the setting values you are using if they
+        differ from the defaults — most "cannot reproduce" outcomes come down to one toggle.
       placeholder: |
-        Screenshots & Screen Records can amp up bug reports.
+        1. Cold start Trawl (force stop it first).
+        2. Paste <a link — see the note about links below>.
+        3. Tap Download.
+        4. In the configure sheet, choose Audio.
+        5. Tap Download. Observe: the format list opens and lists only MP4.
+
+        Happens every time / about 1 time in 5 / only after a download has finished.
+    validations:
+      required: true
+
+  - type: input
+    id: link
+    attributes:
+      label: Link it happens with
+      description: |
+        Optional, and **omit it entirely if it is adult or otherwise sensitive** — describe the
+        kind of post instead ("an age-restricted clip on X"). A bug that only needs *a* link of
+        some type does not need *your* link.
     validations:
       required: false
 
   - type: textarea
+    id: device
     attributes:
-      label: Additional context
-      description:
-      placeholder: |
-        Add any other context about the problem here.      
+      label: Device and version
+      description: Settings ▸ About shows the Trawl and yt-dlp versions.
+      value: |
+        - Trawl version:
+        - yt-dlp version:
+        - Device and model:
+        - Android version:
+        - ROM (stock / MIUI / EMUI / HyperOS / LineageOS / ...):
+        - Installed from (GitHub release / built it myself):
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error report or log
+      description: |
+        If an error card appeared, tap it to copy the report and paste it here. Settings ▸
+        Troubleshooting can also export a log.
+
+        **Check it before posting** — logs can contain the URLs you downloaded and your file
+        paths. Redact anything you would not put in a public issue.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots and screen recordings are very welcome.
+    validations:
+      required: false

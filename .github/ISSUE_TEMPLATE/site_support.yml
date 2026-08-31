@@ -1,0 +1,118 @@
+name: Site support
+description: A site does not work, or you would like a direct resolver for one
+labels: [site support]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Trawl downloads from everything yt-dlp supports. A few sites get a **direct resolver** on
+        top of that — a route that skips yt-dlp's extractor entirely, because on Android that
+        extractor is unreliable for them. X and TikTok have one for exactly that reason.
+
+        A site earns a resolver only when a logged-out request can reach the media without request
+        signing, and only when yt-dlp genuinely struggles with it. A site yt-dlp already handles
+        well is not a gap.
+
+        **What actually decides this is a link I can test.** Everything below exists to make the
+        site reproducible on my machine, because a resolver is written against measurements, never
+        against a description.
+
+  - type: input
+    id: site-name
+    attributes:
+      label: Site name
+      placeholder: Newgrounds
+    validations:
+      required: true
+
+  - type: input
+    id: site-home
+    attributes:
+      label: Site home page
+      placeholder: https://www.newgrounds.com
+    validations:
+      required: true
+
+  - type: input
+    id: example
+    attributes:
+      label: Example media link
+      description: |
+        A **public, safe-for-work** post that anyone can open signed out. This is the link the
+        probe gets run against, so it needs to still be up.
+      placeholder: https://example.com/watch/12345
+    validations:
+      required: true
+
+  - type: dropdown
+    id: what-happens
+    attributes:
+      label: What happens today
+      options:
+        - Download fails with an error
+        - Download succeeds but the quality is wrong or capped
+        - Download succeeds but it is watermarked
+        - Only audio or only video arrives
+        - Never tried — this is a request, not a fault
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: The error, if there is one
+      description: Tap the error card to copy the report. Redact anything personal.
+      render: shell
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### Restricted media on this site
+
+        Age-gated, sensitive-flagged and region-locked posts are **the cases that actually break**,
+        and they break differently from ordinary ones — usually the page returns a placeholder with
+        no media at all rather than an error. Testing a site properly means testing both.
+
+        Fill this part in only if the site has such a tier.
+
+  - type: dropdown
+    id: has-restricted
+    attributes:
+      label: Does this site gate some media behind an age or sensitivity flag?
+      options:
+        - "No, or I do not know"
+        - "Yes"
+    validations:
+      required: false
+
+  - type: input
+    id: restricted-example
+    attributes:
+      label: Restricted example — LINK ONLY, and label it
+      description: |
+        **Optional.** A link and nothing else — no embedded media, no screenshots, no description
+        of the content. Prefix it with `NSFW:` so anyone reading the issue knows before they click.
+
+        Give the mildest example that still triggers the gate; the gate is what is being tested,
+        not the content behind it. If you would rather not post one at all, say which *kind* of
+        restriction applies and that is enough to start.
+
+        Do not post anything involving minors, anything non-consensual, or anything paywalled or
+        private. Such issues are deleted, not moderated.
+      placeholder: "NSFW: https://example.com/watch/67890"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: |
+        Useful if you know it: whether the site works signed out in a browser, whether the media
+        is progressive MP4 or adaptive HLS/DASH, and whether yt-dlp handles it on desktop but not
+        on Android. That last one is the strongest argument for a resolver.
+    validations:
+      required: false

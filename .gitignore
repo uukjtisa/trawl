@@ -30,3 +30,13 @@ HANDOFF*.md
 
 # Working notes, never published
 /convo between me and grok for claude to understand stuff faster.txt
+
+# Working ledger, never published
+GATES.md
+/tools/verify-phase-a.mjs
+
+# JVM crash artefacts. A daemon OOM once put 7.7 MB of these in a commit.
+hs_err_pid*.log
+replay_pid*.log
+build-phase-a.log
+BACKLOG.md
