@@ -868,5 +868,16 @@
     <string name="grant_overlay_permission">Grant permission</string>
     <string name="battery_settings_unavailable">Could not open battery settings on this device. Find Trawl in Settings and allow it to run in the background.</string>
     <string name="tap_window_to_open">Tap the window to open it</string>
+    <!-- Direct-resolver format screen -->
+    <string name="direct_source">Source</string>
+    <string name="direct_convert_to">Convert to</string>
+    <string name="direct_m4a_note">M4A keeps the original audio as-is. No re-encoding, so it is faster and loses nothing.</string>
+    <string name="direct_edit_preset">Edit the %1$s %2$s preset</string>
+    <string name="direct_preset_explainer">This platform publishes %1$d rendition(s). When there are fewer rungs than settings, the middle two say which way to round.</string>
+    <string name="direct_preset_lands">Lands on rendition %1$d of %2$d</string>
+    <string name="rung_best">Best</string>
+    <string name="rung_mid_high">Mid, leaning high</string>
+    <string name="rung_mid_low">Mid, leaning low</string>
+    <string name="rung_lowest">Smallest</string>
 </resources>
 

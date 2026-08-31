@@ -515,6 +515,56 @@ private fun ErrorPreview() {
     }
 }
 
+/**
+ * The direct format screen, in the same sheet the yt-dlp one uses.
+ *
+ * Same container so the two feel like one app; different content because the two routes publish
+ * different things. See DirectFormatPage.kt.
+ */
+@Composable
+fun DirectFormatSheet(
+    state: SelectionState.DirectFormatSelection,
+    preferences: DownloadUtil.DownloadPreferences,
+    onDismissRequest: () -> Unit,
+    onActionPost: (Action) -> Unit,
+) {
+    val sheetState =
+        androidx.compose.material.rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+            skipHalfExpanded = true,
+        )
+    LaunchedEffect(state) { sheetState.show() }
+    val scope = rememberCoroutineScope()
+    BackHandler { scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() } }
+
+    SealModalBottomSheetM2Variant(sheetState = sheetState, sheetGesturesEnabled = false) {
+        DirectFormatPage(
+            state = state,
+            onDismissRequest = {
+                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+            },
+            onDownload = { format, container ->
+                onActionPost(
+                    Action.DownloadWithPreset(
+                        urlList = listOf(state.url),
+                        preferences =
+                            preferences.copy(
+                                extractAudio = state.audio,
+                                // The chosen rendition is a whole file, so the id selects a URL
+                                // rather than a stream for -f. DownloadUtil reads it back through
+                                // byFormatId and clears it before yt-dlp ever sees it.
+                                formatIdString = format.formatId.orEmpty(),
+                                convertAudio = state.audio,
+                                audioConvertFormat = container,
+                            ),
+                    )
+                )
+                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+            },
+        )
+    }
+}
+
 @Composable
 fun FormatPage(
     modifier: Modifier = Modifier,
@@ -762,6 +812,21 @@ private fun ConfigurePage(
                 )
                 if (selectedType == Playlist) {
                     onActionPost(Action.FetchPlaylist(url = url, preferences = preferences))
+                } else if (route is DownloadRoute.Direct) {
+                    // A resolver publishes whole files, so Custom opens ITS screen rather than
+                    // yt-dlp's. Sending a resolved route through the yt-dlp format page is what
+                    // produced the audio dead end: it probes a progressive MP4, finds no separate
+                    // audio stream because there is none, and offers an empty list.
+                    //
+                    // If the resolver comes up empty the view model falls back to FetchFormats,
+                    // so the promise every resolver makes -- no result means carry on -- holds.
+                    onActionPost(
+                        Action.FetchDirectFormats(
+                            url = url,
+                            audioOnly = selectedType == Audio,
+                            preferences = preferences,
+                        )
+                    )
                 } else {
                     onActionPost(
                         Action.FetchFormats(
@@ -1235,7 +1300,7 @@ internal fun Header(
 }
 
 @Composable
-private fun SectionLabel(modifier: Modifier = Modifier, text: String) {
+internal fun SectionLabel(modifier: Modifier = Modifier, text: String) {
     Row(
         modifier = modifier.padding(top = 20.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,

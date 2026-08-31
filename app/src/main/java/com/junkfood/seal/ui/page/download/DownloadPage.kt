@@ -111,6 +111,7 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialog
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.page.downloadv2.configure.FormatPage
+import com.junkfood.seal.ui.page.downloadv2.configure.DirectFormatSheet
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.CONFIGURE
@@ -326,6 +327,13 @@ fun DownloadPage(
                 FormatPage(
                     state = selectionState,
                     onDismissRequest = { dialogViewModel.postAction(Action.Reset) },
+                )
+            is DownloadDialogViewModel.SelectionState.DirectFormatSelection ->
+                DirectFormatSheet(
+                    state = selectionState,
+                    preferences = preferences,
+                    onDismissRequest = { dialogViewModel.postAction(Action.Reset) },
+                    onActionPost = { dialogViewModel.postAction(it) },
                 )
             else -> {}
         }

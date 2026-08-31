@@ -112,6 +112,7 @@ import com.junkfood.seal.ui.component.SelectionGroupDefaults
 import com.junkfood.seal.ui.component.SelectionGroupItem
 import com.junkfood.seal.ui.component.SelectionGroupRow
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
+import com.junkfood.seal.ui.page.downloadv2.configure.DirectFormatSheet
 import com.junkfood.seal.ui.page.downloadv2.configure.Config
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialog
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
@@ -326,6 +327,14 @@ fun DownloadPageV2(
         )
     }
     when (selectionState) {
+        is DownloadDialogViewModel.SelectionState.DirectFormatSelection ->
+            DirectFormatSheet(
+                state = selectionState,
+                preferences = preferences,
+                onDismissRequest = { dialogViewModel.postAction(Action.Reset) },
+                onActionPost = { dialogViewModel.postAction(it) },
+            )
+
         is DownloadDialogViewModel.SelectionState.FormatSelection ->
             FormatPage(
                 state = selectionState,

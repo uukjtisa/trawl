@@ -37,14 +37,11 @@ against the code, not remembered.
 
 **Audio.** Extracting audio through yt-dlp works, as it always did. What is not finished:
 
-- Converted audio carries no artwork or tags, and `--load-info-json` really is the only route.
-  Measured on 2026-08-31: injecting the resolver's thumbnail with `--parse-metadata` looks like it
-  should work and does nothing, because `--embed-thumbnail` embeds from yt-dlp's `thumbnails`
-  LIST, built during extraction, rather than from the scalar `thumbnail` field that
-  `--parse-metadata` writes afterwards. Confirmed on device: the download succeeded and the
-  resulting m4a had no `covr` atom and no JPEG in it. So the info JSON has to be written before
-  the download and handed over with `--load-info-json`, which replaces the whole invocation and
-  therefore needs care.
+- Converted audio now carries cover art, taken from the video's own first second with ffmpeg
+  rather than fetched from the platform. That order matters: --embed-thumbnail embeds from
+  yt-dlp's `thumbnails` list built during extraction, so setting the scalar field afterwards with
+  --parse-metadata does nothing (measured), and DirectFileCdn has no thumbnail to fetch at all.
+  A frame needs no cooperation from anybody. Tags beyond the title are still missing.
 - There is no "extract audio from something I already downloaded". Right now that means
   downloading the video a second time.
 - One-tap MP3 and M4A from a *resolved* download works in the picker, but I have only tested it on

@@ -975,6 +975,31 @@ object DownloadUtil {
         return media
     }
 
+    /**
+     * What a resolver can offer for [url], without asking yt-dlp.
+     *
+     * The direct format screen is built from this. Going through yt-dlp instead is what produced
+     * the audio dead end: it probes the resolver's own progressive MP4, which has no separate
+     * audio stream, so the audio list came back empty and the sheet offered a route that could
+     * not complete.
+     *
+     * Cached by the resolvers themselves, so opening the screen after the configure sheet is not
+     * a second round trip.
+     */
+    fun resolveDirectFormats(url: String): DirectResolution? {
+        resolveTweet(url)?.let {
+            return DirectResolution("X / Twitter", it.title, it.toFormats(), emptyMap())
+        }
+        resolveTok(url)?.let {
+            return DirectResolution("TikTok", it.title, it.toFormats(), it.headers)
+        }
+        resolvePage(url)?.let {
+            val platform = (DownloadRoutes.of(url) as? DownloadRoute.Direct)?.platform ?: "Direct link"
+            return DirectResolution(platform, it.title, it.toFormats(), it.headers)
+        }
+        return null
+    }
+
     private fun resolveTok(url: String): TikTokMedia? {
         if (!TIKTOK_CDN_FIRST.getBoolean()) return null
         if (!TikTokCdn.isTikTok(url)) return null
@@ -1613,6 +1638,8 @@ object DownloadUtil {
                 sdcardUri = sdcardUri,
                 downloadTimeMillis = if (downloadTiming[0] > 0L) downloadTiming[1] - downloadTiming[0] else -1L,
                 averageSpeedBytesPerSec = computeAvgSpeed(videoInfo, downloadTiming),
+                coverSourceUrl = variant?.url ?: tokVariant?.url ?: pageVariant?.url,
+                coverHeaders = tok?.headers ?: page?.headers ?: emptyMap(),
             )
         }
     }
@@ -1624,6 +1651,14 @@ object DownloadUtil {
         sdcardUri: String,
         downloadTimeMillis: Long = -1L,
         averageSpeedBytesPerSec: Long = -1L,
+        /**
+         * The video a resolver produced, so cover art can be taken from it after extraction.
+         *
+         * Null for everything else. yt-dlp supplies its own artwork wherever it has an extractor;
+         * this exists only for the resolved routes, where it has none -- see CoverArt.kt.
+         */
+        coverSourceUrl: String? = null,
+        coverHeaders: Map<String, String> = emptyMap(),
     ): Result<List<String>> =
         preferences.run {
             val fileName =
@@ -1665,6 +1700,24 @@ object DownloadUtil {
                         // longer make a finished download look like it produced no files.
                         altKey = videoInfo.id.takeIf { it.isNotBlank() },
                     )
+                    .also { produced ->
+                        // Cover art from the video itself. After the scan so the paths are known,
+                        // and before the history insert so the row describes the finished file.
+                        // Guarded end to end: a failure here leaves the audio exactly as written.
+                        if (extractAudio && !coverSourceUrl.isNullOrBlank()) {
+                            produced.forEach { path ->
+                                runCatching {
+                                        CoverArt.embedFrameFrom(
+                                            context = context,
+                                            sourceUrl = coverSourceUrl,
+                                            headers = coverHeaders,
+                                            audioFile = File(path),
+                                        )
+                                    }
+                                    .onFailure { TrawlLog.i("CoverArt: skipped - ${it.message}") }
+                            }
+                        }
+                    }
                     .run {
                         if (privateMode) Result.success(emptyList())
                         else

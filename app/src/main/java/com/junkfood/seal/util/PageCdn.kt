@@ -364,3 +364,17 @@ object PageResolvers {
 
     private fun directFileEnabled(): Boolean = DIRECT_FILE_FIRST.getBoolean()
 }
+
+/**
+ * What a resolver offers for one link, in the app's own types.
+ *
+ * A single shape for all five resolvers so the direct format screen does not need a branch per
+ * platform. [formats] is ordered best first; [headers] is empty where the CDN does not require
+ * any, and load-bearing where it does -- a TikTok URL without them is a 403.
+ */
+data class DirectResolution(
+    val platform: String,
+    val title: String,
+    val formats: List<Format>,
+    val headers: Map<String, String>,
+)

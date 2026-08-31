@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.junkfood.seal.util.DirectResolution
 import kotlinx.coroutines.withContext
 
 private const val TAG = "DownloadDialogViewModel"
@@ -30,6 +31,21 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         data class PlaylistSelection(val result: PlaylistResult) : SelectionState
 
         data class FormatSelection(val info: VideoInfo) : SelectionState
+
+        /**
+         * The format screen for a route one of Trawl's own resolvers claims.
+         *
+         * Separate from [FormatSelection] because the two describe different things. yt-dlp
+         * publishes a ladder of streams to be combined; a resolver publishes whole files, one of
+         * which you pick. Feeding the second through the first is what produced the audio dead
+         * end -- a resolved progressive MP4 has no separate audio stream, so the audio list came
+         * back empty with no way forward.
+         */
+        data class DirectFormatSelection(
+            val url: String,
+            val resolution: DirectResolution,
+            val audio: Boolean,
+        ) : SelectionState
     }
 
     sealed interface SheetState {
@@ -63,6 +79,13 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
         ) : Action
 
         data class FetchFormats(
+            val url: String,
+            val audioOnly: Boolean,
+            val preferences: DownloadUtil.DownloadPreferences,
+        ) : Action
+
+        /** Open the resolver's own format screen rather than yt-dlp's. */
+        data class FetchDirectFormats(
             val url: String,
             val audioOnly: Boolean,
             val preferences: DownloadUtil.DownloadPreferences,
@@ -110,6 +133,8 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
             when (this) {
                 is Action.ProceedWithURLs -> proceedWithUrls(this)
                 is Action.FetchFormats -> fetchFormat(this)
+
+                is Action.FetchDirectFormats -> fetchDirectFormat(this)
                 is Action.FetchPlaylist -> fetchPlaylist(this)
                 is Action.DownloadWithPreset -> downloadWithPreset(urlList, preferences)
                 is Action.RunCommand -> runCommand(url, template, preferences)
@@ -170,6 +195,49 @@ class DownloadDialogViewModel(private val downloader: DownloaderV2) : ViewModel(
                     }
             }
         mSheetStateFlow.update { SheetState.Loading(taskKey = "FetchPlaylist_$url", job = job) }
+    }
+
+    /**
+     * Resolve the link with Trawl's own resolver and open its format screen.
+     *
+     * Falls through to the yt-dlp path when the resolver comes up empty, which keeps the promise
+     * every resolver makes: no result means carry on, never an error.
+     */
+    private fun fetchDirectFormat(action: Action.FetchDirectFormats) {
+        val (url, audioOnly, preferences) = action
+
+        if (!PreferenceUtil.isNetworkAvailableForDownload()) {
+            App.context.makeToast(PreferenceUtil.getNetworkErrorMessage())
+            return
+        }
+
+        val job =
+            viewModelScope.launch(Dispatchers.IO) {
+                val resolved = runCatching { DownloadUtil.resolveDirectFormats(url) }.getOrNull()
+                withContext(Dispatchers.Main) {
+                    if (resolved == null || resolved.formats.isEmpty()) {
+                        // No result means carry on, so hand it to the path that always works.
+                        postAction(
+                            Action.FetchFormats(
+                                url = url,
+                                audioOnly = audioOnly,
+                                preferences = preferences,
+                            )
+                        )
+                    } else {
+                        mSelectionStateFlow.update {
+                            SelectionState.DirectFormatSelection(
+                                url = url,
+                                resolution = resolved,
+                                audio = audioOnly,
+                            )
+                        }
+                        hideDialog()
+                    }
+                }
+            }
+
+        mSheetStateFlow.update { SheetState.Loading(taskKey = "FetchDirect_$url", job = job) }
     }
 
     private fun fetchFormat(action: Action.FetchFormats) {

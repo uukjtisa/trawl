@@ -25,6 +25,7 @@ import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.Action
 import com.junkfood.seal.ui.page.downloadv2.configure.DownloadDialogViewModel.SelectionState
 import com.junkfood.seal.ui.page.downloadv2.configure.FormatPage
+import com.junkfood.seal.ui.page.downloadv2.configure.DirectFormatSheet
 import com.junkfood.seal.ui.page.downloadv2.configure.PlaylistSelectionPage
 import com.junkfood.seal.ui.theme.SealTheme
 import com.junkfood.seal.util.DownloadUtil
@@ -139,6 +140,17 @@ class QuickDownloadActivity : ComponentActivity() {
                                     viewModel.postAction(Action.Reset)
                                     this.finish()
                                 },
+                            )
+
+                        is SelectionState.DirectFormatSelection ->
+                            DirectFormatSheet(
+                                state = selectionState,
+                                preferences = preferences,
+                                onDismissRequest = {
+                                    viewModel.postAction(Action.Reset)
+                                    this.finish()
+                                },
+                                onActionPost = { viewModel.postAction(it) },
                             )
 
                         SelectionState.Idle -> {}
