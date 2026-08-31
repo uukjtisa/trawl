@@ -42,3 +42,6 @@ build-phase-a.log
 BACKLOG.md
 test-bcde.log
 build-bcde.log
+build-move.log
+build-tmp.log
+build-release.log
