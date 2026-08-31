@@ -29,9 +29,9 @@ Built by **[uukjtisa](https://github.com/uukjtisa)**.
 
 - [What Trawl is](#what-trawl-is)
 - [A glimpse of it](#a-glimpse-of-it)
-- [Platform support, without the marketing](#platform-support-without-the-marketing)
+- [Which sites get what](#which-sites-get-what)
   - [How the resolvers behave](#how-the-resolvers-behave)
-  - [Why X and TikTok specifically](#why-x-and-tiktok-specifically)
+  - [What a resolver is for](#what-a-resolver-is-for)
   - [Checking any of this yourself](#checking-any-of-this-yourself)
 - [The rest of the app](#the-rest-of-the-app)
 - [What it is for, and what it will not do](#what-it-is-for-and-what-it-will-not-do)
@@ -81,7 +81,7 @@ selection &middot; floating window
 
 ---
 
-## Platform support, without the marketing
+## Which sites get what
 
 | Site | How Trawl gets it | Fallback |
 |---|---|---|
@@ -120,18 +120,20 @@ When a resolver cannot answer it returns nothing, and nothing means *try the nex
 raises an error of its own, so the worst case is the behaviour the app had before the resolver
 existed. Both resolvers have an off switch in Settings.
 
-### Why X and TikTok specifically
+### What a resolver is for
 
-These two kept catching me out, and for different reasons.
+A site earns one when yt-dlp's own extractor is unreliable on Android, and not otherwise. Sites
+yt-dlp handles well are not gaps, and duplicating its work there would only add a second thing to
+maintain.
 
-yt-dlp's Twitter extractor wants a guest token, and increasingly a logged-in session. On a phone
-with no cookies it fails often, and the error tells you nothing useful.
+The failures that qualify tend to be environmental rather than anything wrong with yt-dlp. Its
+Twitter extractor wants a guest token and increasingly a logged-in session, which a phone with no
+cookies does not have. Its TikTok path expects a TLS fingerprint the Android build cannot produce,
+because `curl_cffi` is not bundled, and returns `Unable to extract universal data for rehydration`
+on links that open fine in a browser. Others are one header away from working and nobody has
+noticed, which is what the Newgrounds and Facebook resolvers turned out to be.
 
-yt-dlp's TikTok path expects a TLS fingerprint that the Android build cannot produce, because
-`curl_cffi` is not part of it. The result is `Unable to extract universal data for rehydration` on
-links that open fine in a browser.
-
-Neither is yt-dlp's fault. Both meant a link I could watch on the page would not download.
+In every case the symptom is the same: a link you can watch on the page will not download.
 
 ### Checking any of this yourself
 
