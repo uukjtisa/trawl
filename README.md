@@ -53,8 +53,9 @@ engine underneath.
 What this fork adds is a second way in.
 
 When yt-dlp's extractor for a site stops working, an ordinary front-end has nothing left to try. It
-shows you an extractor error and that is the end of the download. Trawl resolves two sites itself,
-without yt-dlp's extractor, and only falls back to yt-dlp when its own attempt comes up empty.
+shows you an extractor error and that is the end of the download. Trawl resolves four sites itself,
+without yt-dlp's extractor, plus any link that is already a media file, and only falls back to
+yt-dlp when its own attempt comes up empty.
 
 Every download card shows which route actually ran, `DIRECT` or `YT-DLP`, so you can check that
 claim in the app instead of taking this file's word for it.
@@ -89,13 +90,14 @@ selection &middot; floating window
 | **TikTok** | Trawl's own resolver, via TikTok's mobile page and the session cookies its CDN insists on | yt-dlp |
 | **Facebook** | Trawl's own resolver, via the watch page. HD and SD | yt-dlp |
 | **Newgrounds** | Trawl's own resolver, via its portal JSON. Three rungs, age-restricted entries included | yt-dlp |
+| **A link that is already a file** | Trawl's own resolver. Follows redirects and lifts the media out of a player page, then checks the first bytes really are a video before saving | yt-dlp |
 | **YouTube** | yt-dlp | &mdash; |
 | **Everything else** | yt-dlp | &mdash; |
 
 And some NSFW sites, through yt-dlp rather than a Trawl resolver, listed in
 [docs/SUPPORTED-SITES.md](docs/SUPPORTED-SITES.md).
 
-**Four sites have independent tooling. That is the whole list.**
+**Four sites have independent tooling, plus one route for bare media links. That is the whole list.**
 
 YouTube works well here because yt-dlp is good at YouTube, and the same goes for Reddit, Twitch,
 Vimeo and every other site in yt-dlp's catalogue. Trawl adds nothing of its own there. A resolver
@@ -106,6 +108,28 @@ Instagram was tried and does not work signed out: every profile returns the same
 shell with no post data in it, and the `/embed/` surface returns the same shell for a real reel.
 The measurements are in [docs/SUPPORTED-SITES.md](docs/SUPPORTED-SITES.md) along with the one other
 site that was measured and rejected.
+
+### The one that is not a site
+
+The fifth resolver does not belong to a platform. It handles a link that is already a media file,
+and the ones that only look like it.
+
+Some are honest, and a URL ending in `.mp4` serves an `.mp4`. Others are a shortener pointing at a
+redirect pointing at a page that wraps the real file in a `<video>` tag, and that page is itself
+served from an address ending in `.mp4`. Trawl walks the chain, following HTTP redirects,
+`<meta refresh>` and JavaScript hops for up to six steps, and pulls the media out of whatever it
+lands on.
+
+Then it checks, because **the extension is not evidence**. One measured link answered with 5,979
+bytes of HTML from an address ending in `.mp4`. Saved on the strength of its name, that web page
+would have landed in the gallery as a video. So the `Content-Type` has to read as media, and the
+**first bytes of the response have to carry a real container signature** -- mp4, WebM, Ogg, FLAC.
+A file produces those bytes. A server cannot claim them. Anything that fails the check is refused,
+with a reason, rather than downloaded.
+
+It is checked last, behind its own switch, because it claims links by their shape rather than by
+their host. Ahead of the others it would swallow a Facebook `.mp4` and hand back an anonymous file
+with no title, uploader or thumbnail.
 
 ### How the resolvers behave
 
