@@ -99,6 +99,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Lifecycle
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -113,6 +115,12 @@ import android.net.Uri
 import android.content.pm.PackageManager
 import android.content.Intent
 import android.Manifest
+
+/**
+ * Where the author line points. A handle, not a legal name -- whoever wrote this is findable
+ * as the GitHub account the source lives on, which is the identity of any use to a reader.
+ */
+private const val AUTHOR_URL = "https://github.com/uukjtisa"
 
 /** What a permission row can be asked to do. */
 private enum class Grant {
@@ -258,12 +266,29 @@ private fun IdentityPage(active: Boolean) {
 
         Body(stringResource(R.string.onboard_1_body), sub)
         Spacer(Modifier.height(22.dp))
-        Text(
-            text = stringResource(R.string.onboard_by),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+        val uriHandler = LocalUriHandler.current
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier.alpha(by),
-        )
+        ) {
+            Text(
+                text = stringResource(R.string.onboard_by),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+            )
+            Text(
+                text = stringResource(R.string.onboard_by_handle),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.W600,
+                color = LocalTrawlTokens.current.accent,
+                textDecoration = TextDecoration.Underline,
+                modifier =
+                    Modifier.clip(RoundedCornerShape(6.dp))
+                        .clickable { uriHandler.openUri(AUTHOR_URL) }
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+            )
+        }
     }
 }
 

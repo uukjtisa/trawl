@@ -804,7 +804,7 @@
     <string name="github">GitHub</string>
     <string name="built_by">Built by</string>
     <string name="built_on">Built on</string>
-    <string name="signature_subtitle">Nicanor III W. Cariasa · Philippines</string>
+    <string name="signature_subtitle">github.com/uukjtisa · Philippines</string>
     <string name="licence">Licence</string>
     <string name="licence_gpl3">GNU General Public License v3.0</string>
     <string name="and_contributors">&amp; contributors</string>
@@ -827,7 +827,8 @@
     <string name="state_off">OFF</string>
     <string name="mode_ask">Ask</string>
     <string name="onboard_1_body">A media downloader for Android. Paste a link, pick a format, keep the file.</string>
-    <string name="onboard_by">Architected by Nicanor III W. Cariasa</string>
+    <string name="onboard_by">Built by</string>
+    <string name="onboard_by_handle">Niccc2007 (uukjtisa)</string>
     <string name="onboard_2_title">Two ways in</string>
     <string name="onboard_2_body">Most sites go through yt-dlp. A few also get a Trawl resolver, which steps in when the yt-dlp extractor stops working.</string>
     <string name="onboard_route_everything_else">YouTube and a thousand more</string>
@@ -837,8 +838,8 @@
     <string name="perm_none_required">You can skip any of these. Trawl still downloads without them.</string>
     <string name="onboard_3_title">What it asks for</string>
     <string name="onboard_3_body">Only the first one is required. Everything else can be refused, and the app keeps working without it.</string>
-    <string name="onboard_4_title">Early days</string>
-    <string name="onboard_4_body">This is version 0.1.0 and it is still being built, so expect rough edges. Almost everything you see can be switched off in Settings.</string>
+    <string name="onboard_4_title">What to expect</string>
+    <string name="onboard_4_body">Bugs could be anywhere. This is a one-person project, and maintenance happens when a good stretch of free time turns up. Almost everything you see can be switched off in Settings.</string>
     <string name="onboard_skip">Skip</string>
     <string name="onboard_next">Next</string>
     <string name="onboard_start">Get started</string>

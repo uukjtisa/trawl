@@ -36,7 +36,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -111,8 +110,6 @@ import androidx.compose.animation.animateColorAsState
 // came from. Trawl inherits upstream's translations, so that link still improves what it ships.
 const val weblate = "https://hosted.weblate.org/engage/seal/"
 
-private const val PORTFOLIO_URL = "https://nicanoriiicariasa-portfolio.vercel.app/"
-private const val PORTFOLIO_LABEL = "nicanoriiicariasa-portfolio.vercel.app"
 private const val GITHUB_URL = "https://github.com/uukjtisa"
 private const val GITHUB_LABEL = "github.com/uukjtisa"
 private const val LICENCE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
@@ -156,15 +153,6 @@ fun AboutPage(
         ) {
             item { SignatureBanner() }
 
-            item {
-                LinkRow(
-                    title = stringResource(R.string.portfolio),
-                    subtitle = PORTFOLIO_LABEL,
-                    icon = { Icon(Icons.Outlined.Language, null, Modifier.size(18.dp)) },
-                ) {
-                    open(PORTFOLIO_URL)
-                }
-            }
             item {
                 LinkRow(
                     title = stringResource(R.string.github),
