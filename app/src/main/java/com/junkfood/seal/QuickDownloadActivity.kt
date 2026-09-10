@@ -73,7 +73,9 @@ class QuickDownloadActivity : ComponentActivity() {
             return
         }
 
-        App.startService()
+        // Foreground promotion has to happen while this activity is still on screen. It
+        // finishes as soon as the download is queued, and after that the promotion is refused.
+        App.startServiceFromForeground()
 
         enableEdgeToEdge()
 

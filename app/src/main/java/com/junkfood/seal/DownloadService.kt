@@ -25,6 +25,23 @@ class DownloadService : Service() {
     }
 
     /**
+     * Promote immediately when started, rather than waiting for a bind.
+     *
+     * startForegroundService() hands the service roughly five seconds to call startForeground()
+     * before the system kills the process, so this cannot wait for anything. It is also the whole
+     * point of the fix: a bind is asynchronous, and by the time onBind() arrives the activity that
+     * kicked the download off has usually finished -- which is exactly the moment the promotion
+     * starts being refused.
+     *
+     * START_NOT_STICKY because there is nothing to resume: if the system kills this, recreating an
+     * empty service with a null intent would only put up a notification for work that is gone.
+     */
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        attemptPromoteToForeground()
+        return START_NOT_STICKY
+    }
+
+    /**
      * CRITICAL: on Android 12+ (API 31+), startForeground() throws
      * ForegroundServiceStartNotAllowedException if the app is fully backgrounded (no visible
      * UI) AND has no exemption (battery-optimization-disabled is one of the few documented

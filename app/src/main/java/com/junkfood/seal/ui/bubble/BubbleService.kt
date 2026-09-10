@@ -161,7 +161,8 @@ class BubbleService :
         bubbleParams =
             overlayParams(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS).apply {
                 gravity = Gravity.TOP or Gravity.START
-                x = screenW - dp(BUBBLE_SIZE_DP + 16)
+                // Places the visible circle 16dp from the edge, not the window.
+                x = screenW - dp(BUBBLE_SIZE_DP + 16 + BUBBLE_PAD_DP)
                 y = screenH / 2
             }
 
@@ -223,8 +224,8 @@ class BubbleService :
 
     /** Distance from the bubble's centre to the X's centre, both in screen pixels. */
     private fun distanceToDropTarget(): Float {
-        val bx = bubbleParams.x + dp(BUBBLE_SIZE_DP) / 2f
-        val by = bubbleParams.y + dp(BUBBLE_SIZE_DP) / 2f
+        val bx = bubbleParams.x + dp(BUBBLE_WINDOW_DP) / 2f
+        val by = bubbleParams.y + dp(BUBBLE_WINDOW_DP) / 2f
         val tx = screenW / 2f
         val ty = screenH - dp(DROP_BOTTOM_DP) - dp(DROP_SIZE_DP) / 2f
         return hypot(bx - tx, by - ty)
@@ -240,8 +241,9 @@ class BubbleService :
         val wm = windowManager ?: return
         val view = bubbleView ?: return
         val target =
-            if (bubbleParams.x + dp(BUBBLE_SIZE_DP) / 2 < screenW / 2) dp(8)
-            else screenW - dp(BUBBLE_SIZE_DP + 8)
+            if (bubbleParams.x + dp(BUBBLE_WINDOW_DP) / 2 < screenW / 2)
+                dp(8) - dp(BUBBLE_PAD_DP)
+            else screenW - dp(BUBBLE_SIZE_DP + 8 + BUBBLE_PAD_DP)
         settleAnim?.cancel()
         settleAnim =
             ValueAnimator.ofInt(bubbleParams.x, target).apply {
@@ -323,14 +325,14 @@ class BubbleService :
                 // Centred on the bubble, then clamped inside the screen -- the mockup's own
                 // placement maths (renderPanel()).
                 x =
-                    (bubbleParams.x + dp(BUBBLE_SIZE_DP) / 2 - dp(BUBBLE_PANEL_WIDTH_DP) / 2)
+                    (bubbleParams.x + dp(BUBBLE_WINDOW_DP) / 2 - dp(BUBBLE_PANEL_WIDTH_DP) / 2)
                         .coerceIn(dp(10), (screenW - dp(BUBBLE_PANEL_WIDTH_DP + 10)).coerceAtLeast(dp(10)))
                 // Below the bubble by default; above it when there is not room below, so the
                 // panel never opens off the bottom of the screen.
                 y =
-                    (if (bubbleParams.y + dp(70 + PANEL_EST_H_DP) > screenH)
-                            bubbleParams.y - dp(PANEL_EST_H_DP + 6)
-                        else bubbleParams.y + dp(70))
+                    (if (bubbleParams.y + dp(70 + BUBBLE_PAD_DP + PANEL_EST_H_DP) > screenH)
+                            bubbleParams.y + dp(BUBBLE_PAD_DP) - dp(PANEL_EST_H_DP + 6)
+                        else bubbleParams.y + dp(70 + BUBBLE_PAD_DP))
                         .coerceAtLeast(dp(38))
                 panelAnchorY = y
             }
@@ -477,6 +479,10 @@ class BubbleService :
 
     override fun onDestroy() {
         isRunning = false
+        // Settled rows do not outlive the window that showed them. Anything still in flight
+        // does -- running, queued or paused -- so closing the window mid-download and reopening it
+        // shows the download still going.
+        BubbleTasks.forgetSettled()
         settleAnim?.cancel()
         closePanel()
         hideDropTarget()

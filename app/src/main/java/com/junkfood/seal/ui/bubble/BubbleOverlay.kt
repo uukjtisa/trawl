@@ -120,6 +120,22 @@ const val BUBBLE_PANEL_WIDTH_DP = 300
 const val BUBBLE_SIZE_DP = 60
 
 /**
+ * Transparent slack around the bubble, inside its own overlay window.
+ *
+ * The window is WRAP_CONTENT around whatever this composable measures, and the bubble scales to
+ * 1.08 while being dragged. Sized to the circle exactly, the grown circle draws past the window's
+ * surface and the compositor cuts it off square -- so the thing advertising itself as a floating
+ * circle showed visible straight edges the moment you touched it. The drop target already avoids
+ * this by sitting a 58dp circle inside a 90dp box; this is the same trick.
+ *
+ * 8dp covers the 1.08 scale (2.4dp of overflow) with room left for the shadow.
+ */
+const val BUBBLE_PAD_DP = 8
+
+/** What the overlay window actually measures: the circle plus its slack on both sides. */
+const val BUBBLE_WINDOW_DP = BUBBLE_SIZE_DP + 2 * BUBBLE_PAD_DP
+
+/**
  * The two facts the bubble's window and the X's window both need to agree on.
  *
  * They are different windows with different compositions, so this is held by the Service and
@@ -149,7 +165,8 @@ fun BubbleOverlay(
     SealTheme {
         val tokens = LocalTrawlTokens.current
         val scheme = MaterialTheme.colorScheme
-        val live = tasks.filterNot { it.finished }
+        // Not `finished`, which is DONE alone -- a failed download is not still downloading.
+        val live = tasks.filterNot { it.settled }
         // What the bubble DRAWS is outstanding work, not session history. Rings and the overflow
         // badge both counted `tasks`, which retains finished and failed rows on purpose -- so a
         // drained queue still showed "+5", and a ring per row, long after everything was done.
@@ -185,7 +202,11 @@ fun BubbleOverlay(
 
         Box(
             modifier =
-                Modifier.size(BUBBLE_SIZE_DP.dp)
+                // Measures the padded window, then insets back to the circle, so everything below
+                // this line keeps the geometry it always had -- the rings included -- while the
+                // scale has somewhere to grow into.
+                Modifier.size(BUBBLE_WINDOW_DP.dp)
+                    .padding(BUBBLE_PAD_DP.dp)
                     .graphicsScale(scale)
                     .bubbleGestures(
                         onMove = onMove,
@@ -387,7 +408,8 @@ fun BubblePanel(
     SealTheme {
         val tokens = LocalTrawlTokens.current
         val scheme = MaterialTheme.colorScheme
-        val live = tasks.filterNot { it.finished }
+        // Not `finished`, which is DONE alone -- a failed download is not still downloading.
+        val live = tasks.filterNot { it.settled }
         Column(
             modifier =
                 Modifier.width(BUBBLE_PANEL_WIDTH_DP.dp)

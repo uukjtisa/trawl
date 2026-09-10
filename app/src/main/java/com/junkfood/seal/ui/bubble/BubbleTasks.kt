@@ -57,6 +57,14 @@ data class BubbleTask(
      * When this row reached a terminal state, for [BubbleTasks.ageOut]. Zero while it is running.
      */
     val settledAtMillis: Long = 0L,
+    /**
+     * When this row was first published, for [BubbleTasks.reconcile].
+     *
+     * A row the app cannot account for is usually dead, but it might simply be newer than the
+     * app's task map -- reconcile runs from the home screen's composition and can land in that
+     * gap. Age is what tells those two apart.
+     */
+    val firstSeenAtMillis: Long = 0L,
 ) {
     val error: Boolean
         get() = state == BubbleTaskState.ERROR
@@ -107,6 +115,14 @@ object BubbleTasks {
     const val AGE_OUT_MS: Long = 5 * 60 * 1000L
 
     /**
+     * How long an unsettled row is allowed to be unknown to the app before it is treated as dead.
+     *
+     * Long enough to cover the gap between a download being created and the app's task map showing
+     * it; short enough that a genuine orphan does not sit in the panel for the rest of the session.
+     */
+    const val ORPHAN_GRACE_MS: Long = 30 * 1000L
+
+    /**
      * Merge what is live into what this session has already seen.
      *
      * The publisher only knows about ACTIVE downloads, so a straight assignment dropped every row
@@ -130,7 +146,15 @@ object BubbleTasks {
                     previous != null && previous.settledAtMillis > 0L -> previous.settledAtMillis
                     else -> System.currentTimeMillis()
                 }
-            merged[incoming.id] = incoming.copy(settledAtMillis = settledAt)
+            merged[incoming.id] =
+                incoming.copy(
+                    settledAtMillis = settledAt,
+                    // Stamped once, on the first publish, and carried forward after that -- the
+                    // point is how long we have known about the row, not when we last heard.
+                    firstSeenAtMillis =
+                        previous?.firstSeenAtMillis?.takeIf { it > 0L }
+                            ?: System.currentTimeMillis(),
+                )
         }
         _tasks.value = merged.values.toList()
     }
@@ -162,12 +186,25 @@ object BubbleTasks {
      *
      * Absence is therefore only believed when EVERY identifier the row has is unaccounted for.
      */
-    fun reconcile(knownUrls: Set<String>) {
+    fun reconcile(knownUrls: Set<String>, nowMillis: Long = System.currentTimeMillis()) {
         val kept =
             _tasks.value.filter { row ->
-                if (!row.settled) return@filter true
                 val ids = listOfNotNull(row.url.ifBlank { null }, row.filePath?.ifBlank { null })
-                ids.isEmpty() || ids.any { it in knownUrls }
+                // Nothing to match on: keep it. A row with no URL and no path cannot be checked
+                // against the app, and guessing would delete real downloads.
+                if (ids.isEmpty()) return@filter true
+                if (ids.any { it in knownUrls }) return@filter true
+
+                // Not accounted for by the app. A settled row goes at once -- that is the
+                // "I deleted it but the badge still counts it" case.
+                //
+                // An UNSETTLED row used to be kept unconditionally, on the assumption that
+                // unsettled means alive. It does not: a task the app has dropped while it was
+                // running, queued or paused leaves a row that never settles, so neither
+                // forgetSettled() nor ageOut() will ever touch it, and it outlives the session
+                // showing 0% forever with a button that does nothing. It gets a grace period
+                // instead, then goes the same way.
+                !row.settled && nowMillis - row.firstSeenAtMillis < ORPHAN_GRACE_MS
             }
         if (kept.size != _tasks.value.size) _tasks.value = kept
     }
@@ -196,6 +233,31 @@ object BubbleTasks {
      */
     val activeCount: Int
         get() = _tasks.value.count { it.active }
+
+    /**
+     * Forget every settled row. Called when the floating window is torn down.
+     *
+     * A finished or failed row is a receipt: worth seeing while the window is open, meaningless
+     * once it has closed -- and keeping them is how the badge ended up counting downloads that had
+     * been deleted days earlier. Nothing here is written to disk, so these rows only ever survived
+     * because the overlay's own service kept the process alive.
+     *
+     * THE PART THAT IS NOT OBVIOUS, and that a first attempt got wrong: emptying the list is not
+     * enough. [publish] merges from the downloader's task list, which still holds finished and
+     * failed tasks, so the next publish after the window reopened put every one of them straight
+     * back. They have to be suppressed at the source, and [dismissed] is the mechanism that
+     * already exists for precisely that -- publish() honours it.
+     *
+     * Anything NOT settled survives, which means running, queued AND paused. Paused is the reason
+     * this filters on `settled` rather than `active`: `active` is running-or-queued only, so it
+     * would drop a paused download, and with it the button that resumes it.
+     */
+    fun forgetSettled() {
+        val (settled, kept) = _tasks.value.partition { it.settled }
+        if (settled.isEmpty()) return
+        dismissed += settled.map { it.id }
+        _tasks.value = kept
+    }
 
     /** The Clear button. Forgets the rows, and that any were dismissed. */
     fun clear() {

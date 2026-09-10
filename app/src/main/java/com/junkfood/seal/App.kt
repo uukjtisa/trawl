@@ -262,6 +262,33 @@ class App : Application(), SingletonImageLoader.Factory {
             }
         }
 
+        /**
+         * Start the download service from a caller that is on screen RIGHT NOW.
+         *
+         * [startService] only binds, and a bind is asynchronous. Called from
+         * QuickDownloadActivity -- which finishes as soon as the download is queued -- the
+         * promotion inside onBind() lands after the app has gone invisible, and API 31+ refuses
+         * it. The download keeps running because that refusal is caught, but as an ordinary
+         * background task, which an aggressive ROM then freezes until the app is reopened. That is
+         * the "shared downloads sit at 0% until I open Trawl" bug.
+         *
+         * Calling startForegroundService() while an activity is still visible uses the
+         * visible-app exemption, so the promotion is legal and survives the activity going away.
+         * Only ever call this from a visible caller: from the background it throws the very
+         * exception it exists to avoid.
+         */
+        fun startServiceFromForeground() {
+            startService()
+            runCatching {
+                val intent = Intent(context.applicationContext, DownloadService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.applicationContext.startForegroundService(intent)
+                } else {
+                    context.applicationContext.startService(intent)
+                }
+            }
+        }
+
         fun stopService() {
             if (!isServiceRunning) return
             try {
