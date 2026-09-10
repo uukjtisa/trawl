@@ -107,6 +107,21 @@ object UpdateUtil {
             }.getOrNull()
         }
 
+    /**
+     * The newest release on the configured channel, whether or not it is newer than what is
+     * installed.
+     *
+     * [checkForUpdate] answers "is there an update" and returns null when there is not, which is
+     * the right answer for a prompt and the wrong one for a page whose job is to SHOW what
+     * changed. Somebody already on the newest build still wants to read the notes.
+     */
+    suspend fun latestRelease(): Release? =
+        withContext(Dispatchers.IO) { runCatching { getLatestRelease() }.getOrNull() }
+
+    /** Whether [release] is newer than the build running right now. */
+    fun isNewerThanInstalled(release: Release, context: Context = App.context): Boolean =
+        runCatching { context.getCurrentVersion() < release.name.toVersion() }.getOrDefault(false)
+
     private fun Context.getCurrentVersion(): Version =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager

@@ -30,6 +30,9 @@ package com.junkfood.seal.util
 // THIS IS A BRIDGE, NOT A FEATURE. Undocumented and liable to change. Every failure path falls
 // back to handing the original URL to yt-dlp, so the worst case is the behaviour we had before.
 
+import com.junkfood.seal.App
+import com.junkfood.seal.util.FileUtil.getCookiesFile
+import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.Json
@@ -45,6 +48,16 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 private const val TAG = "TikTokCdn"
+
+/**
+ * TikTok's "content classification unavailable".
+ *
+ * The reflow page still returns 200 and still carries the rehydration blob; the video detail
+ * scope simply holds this code and a null itemInfo instead of the item. Measured 2026-09-10.
+ * It is an age gate: oEmbed answers the same item with an empty title and "@" for the author,
+ * and the desktop page returns the 1.4 KB stub. No unauthenticated client gets the media.
+ */
+private const val STATUS_CONTENT_CLASSIFICATION = 10249
 
 /**
  * A resolved TikTok clip.
@@ -212,8 +225,36 @@ object TikTokCdn {
         return media
     }
 
+    /**
+     * The user's own TikTok cookies, when they have signed in and enabled cookies.
+     *
+     * Read out of the very Netscape file the app already builds for yt-dlp, so signing in once
+     * serves both the resolver and the fallback. Empty string when there is nothing to send,
+     * which leaves the request exactly as it was.
+     *
+     * This is the only thing that moves a [STATUS_CONTENT_CLASSIFICATION] refusal. The gate is
+     * server-side and applies to the content, so the fix is being a client TikTok has already
+     * decided may view it -- the same reason yt-dlp takes --cookies.
+     */
+    private fun userCookieHeader(): String =
+        runCatching {
+                if (!COOKIES.getBoolean()) return ""
+                val file = App.context.getCookiesFile()
+                if (!file.isFile) return ""
+                file.useLines { lines ->
+                    lines
+                        .filter { it.isNotBlank() && !it.startsWith("#") }
+                        .map { it.split('\t') }
+                        // Netscape format: domain, flag, path, secure, expiry, name, value.
+                        .filter { it.size >= 7 && it[0].contains("tiktok", ignoreCase = true) }
+                        .joinToString("; ") { "${it[5]}=${it[6]}" }
+                }
+            }
+            .getOrDefault("")
+
     private fun fetch(id: String): TikTokMedia? {
         val pageUrl = "https://m.tiktok.com/v/$id.html"
+        val signedIn = userCookieHeader()
         val req =
             Request.Builder()
                 .url(pageUrl)
@@ -221,6 +262,7 @@ object TikTokCdn {
                 // with a 1.4 KB stub; the mobile share page answers with the whole thing.
                 .header("User-Agent", MOBILE_UA)
                 .header("Accept", "text/html,application/xhtml+xml")
+                .apply { if (signedIn.isNotBlank()) header("Cookie", signedIn) }
                 .build()
 
         val html =
@@ -255,14 +297,31 @@ object TikTokCdn {
 
         // The mobile share page uses the "reflow" scope; the desktop page uses
         // "webapp.video-detail". Both are read so a change of entry point does not break this.
+        val detail =
+            scope["webapp.reflow.video.detail"]?.jsonObject
+                ?: scope["webapp.video-detail"]?.jsonObject
+
         val item =
-            (scope["webapp.reflow.video.detail"]?.jsonObject ?: scope["webapp.video-detail"]?.jsonObject)
-                ?.get("itemInfo")
-                ?.jsonObject
-                ?.get("itemStruct")
-                ?.jsonObject
+            detail?.get("itemInfo")?.jsonObject?.get("itemStruct")?.jsonObject
                 ?: run {
-                    TrawlLog.i("$TAG: $id had no itemStruct (private, removed or region-locked)")
+                    // Report what TikTok said rather than guessing. The old message claimed
+                    // "private, removed or region-locked" and was wrong on all three for the
+                    // case that actually turns up, which cost an afternoon of looking at the
+                    // parser instead of at the response.
+                    val code = detail?.get("statusCode")?.jsonPrimitive?.intOrNull
+                    val message = detail?.get("statusMessage")?.jsonPrimitive?.contentOrNull
+                    val hint =
+                        if (code == STATUS_CONTENT_CLASSIFICATION) {
+                            if (signedIn.isBlank())
+                                " - age-gated; sign in to TikTok under Settings > Cookies"
+                            else " - age-gated, and the stored cookies were not accepted"
+                        } else ""
+                    TrawlLog.i(
+                        "$TAG: $id carried no itemStruct" +
+                            (code?.let { " - status $it" }.orEmpty()) +
+                            (message?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()) +
+                            hint
+                    )
                     return null
                 }
 

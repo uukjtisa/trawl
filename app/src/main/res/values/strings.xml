@@ -200,6 +200,7 @@
     <string name="app_update_failed">Failed to update to the latest version</string>
     <string name="update">Update</string>
     <string name="update_available">Update available</string>
+    <string name="whats_new">What\'s new</string>
     <string name="aria2" translatable="false">Aria2</string>
     <string name="aria2_desc">Use aria2c as the external downloader</string>
     <string name="cookies">Cookies</string>
