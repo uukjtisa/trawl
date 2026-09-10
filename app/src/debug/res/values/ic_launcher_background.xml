@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    NEW FILE (Trawl project, 2026-09-10). Not inherited from upstream.
+
+    The debug launcher icon's background. Overrides the release value (#241A12, a warm dark brown)
+    for the debug build type only.
+
+    Cold slate against the release build's warm brown, so the two are distinguishable at launcher
+    size and at a glance rather than by reading the label. The adaptive icon keeps its foreground
+    and monochrome layers, so the mark is still recognisably Trawl — this says "which build",
+    not "which app".
+-->
+<resources>
+    <color name="ic_launcher_background">#12303A</color>
+</resources>

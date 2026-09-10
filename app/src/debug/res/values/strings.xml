@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    NEW FILE (Trawl project, 2026-09-10). Not inherited from upstream.
+
+    Debug-build overrides. Resources in src/debug/res replace the ones in src/main/res for the
+    debug build type only, so nothing here can leak into a release.
+
+    The debug and release builds are separate packages (applicationIdSuffix ".debug") that sit on
+    the launcher side by side and share one download folder. Telling them apart mattered enough to
+    be worth naming: they were previously two identical brown shields called "Trawl", and the
+    share sheet offered two identical "Quick download" targets with no way to know which build was
+    about to take the link.
+-->
+<resources>
+    <string name="app_name" translatable="false">Trawl Debug</string>
+
+    <!-- The share-sheet target. This is the label a user actually reads when choosing where to
+         send a link from another app, so it carries the build name rather than just the verb. -->
+    <string name="title_activity_share" translatable="false">Quick download · DEBUG</string>
+</resources>

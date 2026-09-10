@@ -45,3 +45,6 @@ build-bcde.log
 build-move.log
 build-tmp.log
 build-release.log
+
+# Local screenshot scratch (device captures, never published)
+.shots/
