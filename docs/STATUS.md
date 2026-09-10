@@ -1,6 +1,6 @@
 # Status
 
-What works, what is half-built, and what is missing on purpose. Written at v0.1.0.
+What works, what is half-built, and what is missing on purpose. Written at v0.1.0, kept current through v0.1.3.
 
 I keep this file because a feature list without one is a wish list. Everything below is checked
 against the code, not remembered.
@@ -60,22 +60,27 @@ The information exists in the log already, so this is a display job.
 
 ## Not started
 
-- **Resolvers beyond X and TikTok.** Instagram, Facebook, Reddit and the rest go to yt-dlp. Each
-  new resolver is a self-contained file behind its own switch, so this is additive work, but none
-  of it is written.
+- **Resolvers beyond the five that exist.** X, TikTok, Facebook, Newgrounds and the direct-file
+  resolver are written. Instagram, Reddit, Twitch and the rest still go to yt-dlp. Each new
+  resolver is a self-contained file behind its own switch, so this stays additive work.
 - **Photo posts.** X photo-only posts and TikTok slideshows return no result and fall through to
   yt-dlp. Gathering every image from an album is not implemented in either resolver.
-- **Cookie import for the resolvers.** The app can import cookies for yt-dlp, but neither resolver
-  uses them, so protected accounts and private posts stay out of reach.
+- **Cookie import for the resolvers.** The TikTok resolver now reads the same Netscape cookie
+  file the app already keeps for yt-dlp, so signing in once serves both paths -- which is the only
+  thing that reaches age-gated posts. The other four resolvers still ignore it, so protected
+  accounts stay out of reach there.
 - **Tests.** `DirectFileCdnTest` covers the direct-file resolver's decisions -- claiming, URL
   mechanics, both kinds of in-page redirect, player-page extraction, and container-magic
   verification. 21 cases, and they earned their place immediately by catching a real defect:
   `substringAfterLast('/', "")` returns the *missing-delimiter* value, so every single-segment
   path reported no extension and the resolver refused to claim the exact shape it exists for.
-  The other four resolvers are still covered only by the Python probes in [`tools/`](../tools/),
-  which is not the same thing.
-- **A release build.** A signed APK is produced and the keystore is wired through
-  `keystore.properties`. Still absent: a GitHub release, and any F-Droid or IzzyOnDroid listing.
+  `DirectPresetTest` pins the quality-rung table, and `ReleaseNotesTest` pins the release-note
+  grammar against a real published release body -- its load-bearing case is a negative one, that
+  no rendered text still contains markup. The other four resolvers are still covered only by the
+  Python probes in [`tools/`](../tools/), which is not the same thing.
+- **Store listings.** Signed release APKs are built for five ABIs and published as GitHub
+  releases, and the in-app updater installs from them. Still absent: any F-Droid or IzzyOnDroid
+  listing.
 - **Playlists and batch downloads** are inherited from Seal and untested against the resolvers.
 - **aria2c** is inherited and off by default. It almost certainly cannot carry TikTok's
   session-bound headers, so leave it off for resolved downloads.
@@ -106,6 +111,17 @@ The information exists in the log already, so this is a display job.
   panel reads it when you open it, which is the closest honest version.
 - **`NewHomePage.kt` is 2,800 inherited lines** and I edited rather than replaced it. Every future
   merge from upstream on that file will be a manual conflict.
+- **A failed download tells you almost nothing, and cannot be reported.** The downloads page
+  offers Copy error report and Show logs on a failed task, but the Recent list on Home offers the
+  same five-item menu whatever the state -- so a failed row there gives you Share and Details,
+  neither of which applies. Worse, the error text is not stored anywhere, so it dies with the
+  process: even the working button hands back an empty report after a restart. Both halves need
+  fixing before the bug-report template can ask anyone for a log.
+- **Age-gated TikTok posts cannot be fetched without signing in.** TikTok answers them with
+  `content classification unavailable` and refuses the media to every unauthenticated client --
+  its own public preview endpoint included, which returns a blank title. There is no parsing trick
+  that reaches it; the server is not sending the file. Importing your TikTok cookies under
+  Settings is the only route.
 - **History rows written before the `DIRECT` badge existed** stored yt-dlp's extractor names, so
   they claimed yt-dlp did work the resolvers actually did. A one-off backfill relabels them at
   startup. If you saw a TikTok row marked `YT-DLP`, that was the bug, and it is fixed.
