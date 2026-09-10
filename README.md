@@ -9,7 +9,8 @@
 [![Licence](https://img.shields.io/badge/Licence-GPL--3.0-D98E4A?style=for-the-badge)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-7.0%2B-D98E4A?style=for-the-badge&logo=android&logoColor=white)](#building-it-yourself)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Compose-D98E4A?style=for-the-badge&logo=kotlin&logoColor=white)](#building-it-yourself)
-[![Status](https://img.shields.io/badge/v0.1.0-early%20development-C25E3A?style=for-the-badge)](docs/STATUS.md)
+[![Release](https://img.shields.io/github/v/release/uukjtisa/trawl?style=for-the-badge&color=D98E4A&label=release)](https://github.com/uukjtisa/trawl/releases/latest)
+[![Status](https://img.shields.io/badge/early%20development-C25E3A?style=for-the-badge)](docs/STATUS.md)
 
 A personal fork of **[Seal Plus](https://github.com/MaheshTechnicals/Sealplus)**, itself a fork of
 **[Seal](https://github.com/JunkFood02/Seal)**.
@@ -18,10 +19,10 @@ Built by **[uukjtisa](https://github.com/uukjtisa)**.
 </div>
 
 > [!WARNING]
-> **v0.1.0. Early development.** I wrote this for my own phone and I am still finding bugs in it.
-> There is no store listing, and until now nobody but me had run it. What is written below is what
-> the code does today, not what I hope it will do. See **[docs/STATUS.md](docs/STATUS.md)** for the
-> honest list of what is finished, half-built and missing.
+> **Early development.** It started as something I built for my own phone, and I am still
+> finding bugs in it. There is no store listing. What is written below is what the code does
+> today, not what I hope it will do. See **[docs/STATUS.md](docs/STATUS.md)** for the honest
+> list of what is finished, half-built and missing.
 
 ---
 
