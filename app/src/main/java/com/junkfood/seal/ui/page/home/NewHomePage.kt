@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -58,6 +59,8 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Pause
@@ -227,6 +230,9 @@ import com.junkfood.seal.ui.component.PlatformBadge
 import com.junkfood.seal.util.PreferenceUtil.getBoolean
 import com.junkfood.seal.util.DELETE_FILE_WITH_ENTRY
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
 
 /**
  * The fast tray's one-tap options.
@@ -2141,8 +2147,30 @@ fun ActiveDownloadCard(
                             }
                         )
                         
-                        // Details option (only for completed downloads)
-                        if (downloadState is Task.DownloadState.Completed) {
+                        // Copy the report straight out of the menu. Reporting a failure
+                        // should not require opening a sheet first and hunting for a button.
+                        if (downloadState is Task.DownloadState.Error) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.copy_error_report)) },
+                                onClick = {
+                                    onAction(UiAction.CopyErrorReport(downloadState.throwable))
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.ErrorOutline,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            )
+                        }
+
+                        // Details. Offered for failures too -- that is the state where somebody
+                        // most wants to know what happened, and it was the one state without it.
+                        if (downloadState is Task.DownloadState.Completed ||
+                            downloadState is Task.DownloadState.Error ||
+                            downloadState is Task.DownloadState.Canceled) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.details)) },
                                 onClick = {
@@ -2270,6 +2298,66 @@ fun DownloadDetailsDialog(
                 }
             }
             
+            // What went wrong, first, when something did. A failed download has no thumbnail
+            // and no media info -- it never got that far -- so leading with them shows an empty
+            // sheet and answers nothing.
+            (state.downloadState as? Task.DownloadState.Error)?.let { errorState ->
+                val report = getErrorReport(errorState.throwable, task.url)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.ErrorOutline,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.why_it_failed),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        // Selectable as well as copyable: someone quoting one line into an issue
+                        // should not have to paste the whole version banner with it.
+                        SelectionContainer {
+                            Text(
+                                text = report,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 11.5.sp,
+                                lineHeight = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FilledTonalButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(report))
+                                context.makeToast(R.string.error_copied)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ContentCopy,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.copy_error_report))
+                        }
+                    }
+                }
+            }
+
             // Thumbnail Card
             state.videoInfo?.thumbnail?.let { thumbnailUrl ->
                 Card(

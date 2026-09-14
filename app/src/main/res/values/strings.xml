@@ -179,6 +179,7 @@
     <string name="details">Details</string>
     <string name="status_error">Error</string>
     <string name="copy_link">Copy link</string>
+    <string name="why_it_failed">Why it failed</string>
     <string name="copy_error_report">Copy report</string>
     <string name="video_resolution">Video resolution</string>
     <string name="video_file_size">Video file size</string>
